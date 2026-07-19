@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Registro opcional de clientes de Ithiel Bazar y Makeup.">
+  <title>Registrarse | Ithiel</title>
+  <style>
+    :root { --rose:#b91658; --deep:#780a38; --ink:#321522; --green:#16804b; }
+    * { box-sizing:border-box; }
+    body { min-height:100vh; margin:0; display:grid; place-items:center; padding:24px; color:var(--ink); font-family:Arial,Helvetica,sans-serif; background:radial-gradient(circle at 14% 0%,#ffb2cb 0,transparent 27%),linear-gradient(125deg,#5e062d,#bd1659 55%,#f26b9d); }
+    main { width:min(100%,480px); padding:32px; border-radius:20px; background:#fff; box-shadow:0 20px 60px #3215224d; }
+    h1 { margin:0; color:var(--deep); text-align:center; font-size:34px; letter-spacing:4px; }
+    p { color:#765763; line-height:1.45; text-align:center; }
+    label { display:grid; gap:6px; margin:15px 0; color:#765763; font-size:13px; font-weight:800; }
+    input,textarea { width:100%; border:1px solid #e4b5c8; border-radius:9px; padding:12px; color:var(--ink); background:#fff; font:inherit; }
+    textarea { min-height:78px; resize:vertical; }
+    .phone { display:grid; grid-template-columns:auto 1fr; border:1px solid #e4b5c8; border-radius:9px; overflow:hidden; background:#fff; }
+    .phone span { display:grid; place-items:center; padding:0 11px; color:var(--deep); background:#f8e4ec; font-size:14px; font-weight:800; }
+    .phone input { border:0; border-radius:0; }
+    .consent { display:flex; gap:8px; align-items:flex-start; font-weight:400; line-height:1.35; }
+    .consent input { width:auto; margin-top:2px; }
+    button,.back { display:flex; width:100%; align-items:center; justify-content:center; gap:9px; border:0; border-radius:10px; padding:13px; color:#fff; background:var(--rose); cursor:pointer; font:inherit; font-size:14px; font-weight:800; text-align:center; text-decoration:none; }
+    button:hover { background:var(--deep); }
+    .google { margin:12px 0; color:#3b2a31; border:1px solid #d9c4ce; background:#fff; }
+    .connected { color:#fff; border-color:var(--green); background:var(--green); cursor:default; }
+    .connected:hover { background:var(--green); }
+    .manual { margin:10px 0; }
+    .choose-back { margin:0 0 10px; color:var(--deep); border:1px solid #e4b5c8; background:#fff; }
+    .icon { width:19px; height:19px; flex:0 0 19px; }
+    .back { margin-top:10px; color:var(--deep); border:1px solid #e4b5c8; background:#fff; }
+    .catalog-ready { color:#fff; border:1px solid var(--green); background:var(--green); }
+    .message { min-height:20px; margin:13px 0 0; font-size:13px; }
+    .trap { position:absolute; left:-10000px; width:1px; height:1px; overflow:hidden; }
+    [hidden] { display:none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>ITHIEL</h1>
+    <p id="intro">Registrarte es opcional. Podés mirar y comprar en el catálogo sin crear una cuenta.</p>
+    <button id="google-login" class="google" type="button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.23-.2-1.77H12v3.37h5.52c-.11.84-.7 2.1-2.01 2.95l-.02.11 2.92 2.26.2.02c1.84-1.7 2.99-4.2 2.99-6.94Z"/><path fill="#34A853" d="M12 22c2.7 0 4.97-.89 6.63-2.42l-3.16-2.4c-.85.59-1.99 1-3.47 1-2.65 0-4.9-1.74-5.7-4.16l-.1.01-3.03 2.35-.03.1A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.3 14.02A5.98 5.98 0 0 1 5.98 12c0-.7.12-1.37.31-2.02v-.13L3.23 7.47l-.1.05A10 10 0 0 0 2 12c0 1.61.38 3.14 1.13 4.47l3.17-2.45Z"/><path fill="#EA4335" d="M12 5.82c1.87 0 3.13.8 3.85 1.47l2.81-2.74C16.96 2.96 14.7 2 12 2a10 10 0 0 0-8.87 5.47l3.16 2.51C7.1 7.56 9.35 5.82 12 5.82Z"/></svg><span>Continuar con Google</span></button>
+    <button id="manual-toggle" class="manual" type="button" aria-expanded="false" aria-controls="customer-register"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.5 3.5A11.8 11.8 0 0 0 12.1 0C5.55 0 .22 5.33.22 11.89c0 2.1.55 4.15 1.6 5.95L.12 24l6.33-1.66a11.86 11.86 0 0 0 5.65 1.44h.01c6.55 0 11.89-5.33 11.89-11.89 0-3.18-1.24-6.16-3.5-8.39ZM12.1 21.77c-1.79 0-3.54-.48-5.07-1.38l-.36-.21-3.76.99 1-3.66-.23-.38a9.83 9.83 0 0 1-1.5-5.24c0-5.48 4.46-9.94 9.94-9.94 2.65 0 5.14 1.03 7.01 2.9a9.86 9.86 0 0 1 2.91 7.02c0 5.48-4.46 9.94-9.94 9.94Zm5.45-7.44c-.3-.15-1.77-.87-2.04-.97-.27-.1-.47-.15-.67.15-.2.3-.76.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.25-.46-2.38-1.48a8.93 8.93 0 0 1-1.65-2.05c-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.5h-.57c-.2 0-.52.08-.8.37-.27.3-1.05 1.02-1.05 2.49s1.08 2.9 1.23 3.1c.15.2 2.13 3.25 5.15 4.56.72.31 1.28.5 1.72.64.72.23 1.38.2 1.9.12.58-.09 1.77-.72 2.02-1.42.25-.7.25-1.3.17-1.42-.07-.12-.27-.2-.57-.35Z"/></svg><span>Registrate con WhatsApp</span></button>
+    <button id="whatsapp-connected" class="manual connected" type="button" hidden disabled><span>✓ WhatsApp conectado</span></button>
+    <form id="customer-register" hidden>
+      <button id="back-options" class="choose-back" type="button">← Elegir otra opción</button>
+      <label for="register-name">Nombre y apellido<input id="register-name" type="text" autocomplete="name" maxlength="100" required></label>
+      <label for="register-phone">WhatsApp<div class="phone"><span>+54 9</span><input id="register-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="341 123 4567" required></div></label>
+      <label for="register-address">Dirección<input id="register-address" type="text" autocomplete="street-address" maxlength="250" placeholder="Calle, número, piso/depto y localidad" required></label>
+      <label class="trap" aria-hidden="true">Sitio web<input id="register-website" type="text" tabindex="-1" autocomplete="off"></label>
+      <label class="consent"><input id="register-optin" type="checkbox"> Quiero recibir novedades y ofertas por WhatsApp.</label>
+      <button id="register-submit" type="submit" hidden>Registrarme</button>
+    </form>
+    <p id="message" class="message" aria-live="polite"></p>
+    <a id="catalog-link" class="back" href="/">Volver al catálogo</a>
+  </main>
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    const SUPABASE_URL = "https://bfuexiblfuqwykktltrp.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_8-do7RGW8-li-7d1BnAsXQ_RYsks6iy";
+    const REGISTER_URL = `${SUPABASE_URL}/functions/v1/register-customer-v2`;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const googleButton = document.getElementById("google-login");
+    const manualToggle = document.getElementById("manual-toggle");
+    const whatsappConnected = document.getElementById("whatsapp-connected");
+    const form = document.getElementById("customer-register");
+    const backOptions = document.getElementById("back-options");
+    const submitButton = document.getElementById("register-submit");
+    const message = document.getElementById("message");
+
+    function updateManualSubmit() {
+      const complete = ["register-name", "register-phone", "register-address"]
+        .every((id) => document.getElementById(id).value.trim().length > 0);
+      submitButton.hidden = !complete;
+    }
+
+    function showGoogleReady(user) {
+      googleButton.innerHTML = `<span>✓ ${user.email}</span>`;
+      googleButton.classList.add("connected");
+      googleButton.disabled = true;
+      manualToggle.hidden = true;
+      document.getElementById("intro").textContent = "Tu cuenta quedó conectada. Ya podés empezar a comprar.";
+      form.hidden = true;
+      document.getElementById("catalog-link").textContent = "Ir al catálogo";
+      document.getElementById("catalog-link").classList.add("catalog-ready");
+    }
+
+    function showWhatsappReady(phone) {
+      googleButton.hidden = true;
+      manualToggle.hidden = true;
+      form.hidden = true;
+      whatsappConnected.hidden = false;
+      whatsappConnected.querySelector("span").textContent = `✓ WhatsApp conectado: +54 9 ${phone}`;
+      document.getElementById("intro").textContent = "Tu registro quedó listo. Ya podés empezar a comprar.";
+      document.getElementById("catalog-link").textContent = "Ir al catálogo";
+      document.getElementById("catalog-link").classList.add("catalog-ready");
+    }
+
+    async function registerGoogleUser(session) {
+      const user = session.user;
+      const fullName = user.user_metadata?.full_name || user.user_metadata?.name || user.email.split("@")[0];
+      const response = await fetch(REGISTER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ fullName, phone: "", address: "", whatsappOptIn: false, website: "" }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "No se pudo completar el registro con Google.");
+      return data;
+    }
+
+    async function currentSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return null;
+      showGoogleReady(session.user);
+      try { await registerGoogleUser(session); }
+      catch (error) {
+        message.style.color = "#a25119";
+        message.textContent = "Google está conectado. El catálogo ya está disponible.";
+      }
+      return session;
+    }
+
+    googleButton.addEventListener("click", async () => {
+      googleButton.disabled = true;
+      googleButton.querySelector("span").textContent = "Abriendo Google…";
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/registro.html` },
+      });
+      if (error) {
+        googleButton.disabled = false;
+        googleButton.querySelector("span").textContent = "Continuar con Google";
+        message.style.color = "#a25119";
+        message.textContent = "No se pudo iniciar con Google.";
+        return;
+      }
+      // Respaldo para navegadores que no siguen la redirección automática.
+      if (data?.url) window.location.assign(data.url);
+    });
+
+    manualToggle.addEventListener("click", () => {
+      form.hidden = false;
+      googleButton.hidden = true;
+      manualToggle.hidden = true;
+      manualToggle.setAttribute("aria-expanded", "true");
+      updateManualSubmit();
+    });
+
+    backOptions.addEventListener("click", () => {
+      form.hidden = true;
+      googleButton.hidden = false;
+      manualToggle.hidden = false;
+      manualToggle.setAttribute("aria-expanded", "false");
+    });
+
+    ["register-name", "register-phone", "register-address"].forEach((id) => {
+      document.getElementById(id).addEventListener("input", updateManualSubmit);
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      message.style.color = "#765763";
+      message.textContent = "Registrando…";
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const response = await fetch(REGISTER_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+          body: JSON.stringify({
+            fullName: document.getElementById("register-name").value.trim(),
+            phone: document.getElementById("register-phone").value,
+            address: document.getElementById("register-address").value.trim(),
+            whatsappOptIn: document.getElementById("register-optin").checked,
+            website: document.getElementById("register-website").value,
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "No se pudo registrar.");
+        message.style.color = "#16804b";
+        showWhatsappReady(document.getElementById("register-phone").value.trim());
+        message.textContent = "Registro listo.";
+      } catch (error) {
+        message.style.color = "#a25119";
+        message.textContent = error.message;
+      }
+    });
+
+    currentSession();
+  </script>
+</body>
+</html>
