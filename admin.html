@@ -297,7 +297,7 @@
       document.querySelector("#sendPasswordReset").addEventListener("click", async () => {
         const message = document.querySelector("#adminAccountMessage");
         message.style.color = "var(--muted)"; message.textContent = "Enviando email…";
-        const { error } = await supabase.auth.resetPasswordForEmail(session.user.email, { redirectTo: `${window.location.origin}/cuenta.html` });
+        const { error } = await supabase.auth.resetPasswordForEmail(session.user.email, { redirectTo: `${window.location.origin}/cuenta` });
         if (error) { message.style.color = "var(--warn)"; message.textContent = error.message; return; }
         message.style.color = "var(--ok)"; message.textContent = "Te enviamos un email para cambiar tu contraseña.";
       });
