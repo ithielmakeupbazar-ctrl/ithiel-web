@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Catálogo online de Ithiel: bazar, makeup y lencería con compra minorista y mayorista.">
+  <meta name="description" content="Catálogo online de Ithiel: bazar, makeup y lencería con compra minorista, mayorista y cuenta opcional.">
   <title>Ithiel | Bazar, Makeup y Lencería</title>
   <style>
     :root { --rose:#b91658; --deep:#780a38; --soft:#fff7fa; --ink:#321522; --line:#f0d7e1; --green:#16804b; }
@@ -106,6 +106,7 @@
     .section-title .icon { width:21px; height:21px; flex-basis:21px; color:var(--rose); }
     .top-access .icon { width:16px; height:16px; flex-basis:16px; }
     .header-button .icon { width:19px; height:19px; }
+    .brand-icon { width:19px; height:19px; flex:0 0 19px; object-fit:contain; }
     .social-icon { fill:currentColor; stroke:none; }
     button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible { outline:3px solid #ffc1d8; outline-offset:3px; }
     @media (max-width:700px) { header { padding-top:112px; } .top-access { top:13px; right:13px; left:13px; justify-content:flex-end; flex-wrap:wrap; } .tools { grid-template-columns:1fr; } .cart-button { right:13px; bottom:13px; min-height:47px; } .info-grid { grid-template-columns:1fr; } .card-actions { grid-template-columns:1fr; } }
@@ -114,16 +115,16 @@
 <body>
   <header>
     <nav class="top-access" aria-label="Acceso">
-      <a href="/registro.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 21c.8-4 3.1-6 7-6s6.2 2 7 6"></path><path d="M19 8v6m-3-3h6"></path></svg>Registrarse</a>
-      <a href="/cuenta.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="9" r="2.6"></circle><path d="M7.5 18c.7-2.7 2.2-4 4.5-4s3.8 1.3 4.5 4"></path></svg>Mi cuenta</a>
-      <a href="/admin.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>Admin</a>
+      <a id="register-link" href="/registro.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 21c.8-4 3.1-6 7-6s6.2 2 7 6"></path><path d="M19 8v6m-3-3h6"></path></svg>Registrarse</a>
+      <a id="account-link" href="/cuenta.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="9" r="2.6"></circle><path d="M7.5 18c.7-2.7 2.2-4 4.5-4s3.8 1.3 4.5 4"></path></svg>Mi cuenta</a>
+      <a id="admin-link" href="/admin.html" hidden><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>Admin</a>
     </nav>
     <p class="brand">ITHIEL</p>
     <p class="subtitle"><span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16l-1.4 10H5.4L4 9Z"></path><path d="m8 9 4-5 4 5M8 13h8"></path></svg>Bazar</span> · <span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3Z"></path><path d="m19 15 .7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7L19 15Z"></path></svg>Makeup</span> · <span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"></path></svg>Lencería</span></p>
     <div class="header-actions">
       <a class="header-button" href="#catalogo"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect></svg>Ver catálogo</a>
       <a class="header-button" href="#como-comprar"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"></path><path d="M8 9h8M8 13h5"></path></svg>Cómo comprar</a>
-      <a class="header-button" href="https://wa.me/5493413038668" target="_blank" rel="noopener"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a8 8 0 0 1-11.7 7.1L4 20l1.4-4.1A8 8 0 1 1 20 11.5Z"></path><path d="M9 8.5c.2 2 1.7 3.7 3.8 4.2l1.1-1.1 1.7.7c-.6 1.4-1.8 2-3.2 1.4-3.2-1.3-5-3.6-5.4-5.5-.2-1 .5-2 1.5-2.2l.7 1.8Z"></path></svg>WhatsApp</a>
+      <a class="header-button" href="https://wa.me/5493413038668" target="_blank" rel="noopener"><img class="brand-icon" src="https://cdn.simpleicons.org/whatsapp/ffffff" alt="">WhatsApp</a>
       <a class="header-button" href="#redes"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="2"></circle><circle cx="18" cy="6" r="2"></circle><circle cx="18" cy="18" r="2"></circle><path d="m8 11 8-4M8 13l8 4"></path></svg>Redes</a>
     </div>
   </header>
@@ -173,9 +174,9 @@
     <section id="redes" class="section">
       <h2 class="section-title"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="2"></circle><circle cx="18" cy="6" r="2"></circle><circle cx="18" cy="18" r="2"></circle><path d="m8 11 8-4M8 13l8 4"></path></svg>Redes</h2>
       <div class="header-actions">
-        <a class="header-button" style="color:var(--deep);border-color:#e4b5c8;background:#fff" href="https://www.instagram.com/ithiel.bazar.makeup/" target="_blank" rel="noopener"><svg class="icon social-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5Zm5 5.5A4.5 4.5 0 1 0 12 16.5 4.5 4.5 0 0 0 12 7.5Zm6-1.2a1.05 1.05 0 1 0 0 2.1 1.05 1.05 0 0 0 0-2.1Z"></path></svg>Instagram</a>
-        <a class="header-button" style="color:var(--deep);border-color:#e4b5c8;background:#fff" href="https://www.facebook.com/ithielbazarmakeup" target="_blank" rel="noopener"><svg class="icon social-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.7 22v-8h2.7l.4-3h-3.1V9.1c0-.9.3-1.5 1.6-1.5H17V4.9c-.3 0-1.3-.1-2.4-.1-2.4 0-4 1.4-4 4.1V11H8v3h2.6v8h3.1Z"></path></svg>Facebook</a>
-        <a class="header-button" style="color:var(--deep);border-color:#e4b5c8;background:#fff" href="https://wa.me/5493413038668" target="_blank" rel="noopener"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a8 8 0 0 1-11.7 7.1L4 20l1.4-4.1A8 8 0 1 1 20 11.5Z"></path><path d="M9 8.5c.2 2 1.7 3.7 3.8 4.2l1.1-1.1 1.7.7c-.6 1.4-1.8 2-3.2 1.4-3.2-1.3-5-3.6-5.4-5.5-.2-1 .5-2 1.5-2.2l.7 1.8Z"></path></svg>Catálogo por WhatsApp</a>
+        <a class="header-button" style="color:var(--deep);border-color:#e4b5c8;background:#fff" href="https://www.instagram.com/ithiel.bazar.makeup/" target="_blank" rel="noopener"><img class="brand-icon" src="https://cdn.simpleicons.org/instagram/b91658" alt="">Instagram</a>
+        <a class="header-button" style="color:var(--deep);border-color:#e4b5c8;background:#fff" href="https://www.facebook.com/ithielbazarmakeup" target="_blank" rel="noopener"><img class="brand-icon" src="https://cdn.simpleicons.org/facebook/b91658" alt="">Facebook</a>
+        <a class="header-button" style="color:var(--deep);border-color:#e4b5c8;background:#fff" href="https://wa.me/5493413038668" target="_blank" rel="noopener"><img class="brand-icon" src="https://cdn.simpleicons.org/whatsapp/b91658" alt="">Catálogo por WhatsApp</a>
       </div>
     </section>
   </main>
@@ -371,6 +372,38 @@
       catch(error){alert(error.message||"No se pudo crear el pedido.");} finally {sendOrder.disabled=false;sendOrder.textContent="Continuar por WhatsApp";}
     });
     autoWholesale(); updateCart(); loadProducts();
+  </script>
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+    const supabase = createClient(
+      "https://bfuexiblfuqwykktltrp.supabase.co",
+      "sb_publishable_8-do7RGW8-li-7d1BnAsXQ_RYsks6iy",
+    );
+    const registerLink = document.getElementById("register-link");
+    const adminLink = document.getElementById("admin-link");
+    const ADMIN_API = "https://bfuexiblfuqwykktltrp.supabase.co/functions/v1/admin-api-v2";
+    async function updateAccess() {
+      const { data: { session } } = await supabase.auth.getSession();
+      registerLink.hidden = Boolean(session);
+      adminLink.hidden = true;
+      if (!session) return;
+      try {
+        const response = await fetch(ADMIN_API, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: "sb_publishable_8-do7RGW8-li-7d1BnAsXQ_RYsks6iy",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ action: "dashboard" }),
+        });
+        adminLink.hidden = !response.ok;
+      } catch (_) {
+        adminLink.hidden = true;
+      }
+    }
+    updateAccess();
+    supabase.auth.onAuthStateChange(() => updateAccess());
   </script>
 </body>
 </html>
