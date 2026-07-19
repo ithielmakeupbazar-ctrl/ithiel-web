@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>ITHIEL · Administración</title>
+  <style>
+    :root { --wine:#9d0c48; --pink:#ee5d95; --ink:#261822; --paper:#fff8fb; --line:#ecd9e2; --muted:#725d68; --ok:#16754b; --warn:#a54619; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink); background:#f8f1f4; }
+    button,input { font:inherit; }
+    button { cursor:pointer; }
+    .hidden { display:none !important; }
+    .login { min-height:100vh; display:grid; place-items:center; padding:24px; background:radial-gradient(circle at top,#f19ab9 0,#b40a51 42%,#621033 100%); }
+    .login-card { width:min(100%,420px); padding:34px; border-radius:22px; background:#fffafd; box-shadow:0 22px 60px #3e0a264d; }
+    .login-back { display:inline-block; margin-bottom:22px; color:var(--wine); font-size:14px; font-weight:800; text-decoration:none; }
+    .login-back:hover { text-decoration:underline; }
+    .brand { font-weight:900; letter-spacing:.12em; font-size:28px; color:var(--wine); text-align:center; }
+    .subtitle { text-align:center; margin:8px 0 26px; color:var(--muted); font-size:14px; }
+    label { display:grid; gap:6px; font-size:14px; font-weight:700; margin:14px 0; }
+    input { width:100%; padding:12px 13px; border:1px solid #d9bdcb; border-radius:10px; background:white; }
+    input:focus { outline:3px solid #ffc8dc; border-color:var(--pink); }
+    .primary,.google,.nav button { border:0; border-radius:10px; padding:12px 14px; font-weight:800; }
+    .primary { width:100%; background:var(--wine); color:white; margin-top:8px; }
+    .google { width:100%; margin-top:12px; background:white; border:1px solid #d5c7ce; color:#33242b; }
+    .notice { min-height:20px; margin:14px 0 0; font-size:14px; text-align:center; color:var(--warn); }
+    .app { min-height:100vh; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px clamp(18px,4vw,56px); background:#fff; border-bottom:1px solid var(--line); }
+    header .brand { text-align:left; font-size:21px; }
+    .account { display:flex; align-items:center; gap:10px; color:var(--muted); font-size:14px; }
+    .outline { border:1px solid #d4bec9; color:var(--wine); background:white; border-radius:8px; padding:8px 10px; font-weight:800; }
+    .home-link { color:var(--wine); text-decoration:none; font-weight:800; font-size:14px; }
+    .home-link:hover { text-decoration:underline; }
+    main { max-width:1200px; margin:auto; padding:28px 20px 54px; }
+    h1 { font-size:25px; margin:0 0 6px; }
+    .lead { margin:0 0 22px; color:var(--muted); }
+    .nav { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:24px; }
+    .nav button { background:#eadbe2; color:#5e3447; padding:9px 13px; }
+    .nav button.active { background:var(--wine); color:white; }
+    .cards { display:grid; grid-template-columns:repeat(5,minmax(120px,1fr)); gap:13px; margin:18px 0 26px; }
+    .card,.panel { background:white; border:1px solid var(--line); border-radius:14px; box-shadow:0 4px 14px #5d15300b; }
+    .card { padding:17px; }
+    .card small { color:var(--muted); display:block; }
+    .card strong { display:block; margin-top:8px; font-size:28px; color:var(--wine); }
+    .panel { padding:20px; overflow:auto; }
+    .panel h2 { margin:0 0 15px; font-size:18px; }
+    table { width:100%; border-collapse:collapse; font-size:14px; }
+    th,td { padding:11px 8px; text-align:left; border-bottom:1px solid #f0e5ea; vertical-align:top; }
+    th { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .pill { display:inline-block; padding:4px 8px; border-radius:100px; background:#f4dce6; color:#7c1743; font-size:12px; font-weight:800; }
+    .pill.low { background:#ffe4d9; color:#9a3715; }
+    .empty { color:var(--muted); padding:20px 0; }
+    .customer-form { display:grid; grid-template-columns:1.2fr 1fr auto auto; gap:10px; align-items:end; margin-bottom:22px; }
+    .customer-form label { margin:0; }
+    .check { display:flex; align-items:center; gap:7px; font-size:13px; font-weight:700; white-space:nowrap; padding-bottom:11px; }
+    .check input { width:auto; }
+    .customer-form .primary { width:auto; margin:0; white-space:nowrap; }
+    .product-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .product-form .wide { grid-column:1 / -1; }
+    textarea,select { width:100%; padding:12px 13px; border:1px solid #d9bdcb; border-radius:10px; background:white; font:inherit; }
+    textarea:focus,select:focus { outline:3px solid #ffc8dc; border-color:var(--pink); }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; margin:0 0 17px; }
+    .actions .primary { width:auto; margin:0; }
+    .photo-thumb { width:42px; height:42px; object-fit:cover; border-radius:7px; background:#f2e7eb; vertical-align:middle; }
+    .product-photos { display:flex; flex-wrap:wrap; gap:10px; margin:4px 0 8px; }
+    .product-photo { display:grid; gap:4px; justify-items:center; color:var(--muted); font-size:11px; }
+    .product-photo img { width:76px; height:76px; object-fit:cover; border-radius:9px; background:#f2e7eb; }
+    .edit { border:1px solid #d4bec9; color:var(--wine); background:white; border-radius:7px; padding:6px 8px; font-weight:800; font-size:12px; }
+    @media (max-width:820px) { .customer-form,.product-form { grid-template-columns:1fr; } .check { padding:0; } }
+    @media (max-width:820px) { .cards { grid-template-columns:repeat(2,1fr); } .account span { display:none; } }
+  </style>
+</head>
+<body>
+  <section id="loginView" class="login">
+    <form id="loginForm" class="login-card">
+      <a class="login-back" href="/">← Volver al catálogo</a>
+      <div class="brand">ITHIEL</div>
+      <p class="subtitle">Panel de administración</p>
+      <label>Email<input id="email" type="email" autocomplete="email" required></label>
+      <label>Contraseña<input id="password" type="password" autocomplete="current-password" required></label>
+      <button class="primary" type="submit">Ingresar</button>
+      <button id="googleLogin" class="google" type="button">Continuar con Google</button>
+      <p id="loginNotice" class="notice" aria-live="polite"></p>
+    </form>
+  </section>
+
+  <section id="appView" class="app hidden">
+    <header>
+      <div class="brand">ITHIEL</div>
+      <div class="account"><a class="home-link" href="/">← Ver tienda</a><span id="accountEmail"></span><button id="logout" class="outline">Salir</button></div>
+    </header>
+    <main>
+      <h1>Administración</h1>
+      <p class="lead">Control de stock, pedidos y cupones.</p>
+      <nav class="nav">
+        <button data-view="dashboard" class="active">Resumen</button>
+        <button data-view="products">Productos</button>
+        <button data-view="orders">Pedidos</button>
+        <button data-view="customers">Clientes</button>
+      </nav>
+      <div id="content" class="panel"><p class="empty">Cargando…</p></div>
+    </main>
+  </section>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    const SUPABASE_URL = "https://bfuexiblfuqwykktltrp.supabase.co";
+    const SUPABASE_ANON_KEY = "PEGAR_AQUI_LA_CLAVE_PUBLICA_DE_SUPABASE";
+    const ADMIN_API = `${SUPABASE_URL}/functions/v1/admin-api-v2`;
+    const loginView = document.querySelector("#loginView");
+    const appView = document.querySelector("#appView");
+    const notice = document.querySelector("#loginNotice");
+    const content = document.querySelector("#content");
+    let supabase;
+    let currentView = "dashboard";
+
+    function money(value) { return `$${Number(value || 0).toLocaleString("es-AR")}`; }
+    function escapeHtml(value) { return String(value ?? "").replace(/[&<>'\"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c])); }
+    function statusLabel(status) { return ({ published:"🟢 Publicado", draft:"🟡 Borrador", archived:"⚫ Archivado", pending:"🟠 Pendiente", processing:"🔵 En proceso", completed:"✅ Completado", cancelled:"🔴 Cancelado" })[status] || escapeHtml(status); }
+    function setNotice(message = "") { notice.textContent = message; }
+    function setLoading() { content.innerHTML = '<p class="empty">Cargando…</p>'; }
+
+    async function callAdmin(action, payload = {}) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Tu sesión venció. Volvé a ingresar.");
+      const response = await fetch(ADMIN_API, {
+        method: "POST",
+        headers: { "Content-Type":"application/json", apikey:SUPABASE_ANON_KEY, Authorization:`Bearer ${session.access_token}` },
+        body: JSON.stringify({ action, ...payload }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "No se pudo cargar la información.");
+      return result.data;
+    }
+
+    function renderDashboard(data) {
+      const t = data.totals;
+      content.innerHTML = `
+        <div class="cards">
+          <article class="card"><small>Productos</small><strong>${t.products}</strong></article>
+          <article class="card"><small>Stock bajo</small><strong>${t.lowStock}</strong></article>
+          <article class="card"><small>Pedidos pendientes</small><strong>${t.pendingOrders}</strong></article>
+          <article class="card"><small>En proceso</small><strong>${t.processingOrders}</strong></article>
+          <article class="card"><small>Cupones activos</small><strong>${t.activeCoupons}</strong></article>
+        </div>
+        <section class="panel"><h2>Alerta de stock bajo</h2>
+          ${data.alerts.length ? `<table><thead><tr><th>Producto</th><th>SKU</th><th>Stock</th><th>Estado</th></tr></thead><tbody>${data.alerts.map(p => `<tr><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku)}</td><td><span class="pill low">${p.stock}</span></td><td>${escapeHtml(p.status)}</td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay productos con stock bajo.</p>'}
+        </section>`;
+    }
+
+    async function renderProductForm(product = null) {
+      const options = await callAdmin("catalogOptions");
+      const categoryOptions = ['<option value="">Elegir categoría</option>', ...options.categories.map(c => `<option value="${c.id}" ${product?.category_id === c.id ? "selected" : ""}>${escapeHtml(c.name)}</option>`)].join("");
+      content.innerHTML = `<section class="panel"><div class="actions"><button id="backProducts" class="outline" type="button">← Volver a productos</button></div>
+        <h2>${product ? "Editar producto" : "Nuevo producto"}</h2>
+        <form id="productForm" class="product-form">
+          <label class="wide">Nombre<input id="productName" required maxlength="180" value="${escapeHtml(product?.name || "")}"></label>
+          <label class="wide">Descripción<textarea id="productDescription" rows="3" maxlength="1500">${escapeHtml(product?.description || "")}</textarea></label>
+          <label>Categoría<select id="productCategory" required>${categoryOptions}</select></label>
+          <label>Subcategoría<select id="productSubcategory"><option value="">Sin subcategoría</option></select></label>
+          <label>Precio minorista<input id="productRetail" type="number" min="1" required value="${product?.retail_price || ""}"></label>
+          <label>Precio mayorista<input id="productWholesale" type="number" min="1" value="${product?.wholesale_price || ""}"></label>
+          <label>Stock<input id="productStock" type="number" min="0" required value="${product?.stock ?? 30}"></label>
+          <label>Estado<select id="productStatus"><option value="published" ${product?.status === "published" ? "selected" : ""}>Publicado</option><option value="draft" ${product?.status === "draft" ? "selected" : ""}>Borrador</option><option value="archived" ${product?.status === "archived" ? "selected" : ""}>Archivado</option></select></label>
+          ${product?.product_images?.length ? `<div class="wide"><label>Fotos actuales</label><div class="product-photos">${product.product_images.map(image => `<div class="product-photo"><img src="${escapeHtml(image.image_url)}" alt=""><button class="edit" type="button" data-delete-image="${image.id}">Quitar</button></div>`).join("")}</div></div>` : ""}
+          <label class="wide">Foto (opcional, JPG/PNG/WEBP hasta 4 MB)<input id="productPhoto" type="file" accept="image/jpeg,image/png,image/webp"></label>
+          <div class="wide"><button class="primary" type="submit">${product ? "Guardar cambios" : "Crear producto"}</button></div>
+        </form><p id="productMessage" class="notice"></p>
+      </section>`;
+      const category = document.querySelector("#productCategory");
+      const subcategory = document.querySelector("#productSubcategory");
+      const fillSubcategories = () => {
+        const selected = category.value;
+        subcategory.innerHTML = '<option value="">Sin subcategoría</option>' + options.subcategories.filter(s => s.category_id === selected).map(s => `<option value="${s.id}" ${product?.subcategory_id === s.id ? "selected" : ""}>${escapeHtml(s.name)}</option>`).join("");
+      };
+      category.addEventListener("change", () => { product = { ...product, subcategory_id:"" }; fillSubcategories(); });
+      fillSubcategories();
+      document.querySelector("#backProducts").addEventListener("click", () => loadView("products"));
+      document.querySelectorAll("[data-delete-image]").forEach(button => button.addEventListener("click", async () => {
+        if (!confirm("¿Quitar esta foto del producto?")) return;
+        try {
+          await callAdmin("deleteProductImage", { imageId: button.dataset.deleteImage });
+          const products = await callAdmin("products");
+          await renderProductForm(products.find(item => item.id === product.id));
+        } catch (error) { alert(error.message); }
+      }));
+      document.querySelector("#productForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const message = document.querySelector("#productMessage"); message.style.color = "var(--muted)"; message.textContent = "Guardando…";
+        try {
+          const result = await callAdmin("saveProduct", {
+            id: product?.id || "", name: document.querySelector("#productName").value, description: document.querySelector("#productDescription").value,
+            categoryId: category.value, subcategoryId: subcategory.value, retailPrice: document.querySelector("#productRetail").value,
+            wholesalePrice: document.querySelector("#productWholesale").value, stock: document.querySelector("#productStock").value, status: document.querySelector("#productStatus").value,
+          });
+          const photo = document.querySelector("#productPhoto").files[0];
+          if (photo) {
+            const dataUrl = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(photo); });
+            await callAdmin("uploadProductImage", { productId: result.id, dataUrl });
+          }
+          message.style.color = "var(--ok)"; message.textContent = result.created ? "Producto creado." : "Producto actualizado.";
+          setTimeout(() => loadView("products"), 550);
+        } catch (error) { message.style.color = "var(--warn)"; message.textContent = error.message; }
+      });
+    }
+
+    function renderProducts(products) {
+      content.innerHTML = `<section class="panel"><div class="actions"><button id="newProduct" class="primary" type="button">+ Nuevo producto</button></div><h2>Productos (${products.length})</h2>
+        ${products.length ? `<table><thead><tr><th>Foto</th><th>Producto</th><th>SKU</th><th>Minorista</th><th>Mayorista</th><th>Stock</th><th>Estado</th><th></th></tr></thead><tbody>${products.map(p => `<tr><td>${p.product_images?.[0]?.image_url ? `<img class="photo-thumb" src="${escapeHtml(p.product_images[0].image_url)}" alt="">` : "—"}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku)}</td><td>${money(p.retail_price)}</td><td>${money(p.wholesale_price)}</td><td><span class="pill ${Number(p.stock) <= 5 ? "low" : ""}">${p.stock}</span></td><td><span class="pill">${statusLabel(p.status)}</span></td><td><button class="edit" data-edit-product="${p.id}">Editar</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">Todavía no hay productos cargados.</p>'}
+      </section>`;
+      document.querySelector("#newProduct").addEventListener("click", () => renderProductForm().catch(showProductError));
+      document.querySelectorAll("[data-edit-product]").forEach(button => button.addEventListener("click", () => renderProductForm(products.find(p => p.id === button.dataset.editProduct)).catch(showProductError)));
+    }
+
+    function showProductError(error) {
+      content.innerHTML = `<section class="panel"><h2>No se pudo abrir el editor</h2><p class="empty">${escapeHtml(error.message || "Actualizá la función admin-api y probá nuevamente.")}</p><button class="outline" id="backProductsError" type="button">← Volver a productos</button></section>`;
+      document.querySelector("#backProductsError").addEventListener("click", () => loadView("products"));
+    }
+
+    function orderActions(order) {
+      if (order.status === "pending") return `<button class="edit" data-order-status="processing" data-order-id="${order.id}">En proceso</button><button class="edit" data-order-status="cancelled" data-order-id="${order.id}">Cancelar</button>`;
+      if (order.status === "processing") return `<button class="edit" data-order-status="completed" data-order-id="${order.id}">Completar</button><button class="edit" data-order-status="cancelled" data-order-id="${order.id}">Cancelar</button>`;
+      return "—";
+    }
+
+    function renderOrders(orders) {
+      content.innerHTML = `<section class="panel"><h2>Últimos pedidos</h2>
+        ${orders.length ? `<table><thead><tr><th>N°</th><th>Cliente</th><th>Tipo</th><th>Entrega</th><th>Total</th><th>Estado</th><th>Fecha</th><th>Acción</th></tr></thead><tbody>${orders.map(o => `<tr><td>#${escapeHtml(o.order_number)}</td><td>${escapeHtml(o.customers?.full_name || "Sin registro")}<br><small>${escapeHtml(o.customers?.phone || "")}</small></td><td>${o.purchase_type === "wholesale" ? "Mayorista" : "Minorista"}</td><td>${o.fulfillment_type === "shipping" ? "Envío" : "Retiro"}</td><td>${money(o.total)}</td><td><span class="pill">${statusLabel(o.status)}</span></td><td>${new Date(o.created_at).toLocaleDateString("es-AR")}</td><td>${orderActions(o)}</td></tr>`).join("")}</tbody></table>` : '<p class="empty">Todavía no hay pedidos registrados.</p>'}
+      </section>`;
+      document.querySelectorAll("[data-order-status]").forEach(button => button.addEventListener("click", async () => {
+        const status = button.dataset.orderStatus;
+        const action = status === "completed" ? "completar" : status === "processing" ? "pasar a En proceso" : "cancelar";
+        if (!confirm(`¿Querés ${action} este pedido?`)) return;
+        try { await callAdmin("updateOrderStatus", { orderId: button.dataset.orderId, status }); await loadView("orders"); }
+        catch (error) { alert(error.message); }
+      }));
+    }
+
+    function renderCustomers(customers) {
+      content.innerHTML = `<section class="panel"><h2>Clientes</h2>
+        <form id="customerForm" class="customer-form">
+          <label>Nombre<input id="customerName" required maxlength="100" placeholder="Nombre y apellido"></label>
+          <label>WhatsApp<input id="customerPhone" required inputmode="numeric" placeholder="5493411234567"></label>
+          <label class="check"><input id="customerConsent" type="checkbox"> Acepta novedades</label>
+          <button class="primary" type="submit">Guardar cliente</button>
+        </form>
+        <div id="customerMessage" class="notice"></div>
+        ${customers.length ? `<table><thead><tr><th>Cliente</th><th>WhatsApp</th><th>Novedades</th><th>Alta</th></tr></thead><tbody>${customers.map(c => `<tr><td>${escapeHtml(c.full_name)}</td><td>+${escapeHtml(c.phone)}</td><td>${c.whatsapp_opt_in ? '<span class="pill">Sí</span>' : 'No'}</td><td>${new Date(c.created_at).toLocaleDateString("es-AR")}</td></tr>`).join("")}</tbody></table>` : '<p class="empty">Todavía no hay clientes registrados.</p>'}
+      </section>`;
+      document.querySelector("#customerForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const message = document.querySelector("#customerMessage");
+        message.textContent = "Guardando…";
+        try {
+          const result = await callAdmin("createCustomer", {
+            fullName: document.querySelector("#customerName").value,
+            phone: document.querySelector("#customerPhone").value,
+            whatsappOptIn: document.querySelector("#customerConsent").checked,
+          });
+          message.style.color = "var(--ok)";
+          message.textContent = result.created ? "Cliente registrado." : "Cliente actualizado.";
+          await loadView("customers");
+        } catch (error) {
+          message.style.color = "var(--warn)";
+          message.textContent = error.message;
+        }
+      });
+    }
+
+    async function loadView(view) {
+      currentView = view;
+      document.querySelectorAll(".nav button").forEach(button => button.classList.toggle("active", button.dataset.view === view));
+      setLoading();
+      try {
+        const data = await callAdmin(view);
+        if (view === "dashboard") renderDashboard(data);
+        if (view === "products") renderProducts(data);
+        if (view === "orders") renderOrders(data);
+        if (view === "customers") renderCustomers(data);
+      } catch (error) {
+        content.innerHTML = `<p class="empty">${escapeHtml(error.message)}</p>`;
+      }
+    }
+
+    async function showApp(session) {
+      document.querySelector("#accountEmail").textContent = session.user.email || "Cuenta administradora";
+      loginView.classList.add("hidden");
+      appView.classList.remove("hidden");
+      await loadView(currentView);
+    }
+
+    function setup() {
+      if (SUPABASE_ANON_KEY.startsWith("PEGAR_AQUI")) {
+        setNotice("Falta configurar la clave pública de Supabase.");
+        return;
+      }
+      supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      supabase.auth.getSession().then(({ data: { session } }) => { if (session) showApp(session); });
+      supabase.auth.onAuthStateChange((_event, session) => { if (session) showApp(session); });
+    }
+
+    document.querySelector("#loginForm").addEventListener("submit", async (event) => {
+      event.preventDefault(); setNotice("");
+      const email = document.querySelector("#email").value.trim();
+      const password = document.querySelector("#password").value;
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) setNotice("No se pudo ingresar. Revisá email y contraseña.");
+    });
+    document.querySelector("#googleLogin").addEventListener("click", async () => {
+      setNotice("");
+      const { error } = await supabase.auth.signInWithOAuth({ provider:"google", options:{ redirectTo:`${window.location.origin}/admin.html` } });
+      if (error) setNotice("No se pudo iniciar con Google.");
+    });
+    document.querySelector("#logout").addEventListener("click", () => supabase.auth.signOut().then(() => location.reload()));
+    document.querySelectorAll(".nav button").forEach(button => button.addEventListener("click", () => loadView(button.dataset.view)));
+    setup();
+  </script>
+</body>
+</html>
