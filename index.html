@@ -1,74 +1,376 @@
-import { createClient } from "jsr:@supabase/supabase-js@2";
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Catálogo online de Ithiel: bazar, makeup y lencería con compra minorista y mayorista.">
+  <title>Ithiel | Bazar, Makeup y Lencería</title>
+  <style>
+    :root { --rose:#b91658; --deep:#780a38; --soft:#fff7fa; --ink:#321522; --line:#f0d7e1; --green:#16804b; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; background:var(--soft); color:var(--ink); font-family:Arial,Helvetica,sans-serif; }
+    header { position:relative; padding:52px 20px 42px; color:#fff; text-align:center; background:radial-gradient(circle at 14% 0%,#ffb2cb 0,transparent 27%),linear-gradient(125deg,#5e062d,#bd1659 55%,#f26b9d); }
+    .brand { margin:0; font-size:clamp(44px,9vw,78px); font-weight:900; letter-spacing:8px; }
+    .subtitle { margin:12px 0 0; font-size:14px; letter-spacing:2px; text-transform:uppercase; }
+    .subtitle span { display:inline-flex; align-items:center; gap:5px; }
+    .header-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:27px; }
+    .header-button { display:inline-flex; align-items:center; justify-content:center; gap:8px; border:1px solid #ffffff82; border-radius:999px; padding:10px 16px; color:#fff; background:#ffffff1f; text-decoration:none; font-size:14px; font-weight:800; }
+    .header-button:hover { color:var(--deep); background:#fff; }
+    .top-access { position:absolute; top:16px; right:20px; display:flex; gap:8px; }
+    .top-access a { display:inline-flex; align-items:center; gap:6px; border:1px solid #ffffff82; border-radius:999px; padding:8px 11px; color:#fff; background:#ffffff1f; text-decoration:none; font-size:12px; font-weight:800; }
+    .top-access a:hover { color:var(--deep); background:#fff; }
+    main { width:min(1160px,calc(100% - 32px)); margin:0 auto; padding:36px 0 62px; }
+    .section { margin-top:48px; }
+    .section-title { display:flex; align-items:center; justify-content:center; gap:9px; margin:0 0 9px; font-size:28px; text-align:center; }
+    .section-copy { margin:0; color:#785865; text-align:center; line-height:1.5; }
+    .tools { display:grid; grid-template-columns:1fr auto; gap:12px; margin:27px 0 18px; }
+    .search-wrap { position:relative; }
+    .search-wrap .icon { position:absolute; top:50%; left:14px; transform:translateY(-50%); color:#9b7785; pointer-events:none; }
+    .search { width:100%; border:1px solid #e4b5c8; border-radius:12px; padding:13px 15px 13px 43px; color:var(--ink); background:#fff; font-size:16px; }
+    .cart-button { position:fixed; right:20px; bottom:20px; z-index:8; display:inline-flex; align-items:center; justify-content:center; gap:7px; min-width:150px; min-height:50px; border:0; border-radius:999px; padding:0 18px; color:#fff; background:var(--deep); box-shadow:0 12px 28px #4d082b55; cursor:pointer; font-size:15px; font-weight:800; }
+    .cart-button:hover { background:var(--rose); transform:translateY(-2px); }
+    .count { display:inline-grid; min-width:21px; height:21px; place-items:center; margin-left:5px; border-radius:50%; color:var(--deep); background:#fff; font-size:12px; }
+    .filters { display:flex; flex-wrap:wrap; justify-content:center; gap:9px; margin:0 0 29px; }
+    .filter { display:inline-flex; align-items:center; gap:7px; border:1px solid #e7b7c9; border-radius:999px; padding:10px 16px; color:var(--deep); background:#fff; cursor:pointer; font-weight:800; }
+    .filter:hover,.filter.active { border-color:var(--rose); color:#fff; background:var(--rose); }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:20px; }
+    .card { overflow:hidden; border:1px solid var(--line); border-radius:18px; background:#fff; box-shadow:0 8px 24px #7f23401a; }
+    .photo { position:relative; aspect-ratio:1/1; background:#f9e5ed; }
+    .photo img { display:block; width:100%; height:100%; object-fit:cover; }
+    .image-view { width:100%; height:100%; padding:0; border:0; background:transparent; cursor:zoom-in; }
+    .placeholder { display:grid; height:100%; place-items:center; color:#fff; background:linear-gradient(135deg,#f385ab,#8b1042); font-size:30px; font-weight:900; letter-spacing:4px; }
+    .availability { position:absolute; top:12px; right:12px; border-radius:999px; padding:6px 10px; color:#fff; background:var(--green); font-size:12px; font-weight:700; }
+    .availability.out { background:#a25119; }
+    .content { padding:18px; }
+    .tag { display:flex; align-items:center; gap:5px; margin:0 0 7px; color:var(--rose); font-size:12px; font-weight:800; letter-spacing:1px; text-transform:uppercase; }
+    .tag .icon { width:14px; height:14px; flex-basis:14px; }
+    h3 { margin:0; font-size:19px; line-height:1.2; }
+    .description { margin:10px 0; color:#765763; font-size:14px; line-height:1.4; }
+    .price { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:18px 0 14px; }
+    .price-major { display:grid; color:var(--deep); font-size:22px; font-weight:900; }
+    .price-major small { margin-top:3px; color:var(--rose); font-size:10px; letter-spacing:.8px; text-transform:uppercase; }
+    .price-minor { display:grid; color:#9b7785; font-size:14px; font-weight:800; text-align:right; }
+    .price-minor small { margin-bottom:3px; font-size:10px; letter-spacing:.8px; text-transform:uppercase; }
+    .options { display:grid; gap:8px; margin:12px 0 0; }
+    .option-label { color:#765763; font-size:12px; font-weight:800; }
+    .option-list { display:flex; flex-wrap:wrap; gap:6px; }
+    .option { border:1px solid #e4b5c8; border-radius:999px; padding:7px 10px; color:var(--deep); background:#fff; cursor:pointer; font-size:12px; font-weight:800; }
+    .option.active { border-color:var(--rose); color:#fff; background:var(--rose); }
+    .card-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .button { display:block; border:0; border-radius:10px; padding:12px 9px; color:#fff; background:var(--rose); cursor:pointer; text-align:center; font-size:13px; font-weight:800; text-decoration:none; }
+    .button:hover { background:var(--deep); }
+    .button.secondary { color:var(--deep); border:1px solid #e4b5c8; background:#fff; }
+    .button.secondary:hover { color:#fff; background:var(--deep); }
+    .notice { padding:36px; color:#785865; text-align:center; }
+    .info-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:25px; }
+    .info-card { border:1px solid var(--line); border-radius:16px; padding:21px; background:#fff; }
+    .info-card h3 { color:var(--deep); }
+    .info-card h3 { display:flex; align-items:center; gap:7px; }
+    .info-card p,.info-card li { color:#765763; font-size:14px; line-height:1.5; }
+    .info-card ul { margin:10px 0 0; padding-left:19px; }
+    .modal { position:fixed; inset:0; z-index:10; display:none; align-items:flex-end; justify-content:center; padding:18px; background:#32152270; }
+    .modal.open { display:flex; }
+    #image-modal { align-items:center; }
+    .viewer { position:relative; width:min(760px,100%); max-height:90vh; border-radius:18px; padding:12px; background:#fff; }
+    .viewer img { display:block; width:100%; max-height:82vh; object-fit:contain; }
+    .viewer .close { position:absolute; top:20px; right:20px; }
+    .cart { width:min(560px,100%); max-height:80vh; overflow:auto; border-radius:20px; padding:22px; background:#fff; box-shadow:0 20px 60px #3215224d; }
+    .cart-head { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .cart-head h2 { margin:0; }
+    .close { border:0; border-radius:9px; padding:9px 12px; color:var(--deep); background:#f8e4ec; cursor:pointer; font-weight:800; }
+    .cart-row { display:grid; grid-template-columns:1fr auto auto; align-items:center; gap:9px; border-top:1px solid var(--line); padding:13px 0; }
+    .cart-row p { margin:3px 0 0; color:#765763; font-size:13px; }
+    .quantity { display:flex; align-items:center; gap:7px; }
+    .quantity button { width:27px; height:27px; border:1px solid #e4b5c8; border-radius:7px; color:var(--deep); background:#fff; cursor:pointer; font-size:17px; font-weight:800; }
+    .remove { border:0; color:#9b2252; background:transparent; cursor:pointer; font-weight:800; }
+    .cart-total { display:grid; gap:5px; margin:18px 0; color:var(--deep); font-size:20px; font-weight:900; text-align:right; }
+    .cart-total small { color:#765763; font-size:12px; font-weight:700; }
+    .purchase-switch { display:grid; grid-template-columns:1fr 1fr; overflow:hidden; margin:17px 0 10px; border:1px solid #e4b5c8; border-radius:10px; }
+    .purchase-switch button { border:0; padding:11px 8px; color:var(--deep); background:#fff; cursor:pointer; font-weight:800; }
+    .purchase-switch button.active { color:#fff; background:var(--rose); }
+    .cart-notice { margin:10px 0; padding:10px; border-radius:10px; color:#765763; background:#fff1d7; font-size:13px; line-height:1.4; }
+    .coupon-row { display:grid; grid-template-columns:1fr auto; gap:8px; margin:12px 0; }
+    .coupon-row input,.checkout-field input,.checkout-field textarea { width:100%; border:1px solid #e4b5c8; border-radius:9px; padding:10px; color:var(--ink); background:#fff; }
+    .checkout-field { display:grid; gap:5px; margin:10px 0; color:#765763; font-size:13px; font-weight:800; }
+    .delivery-options { display:flex; flex-wrap:wrap; gap:12px; margin:13px 0; color:#765763; font-size:14px; }
+    .optin { display:flex; gap:8px; margin:13px 0; color:#765763; font-size:13px; line-height:1.35; }
+    .register-order { display:flex; gap:8px; margin:16px 0 6px; color:var(--deep); font-size:13px; font-weight:800; }
+    .checkout-details[hidden] { display:none; }
+    .checkout-field[hidden] { display:none; }
+    footer .world { display:inline-flex; width:17px; height:17px; vertical-align:-3px; margin:0 5px; color:var(--rose); }
+    .empty-cart { padding:26px 0; color:#785865; text-align:center; }
+    footer { padding:32px 20px; color:#765763; text-align:center; font-size:14px; }
+    .icon { width:19px; height:19px; flex:0 0 19px; fill:none; stroke:currentColor; stroke-width:2.25; stroke-linecap:round; stroke-linejoin:round; }
+    .subtitle .icon { width:17px; height:17px; flex-basis:17px; stroke-width:2.35; }
+    .section-title .icon { width:21px; height:21px; flex-basis:21px; color:var(--rose); }
+    .top-access .icon { width:16px; height:16px; flex-basis:16px; }
+    .header-button .icon { width:19px; height:19px; }
+    .social-icon { fill:currentColor; stroke:none; }
+    button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible { outline:3px solid #ffc1d8; outline-offset:3px; }
+    @media (max-width:700px) { header { padding-top:112px; } .top-access { top:13px; right:13px; left:13px; justify-content:flex-end; flex-wrap:wrap; } .tools { grid-template-columns:1fr; } .cart-button { right:13px; bottom:13px; min-height:47px; } .info-grid { grid-template-columns:1fr; } .card-actions { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="top-access" aria-label="Acceso">
+      <a href="/registro.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 21c.8-4 3.1-6 7-6s6.2 2 7 6"></path><path d="M19 8v6m-3-3h6"></path></svg>Registrarse</a>
+      <a href="/cuenta.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="9" r="2.6"></circle><path d="M7.5 18c.7-2.7 2.2-4 4.5-4s3.8 1.3 4.5 4"></path></svg>Mi cuenta</a>
+      <a href="/admin.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>Admin</a>
+    </nav>
+    <p class="brand">ITHIEL</p>
+    <p class="subtitle"><span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16l-1.4 10H5.4L4 9Z"></path><path d="m8 9 4-5 4 5M8 13h8"></path></svg>Bazar</span> · <span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3Z"></path><path d="m19 15 .7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7L19 15Z"></path></svg>Makeup</span> · <span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"></path></svg>Lencería</span></p>
+    <div class="header-actions">
+      <a class="header-button" href="#catalogo"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect></svg>Ver catálogo</a>
+      <a class="header-button" href="#como-comprar"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"></path><path d="M8 9h8M8 13h5"></path></svg>Cómo comprar</a>
+      <a class="header-button" href="https://wa.me/5493413038668" target="_blank" rel="noopener"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a8 8 0 0 1-11.7 7.1L4 20l1.4-4.1A8 8 0 1 1 20 11.5Z"></path><path d="M9 8.5c.2 2 1.7 3.7 3.8 4.2l1.1-1.1 1.7.7c-.6 1.4-1.8 2-3.2 1.4-3.2-1.3-5-3.6-5.4-5.5-.2-1 .5-2 1.5-2.2l.7 1.8Z"></path></svg>WhatsApp</a>
+      <a class="header-button" href="#redes"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="2"></circle><circle cx="18" cy="6" r="2"></circle><circle cx="18" cy="18" r="2"></circle><path d="m8 11 8-4M8 13l8 4"></path></svg>Redes</a>
+    </div>
+  </header>
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://ithielbazar-makeup.netlify.app",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey",
-};
+  <main>
+    <section>
+      <h1 class="section-title"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v9l5 3"></path><circle cx="12" cy="12" r="9"></circle></svg>Últimos ingresados</h1>
+      <p class="section-copy">Novedades recién incorporadas al catálogo.</p>
+      <section id="latest" class="grid"><p class="notice">Cargando novedades...</p></section>
+    </section>
 
-function readServiceKey() {
-  try {
-    const keys = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}");
-    if (typeof keys?.default === "string" && keys.default) return keys.default;
-  } catch (_) {
-    // Se usa la variable clásica si el proyecto no tiene el paquete de secretos.
-  }
-  return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-}
+    <section id="catalogo" class="section">
+      <h2 class="section-title"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect></svg>Catálogo</h2>
+      <p class="section-copy">Buscá, filtrá y armá tu pedido.</p>
+      <div class="tools">
+        <div class="search-wrap"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="5"></circle><path d="m14 14 6 6"></path></svg><input id="search" class="search" type="search" placeholder="Buscar un producto..." autocomplete="off"></div>
+        <button id="open-cart" class="cart-button" type="button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8Z"></path><path d="M9 8a3 3 0 0 1 6 0"></path></svg>Mi pedido <span id="count" class="count">0</span></button>
+      </div>
+      <nav id="filters" class="filters" aria-label="Filtrar productos"></nav>
+      <section id="products" class="grid"><p class="notice">Cargando productos...</p></section>
+    </section>
 
-const supabase = createClient(
-  Deno.env.get("SUPABASE_URL") ?? "",
-  readServiceKey(),
-  { auth: { autoRefreshToken: false, persistSession: false } },
-);
+    <section id="como-comprar" class="section">
+      <h2 class="section-title"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"></path><path d="M8 9h8M8 13h5"></path></svg>Cómo comprar</h2>
+      <p class="section-copy"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8Z"></path><path d="M9 8a3 3 0 0 1 6 0"></path></svg>Te acompañamos para que armes tu pedido de forma simple.</p>
+      <div class="info-grid">
+        <article class="info-card">
+          <h3><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8Z"></path><path d="M9 8a3 3 0 0 1 6 0"></path></svg>Compra minorista</h3>
+          <p>Si tu compra no cumple los requisitos mayoristas, se aplica el precio minorista. Agregá productos al pedido y consultanos por WhatsApp.</p>
+        </article>
+        <article class="info-card">
+          <h3><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8 12 4l8 4-8 4-8-4Z"></path><path d="M4 8v9l8 4 8-4V8M12 12v9"></path></svg>Compra mayorista</h3>
+          <ul>
+            <li>Primera compra: mínimo $30.000 o 15 artículos.</li>
+            <li>Compras siguientes: mínimo $10.000 o 10 artículos.</li>
+            <li>La condición mayorista tiene vigencia de 30 días.</li>
+            <li>Luego de 30 días sin comprar, vuelve a aplicar la compra inicial.</li>
+          </ul>
+        </article>
+        <article class="info-card">
+          <h3><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Atención y envíos</h3>
+          <p>Lunes a viernes: 9:00 a 18:00 hs.<br>Sábados: 9:00 a 13:00 hs.</p>
+          <p>Confirmamos stock, colores/talles, envío y medio de pago antes de preparar tu pedido.</p>
+        </article>
+      </div>
+    </section>
+    <section id="redes" class="section">
+      <h2 class="section-title"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="2"></circle><circle cx="18" cy="6" r="2"></circle><circle cx="18" cy="18" r="2"></circle><path d="m8 11 8-4M8 13l8 4"></path></svg>Redes</h2>
+      <div class="header-actions">
+        <a class="header-button" style="color:var(--deep);border-color:#e4b5c8;background:#fff" href="https://www.instagram.com/ithiel.bazar.makeup/" target="_blank" rel="noopener"><svg class="icon social-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5Zm5 5.5A4.5 4.5 0 1 0 12 16.5 4.5 4.5 0 0 0 12 7.5Zm6-1.2a1.05 1.05 0 1 0 0 2.1 1.05 1.05 0 0 0 0-2.1Z"></path></svg>Instagram</a>
+        <a class="header-button" style="color:var(--deep);border-color:#e4b5c8;background:#fff" href="https://www.facebook.com/ithielbazarmakeup" target="_blank" rel="noopener"><svg class="icon social-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.7 22v-8h2.7l.4-3h-3.1V9.1c0-.9.3-1.5 1.6-1.5H17V4.9c-.3 0-1.3-.1-2.4-.1-2.4 0-4 1.4-4 4.1V11H8v3h2.6v8h3.1Z"></path></svg>Facebook</a>
+        <a class="header-button" style="color:var(--deep);border-color:#e4b5c8;background:#fff" href="https://wa.me/5493413038668" target="_blank" rel="noopener"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a8 8 0 0 1-11.7 7.1L4 20l1.4-4.1A8 8 0 1 1 20 11.5Z"></path><path d="M9 8.5c.2 2 1.7 3.7 3.8 4.2l1.1-1.1 1.7.7c-.6 1.4-1.8 2-3.2 1.4-3.2-1.3-5-3.6-5.4-5.5-.2-1 .5-2 1.5-2.2l.7 1.8Z"></path></svg>Catálogo por WhatsApp</a>
+      </div>
+    </section>
+  </main>
 
-function json(body: unknown, status = 200) {
-  return Response.json(body, { status, headers: corsHeaders });
-}
+  <div id="modal" class="modal" aria-hidden="true">
+    <section class="cart" role="dialog" aria-modal="true" aria-label="Mi pedido">
+      <div class="cart-head"><h2>Mi pedido</h2><button id="close-cart" class="close" type="button">Cerrar</button></div>
+      <div id="cart-items"></div>
+      <div class="purchase-switch"><button type="button" data-purchase="retail" class="active">Compra minorista</button><button type="button" data-purchase="wholesale">Compra mayorista</button></div>
+      <p id="cart-notice" class="cart-notice">Elegí compra mayorista para revisar si aplican esos precios.</p>
+      <div class="coupon-row"><input id="coupon" placeholder="Cupón de descuento"><button id="apply-coupon" class="button secondary" type="button">Aplicar</button></div>
+      <p id="cart-total" class="cart-total"></p>
+      <label class="register-order"><input id="register-order" type="checkbox"> Quiero registrar mi pedido y recibir seguimiento.</label>
+      <div id="checkout-details" class="checkout-details" hidden>
+        <div class="checkout-field"><label for="full-name">Nombre y apellido</label><input id="full-name" autocomplete="name"></div>
+        <div class="checkout-field"><label for="phone">WhatsApp con código de país</label><input id="phone" inputmode="tel" placeholder="5493411234567"></div>
+        <div class="delivery-options"><label><input name="delivery" value="pickup" type="radio" checked> Retiro en el local</label><label><input name="delivery" value="shipping" type="radio"> Envío</label></div>
+        <div id="address-field" class="checkout-field" hidden><label for="address">Dirección de envío</label><textarea id="address" rows="2"></textarea></div>
+        <div class="checkout-field"><label for="note">Nota (opcional)</label><textarea id="note" rows="2"></textarea></div>
+        <label class="optin"><input id="optin" type="checkbox"> Quiero recibir novedades y ofertas por WhatsApp.</label>
+      </div>
+      <button id="send-order" class="button" type="button">Continuar por WhatsApp</button>
+    </section>
+  </div>
 
-Deno.serve(async (request) => {
-  if (request.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (request.method !== "POST") return json({ error: "Método no permitido." }, 405);
+  <div id="image-modal" class="modal" aria-hidden="true">
+    <section class="viewer" role="dialog" aria-modal="true" aria-label="Imagen ampliada">
+      <button id="close-image" class="close" type="button">Cerrar</button>
+      <img id="large-image" alt="Imagen del producto">
+    </section>
+  </div>
 
-  try {
-    const body = await request.json();
-    const phone = String(body.phone ?? "").replace(/\D/g, "");
-    const fullName = String(body.fullName ?? "").trim().slice(0, 100);
-    const whatsappOptIn = body.whatsappOptIn === true;
+  <footer><span class="world" aria-label="Sitio web"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c3 3.4 3 14.6 0 18M12 3c-3 3.4-3 14.6 0 18"></path></svg></span>ITHIEL Bazar y Makeup · Derechos reservados 2015 - 2026 <span class="world" aria-label="Rosario, Santa Fe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg></span>Rosario, Santa Fe</footer>
 
-    if (!/^[0-9]{10,15}$/.test(phone)) {
-      return json({ error: "Ingresá tu WhatsApp con código de país. Ejemplo: 5493411234567." }, 400);
+  <script>
+    const API = "https://bfuexiblfuqwykktltrp.supabase.co/functions/v1/";
+    const CATALOG_URL = `${API}web-catalog`;
+    const QUOTE_URL = `${API}checkout-quote`;
+    const ORDER_URL = `${API}create-order`;
+    const WHATSAPP = "5493413038668";
+    const productsContainer = document.getElementById("products");
+    const latestContainer = document.getElementById("latest");
+    const filters = document.getElementById("filters");
+    const search = document.getElementById("search");
+    const modal = document.getElementById("modal");
+    const imageModal = document.getElementById("image-modal");
+    const largeImage = document.getElementById("large-image");
+    const cartItems = document.getElementById("cart-items");
+    const cartTotal = document.getElementById("cart-total");
+    const sendOrder = document.getElementById("send-order");
+    const count = document.getElementById("count");
+    let allProducts = [];
+    let selectedCategory = "Todos";
+    let cart = JSON.parse(localStorage.getItem("ithiel-cart") || "[]");
+    let selections = {};
+    let purchaseType = "retail";
+    let couponCode = "";
+    let quote = null;
+
+    function escapeHtml(value) { return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
+    function money(value) { return `$${Number(value || 0).toLocaleString("es-AR")}`; }
+    function priceNumber(value) { return Number(value || 0); }
+    function parseCsv(text) {
+      const rows=[]; let row=[]; let cell=""; let quoted=false;
+      for(let i=0;i<text.length;i+=1){ const char=text[i], next=text[i+1]; if(char==='"'&&quoted&&next==='"'){cell+='"';i+=1;} else if(char==='"'){quoted=!quoted;} else if(char===','&&!quoted){row.push(cell);cell="";} else if((char==='\n'||char==='\r')&&!quoted){if(char==='\r'&&next==='\n')i+=1;row.push(cell);rows.push(row);row=[];cell="";} else cell+=char; }
+      if(cell||row.length){row.push(cell);rows.push(row);} const headers=rows.shift()||[];
+      return rows.filter((item)=>item.length===headers.length).map((item)=>Object.fromEntries(headers.map((header,index)=>[header,item[index]||""])));
     }
-
-    const { data: existing, error: searchError } = await supabase
-      .from("customers")
-      .select("id,full_name,whatsapp_opt_in,whatsapp_opted_in_at")
-      .eq("phone", phone)
-      .maybeSingle();
-    if (searchError) throw searchError;
-
-    if (existing) {
-      const { error } = await supabase.from("customers").update({
-        full_name: fullName || existing.full_name,
-        whatsapp_opt_in: Boolean(existing.whatsapp_opt_in) || whatsappOptIn,
-        whatsapp_opted_in_at: existing.whatsapp_opted_in_at ?? (whatsappOptIn ? new Date().toISOString() : null),
-        updated_at: new Date().toISOString(),
-      }).eq("id", existing.id);
-      if (error) throw error;
-      return json({ ok: true, message: "Tus datos ya estaban registrados y quedaron actualizados." });
+    function category(product) { return product.category || "Otros"; }
+    function subcategory(product) { return product.subcategory || ""; }
+    function categoryIcon(name) {
+      const icons = {
+        "Todos": '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect></svg>',
+        "Bazar": '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16l-1.4 10H5.4L4 9Z"></path><path d="m8 9 4-5 4 5M8 13h8"></path></svg>',
+        "Makeup": '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3Z"></path></svg>',
+        "Lencería": '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"></path></svg>'
+      };
+      return icons[name] || '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8 12 4l8 4-8 4-8-4Z"></path><path d="M4 8v9l8 4 8-4V8"></path></svg>';
     }
-
-    const { error } = await supabase.from("customers").insert({
-      full_name: fullName || "Cliente web",
-      phone,
-      whatsapp_opt_in: whatsappOptIn,
-      whatsapp_opted_in_at: whatsappOptIn ? new Date().toISOString() : null,
+    function productOptions(product, key) {
+      return [...new Set((product.variants || []).map((variant) => variant[key]).filter(Boolean))];
+    }
+    function selectedVariant(product) {
+      const selected = selections[product.id] || {};
+      return (product.variants || []).find((variant) =>
+        (!productOptions(product, "color").length || variant.color === selected.color) &&
+        (!productOptions(product, "size").length || variant.size === selected.size)
+      );
+    }
+    function optionButtons(product, key, label) {
+      const options = productOptions(product, key);
+      if (!options.length) return "";
+      const selected = selections[product.id]?.[key] || "";
+      return `<div class="options"><span class="option-label">${label}</span><div class="option-list">${options.map((value) => `<button class="option ${selected === value ? "active" : ""}" type="button" onclick="selectOption('${product.id}','${key}','${escapeHtml(value)}')">${escapeHtml(value)}</button>`).join("")}</div></div>`;
+    }
+    window.selectOption = (id, key, value) => { selections[id] = { ...(selections[id] || {}), [key]: value }; renderCatalog(); };
+    function addToCart(id) {
+      const product=allProducts.find((item)=>item.id===id); if(!product) return;
+      const colors = productOptions(product, "color");
+      const sizes = productOptions(product, "size");
+      const chosen = selections[id] || {};
+      if ((colors.length && !chosen.color) || (sizes.length && !chosen.size)) { alert("Elegí color y talle antes de agregar."); return; }
+      const variant = selectedVariant(product);
+      if ((colors.length || sizes.length) && !variant) { alert("Esa combinación no está disponible."); return; }
+      const itemId = `${product.id}|${chosen.color || ""}|${chosen.size || ""}`;
+      const details = [chosen.color, chosen.size].filter(Boolean).join(" · ");
+      const current=cart.find((item)=>item.id===itemId);
+      const retailPrice = variant?.retail_price ?? product.price;
+      const wholesalePrice = variant?.wholesale_price ?? product.wholesalePrice ?? retailPrice;
+      if(current) current.quantity+=1; else cart.push({id:itemId,productId:product.id,title:product.title,details,retailPrice,wholesalePrice,quantity:1});
+      saveCart();
+    }
+    function updatePurchaseButtons() { document.querySelectorAll("[data-purchase]").forEach((button)=>button.classList.toggle("active",button.dataset.purchase===purchaseType)); }
+    function autoWholesale() {
+      const retailTotal=cart.reduce((sum,item)=>sum+priceNumber(item.retailPrice ?? item.price)*item.quantity,0);
+      const itemCount=cart.reduce((sum,item)=>sum+item.quantity,0);
+      if(retailTotal>=30000 || itemCount>=15) {
+        purchaseType="wholesale";
+        document.getElementById("cart-notice").textContent="Se aplicaron precios mayoristas automáticamente.";
+      } else {
+        purchaseType="retail";
+        const missingAmount=Math.max(0,30000-retailTotal), missingItems=Math.max(0,15-itemCount);
+        document.getElementById("cart-notice").textContent=`Te faltan ${money(missingAmount)} o ${missingItems} artículo${missingItems===1?"":"s"} para acceder a compra mayorista.`;
+      }
+      updatePurchaseButtons();
+    }
+    function saveCart() { autoWholesale(); localStorage.setItem("ithiel-cart",JSON.stringify(cart)); updateCart(); if(document.getElementById("phone").value.replace(/\D/g,"").length>=10) quoteCart(); }
+    function updateCart() {
+      const totalItems=cart.reduce((total,item)=>total+item.quantity,0); count.textContent=totalItems;
+      if(!cart.length){ cartItems.innerHTML='<p class="empty-cart">Todavía no agregaste productos.</p>'; cartTotal.textContent=""; sendOrder.style.display="none"; return; }
+      cart=cart.map((item)=>({ ...item, productId:item.productId || item.id.split("|")[0], retailPrice:item.retailPrice ?? item.price, wholesalePrice:item.wholesalePrice ?? item.price }));
+      cartItems.innerHTML=cart.map((item)=>{const unit=purchaseType==="wholesale"?item.wholesalePrice:item.retailPrice;return `<div class="cart-row"><div><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.details || "")} ${item.details ? "·" : ""} ${money(unit)} c/u</p></div><div class="quantity"><button type="button" onclick="changeQty('${escapeHtml(item.id)}',-1)">−</button><strong>${item.quantity}</strong><button type="button" onclick="changeQty('${escapeHtml(item.id)}',1)">+</button></div><button class="remove" type="button" onclick="removeItem('${escapeHtml(item.id)}')">Quitar</button></div>`}).join("");
+      const fallback=cart.reduce((sum,item)=>sum+(purchaseType==="wholesale"?priceNumber(item.wholesalePrice):priceNumber(item.retailPrice))*item.quantity,0);
+      const delivery=document.querySelector('input[name="delivery"]:checked')?.value === "shipping" ? "Envío: a coordinar" : "Retiro en el local";
+      const mode=purchaseType === "wholesale" ? "Precios mayoristas aplicados" : "Precios minoristas aplicados";
+      const total=quote ? quote.total : fallback;
+      const discount=quote?.discountAmount ? `<small>Descuento: −${money(quote.discountAmount)}</small>` : "";
+      cartTotal.innerHTML=`<span>Total: ${money(total)}</span>${discount}<small>${mode} · ${delivery}</small>`;
+      sendOrder.style.display="block";
+    }
+    window.changeQty=(id,delta)=>{const item=cart.find((product)=>product.id===id);if(!item)return;item.quantity+=delta;if(item.quantity<=0)cart=cart.filter((product)=>product.id!==id);saveCart();};
+    window.removeItem=(id)=>{cart=cart.filter((product)=>product.id!==id);saveCart();};
+    async function quoteCart() {
+      const phone=document.getElementById("phone").value.replace(/\D/g,"");
+      if(!cart.length || phone.length<10){quote=null; updateCart(); return;}
+      try { const response=await fetch(QUOTE_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone,purchaseType:"wholesale",couponCode,items:cart.map((item)=>({productId:item.productId,quantity:item.quantity}))})}); const data=await response.json(); if(!response.ok)throw new Error(data.error); quote=data; purchaseType=data.purchaseType; updatePurchaseButtons(); document.getElementById("cart-notice").textContent=data.wholesale.message; updateCart(); }
+      catch(error){ quote=null; document.getElementById("cart-notice").textContent=error.message; updateCart(); }
+    }
+    function card(product) {
+      const chosenVariant = selectedVariant(product);
+      const imageSource = chosenVariant?.image_url || product.image;
+      const available=Number(product.stock) > 0; const image=imageSource?`<button class="image-view" type="button" data-image="${encodeURIComponent(imageSource)}" data-title="${encodeURIComponent(product.title)}"><img src="${escapeHtml(imageSource)}" alt="${escapeHtml(product.title)}" loading="lazy"></button>`:'<div class="placeholder">ITHIEL</div>';
+      const tag=[category(product),subcategory(product)].filter(Boolean).join(" · ");
+      const wholesale = product.wholesalePrice ?? product.price;
+      return `<article class="card"><div class="photo">${image}<span class="availability ${available?"":"out"}">${available?"Disponible":"Consultar"}</span></div><div class="content"><p class="tag">${categoryIcon(category(product))}<span>${escapeHtml(tag)}</span></p><h3>${escapeHtml(product.title)}</h3>${product.description ? `<p class="description">${escapeHtml(product.description)}</p>` : ""}${optionButtons(product,"color","Color")}${optionButtons(product,"size","Talle")}<p class="price"><span class="price-major">${money(wholesale)}<small>Precio mayorista</small></span><span class="price-minor"><small>Precio minorista</small>${money(product.price)}</span></p><div class="card-actions"><button class="button secondary" type="button" onclick="addToCart('${escapeHtml(product.id)}')">Agregar</button><button class="button" type="button" onclick="consultProduct('${escapeHtml(product.id)}')">Consultar</button></div></div></article>`;
+    }
+    window.addToCart=addToCart;
+    window.viewImage=(src,title)=>{largeImage.src=src;largeImage.alt=title;imageModal.classList.add("open");imageModal.setAttribute("aria-hidden","false");};
+    document.addEventListener("click",(event)=>{const button=event.target.closest(".image-view");if(!button)return;window.viewImage(decodeURIComponent(button.dataset.image),decodeURIComponent(button.dataset.title));});
+    window.consultProduct=(id)=>{const product=allProducts.find((item)=>item.id===id);if(!product)return;const chosen=selections[id]||{};const details=[chosen.color,chosen.size].filter(Boolean).join(" · ");window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Hola! Quiero consultar por: ${product.title}${details ? ` (${details})` : ""} (${product.sku}).`)}`,"_blank");};
+    function renderFilters() {
+      const preferred=["Bazar","Makeup","Lencería"]; const present=new Set(allProducts.map(category));
+      filters.innerHTML=["Todos",...preferred.filter((item)=>present.has(item)),...Array.from(present).filter((item)=>!preferred.includes(item)&&item!=="Otros"),...(present.has("Otros")?["Otros"]:[])].map((item)=>`<button class="filter ${item===selectedCategory?"active":""}" type="button" data-category="${escapeHtml(item)}">${categoryIcon(item)}<span>${escapeHtml(item)}</span></button>`).join("");
+      filters.querySelectorAll(".filter").forEach((button)=>button.addEventListener("click",()=>{selectedCategory=button.dataset.category;renderFilters();renderCatalog();}));
+    }
+    function renderCatalog() {
+      const term=search.value.trim().toLocaleLowerCase("es");
+      const visible=allProducts.filter((product)=>{const text=`${product.title} ${product.description} ${category(product)} ${subcategory(product)}`.toLocaleLowerCase("es"); return (selectedCategory==="Todos"||category(product)===selectedCategory)&&text.includes(term);});
+      productsContainer.innerHTML=visible.length?visible.map(card).join(""):'<p class="notice">No encontramos productos con esa búsqueda.</p>';
+    }
+    async function loadProducts() {
+      try { const response=await fetch(CATALOG_URL,{cache:"no-store"}); if(!response.ok)throw new Error(); const payload=await response.json(); allProducts=payload.products || []; latestContainer.innerHTML=allProducts.length?allProducts.slice(0,8).map(card).join(""):'<p class="notice">Próximamente vas a encontrar novedades acá.</p>'; renderFilters(); renderCatalog(); }
+      catch { latestContainer.innerHTML='<p class="notice">No se pudieron cargar las novedades.</p>'; productsContainer.innerHTML='<p class="notice">No se pudo cargar el catálogo. Probá nuevamente en unos minutos.</p>'; }
+    }
+    search.addEventListener("input",renderCatalog);
+    document.getElementById("open-cart").addEventListener("click",()=>{modal.classList.add("open");modal.setAttribute("aria-hidden","false");});
+    document.getElementById("close-cart").addEventListener("click",()=>{modal.classList.remove("open");modal.setAttribute("aria-hidden","true");});
+    modal.addEventListener("click",(event)=>{if(event.target===modal){modal.classList.remove("open");modal.setAttribute("aria-hidden","true");}});
+    document.getElementById("close-image").addEventListener("click",()=>{imageModal.classList.remove("open");imageModal.setAttribute("aria-hidden","true");});
+    imageModal.addEventListener("click",(event)=>{if(event.target===imageModal){imageModal.classList.remove("open");imageModal.setAttribute("aria-hidden","true");}});
+    document.querySelectorAll("[data-purchase]").forEach((button)=>button.addEventListener("click",()=>{purchaseType=button.dataset.purchase;quote=null;updatePurchaseButtons();quoteCart();}));
+    document.getElementById("register-order").addEventListener("change",(event)=>{document.getElementById("checkout-details").hidden=!event.target.checked; if(!event.target.checked){quote=null;document.getElementById("cart-notice").textContent="Podés enviar tu consulta directa por WhatsApp, sin registrarte.";updateCart();}});
+    document.getElementById("phone").addEventListener("change",quoteCart);
+    document.getElementById("apply-coupon").addEventListener("click",()=>{couponCode=document.getElementById("coupon").value.trim();quoteCart();});
+    document.querySelectorAll('input[name="delivery"]').forEach((input)=>input.addEventListener("change",()=>{document.getElementById("address-field").hidden=document.querySelector('input[name="delivery"]:checked').value!=="shipping";updateCart();}));
+    sendOrder.addEventListener("click",async()=>{
+      const registering=document.getElementById("register-order").checked, fullName=document.getElementById("full-name").value.trim(), phone=document.getElementById("phone").value.replace(/\D/g,""), fulfillmentType=document.querySelector('input[name="delivery"]:checked').value, shippingAddress=document.getElementById("address").value.trim();
+      if(!cart.length)return alert("Tu carrito está vacío.");
+      if(!registering){const lines=cart.map((item)=>`• ${item.quantity} x ${item.title}${item.details ? ` (${item.details})` : ""}`).join("\n");window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Hola! Quiero consultar/realizar este pedido:\n\n${lines}\n\nTipo de compra: ${purchaseType === "wholesale" ? "Mayorista" : "Minorista"}.\n\nQuedo atento/a a la confirmación.`)}`,"_blank");return;}
+      if(!fullName||phone.length<10)return alert("Completá nombre y WhatsApp."); if(fulfillmentType==="shipping"&&!shippingAddress)return alert("Ingresá la dirección de envío.");
+      sendOrder.disabled=true;sendOrder.textContent="Creando pedido...";
+      try { const response=await fetch(ORDER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({fullName,phone,purchaseType,couponCode,items:cart.map((item)=>({productId:item.productId,quantity:item.quantity})),fulfillmentType,shippingAddress,customerNote:document.getElementById("note").value.trim(),whatsappOptIn:document.getElementById("optin").checked})}); const data=await response.json();if(!response.ok)throw new Error(data.error);cart=[];saveCart();window.location.href=data.whatsappUrl; }
+      catch(error){alert(error.message||"No se pudo crear el pedido.");} finally {sendOrder.disabled=false;sendOrder.textContent="Continuar por WhatsApp";}
     });
-    if (error) throw error;
-
-    return json({ ok: true, message: "¡Listo! Quedaste registrada." }, 201);
-  } catch (error) {
-    console.error(error);
-    return json({ error: "No pudimos registrar tus datos. Probá nuevamente." }, 500);
-  }
-});
+    autoWholesale(); updateCart(); loadProducts();
+  </script>
+</body>
+</html>
