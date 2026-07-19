@@ -65,6 +65,7 @@
     textarea:focus,select:focus { outline:3px solid #ffc8dc; border-color:var(--pink); }
     .actions { display:flex; gap:10px; flex-wrap:wrap; margin:0 0 17px; }
     .actions .primary { width:auto; margin:0; }
+    .product-search { max-width:500px; margin:0 0 16px; }
     .photo-thumb { width:42px; height:42px; object-fit:cover; border-radius:7px; background:#f2e7eb; vertical-align:middle; }
     .product-photos { display:flex; flex-wrap:wrap; gap:10px; margin:4px 0 8px; }
     .product-photo { display:grid; gap:4px; justify-items:center; color:var(--muted); font-size:11px; }
@@ -72,7 +73,10 @@
     .edit { border:1px solid #d4bec9; color:var(--wine); background:white; border-radius:7px; padding:6px 8px; font-weight:600; font-size:12px; }
     .delete { color:#a12835; border-color:#e9c2c7; margin-left:5px; }
     .delete:hover { color:#fff; background:#a12835; border-color:#a12835; }
-    @media (max-width:820px) { .customer-form,.product-form { grid-template-columns:1fr; } .check { padding:0; } }
+    .catalog-tools { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:20px; }
+    .catalog-tools form { display:flex; gap:8px; align-items:end; }
+    .catalog-tools label { flex:1; margin:0; }
+    @media (max-width:820px) { .customer-form,.product-form,.catalog-tools { grid-template-columns:1fr; } .catalog-tools form { display:grid; grid-template-columns:1fr; } .check { padding:0; } }
     @media (max-width:820px) { .cards { grid-template-columns:repeat(2,1fr); } .account span { display:none; } }
   </style>
 </head>
@@ -100,7 +104,8 @@
       <p class="lead">Control de stock, pedidos y cupones.</p>
       <nav class="nav">
         <button data-view="dashboard" class="active">Resumen</button>
-        <button data-view="products">Productos</button>
+        <button data-view="products">Administrar catálogo</button>
+        <button data-view="catalog">Categorías</button>
         <button data-view="orders">Pedidos</button>
         <button data-view="customers">Clientes</button>
         <button data-view="account">Mi cuenta</button>
@@ -122,7 +127,7 @@
     let supabase;
     let currentView = "dashboard";
 
-    function money(value) { return `$${Number(value || 0).toLocaleString("es-AR")}`; }
+    function money(value) { return value === null || value === undefined || value === "" ? "—" : `$${Number(value).toLocaleString("es-AR")}`; }
     function escapeHtml(value) { return String(value ?? "").replace(/[&<>'\"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c])); }
     function statusLabel(status) { return ({ published:"🟢 Publicado", draft:"🟡 Borrador", archived:"⚫ Archivado", pending:"🟠 Pendiente", processing:"🔵 En proceso", completed:"✅ Completado", cancelled:"🔴 Cancelado" })[status] || escapeHtml(status); }
     function setNotice(message = "") { notice.textContent = message; }
@@ -166,7 +171,7 @@
           <label class="wide">Descripción<textarea id="productDescription" rows="3" maxlength="1500">${escapeHtml(product?.description || "")}</textarea></label>
           <label>Categoría<select id="productCategory" required>${categoryOptions}</select></label>
           <label>Subcategoría<select id="productSubcategory"><option value="">Sin subcategoría</option></select></label>
-          <label>Precio minorista<input id="productRetail" type="number" min="1" required value="${product?.retail_price || ""}"></label>
+          <label>Precio minorista (opcional)<input id="productRetail" type="number" min="1" value="${product?.retail_price || ""}"></label>
           <label>Precio mayorista<input id="productWholesale" type="number" min="1" value="${product?.wholesale_price || ""}"></label>
           <label>Stock<input id="productStock" type="number" min="0" required value="${product?.stock ?? 30}"></label>
           <label>Estado<select id="productStatus"><option value="published" ${product?.status === "published" ? "selected" : ""}>Publicado</option><option value="draft" ${product?.status === "draft" ? "selected" : ""}>Borrador</option><option value="archived" ${product?.status === "archived" ? "selected" : ""}>Archivado</option></select></label>
@@ -213,17 +218,18 @@
     }
 
     function renderProducts(products) {
-      content.innerHTML = `<section class="panel"><div class="actions"><button id="newProduct" class="primary" type="button">+ Nuevo producto</button></div><h2>Productos (${products.length})</h2>
-        ${products.length ? `<table><thead><tr><th>Foto</th><th>Producto</th><th>SKU</th><th>Minorista</th><th>Mayorista</th><th>Stock</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${products.map(p => `<tr><td>${p.product_images?.[0]?.image_url ? `<img class="photo-thumb" src="${escapeHtml(p.product_images[0].image_url)}" alt="">` : "—"}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku)}</td><td>${money(p.retail_price)}</td><td>${money(p.wholesale_price)}</td><td><span class="pill ${Number(p.stock) <= 5 ? "low" : ""}">${p.stock}</span></td><td><span class="pill">${statusLabel(p.status)}</span></td><td><button class="edit" data-edit-product="${p.id}">Editar</button><button class="edit delete" type="button" data-delete-product="${p.id}" aria-label="Eliminar ${escapeHtml(p.name)}" title="Eliminar producto">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">Todavía no hay productos cargados.</p>'}
-      </section>`;
+      const rows = (items) => items.length ? `<table><thead><tr><th>Foto</th><th>Producto</th><th>SKU</th><th>Minorista</th><th>Mayorista</th><th>Stock</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${items.map(p => `<tr><td>${p.product_images?.[0]?.image_url ? `<img class="photo-thumb" src="${escapeHtml(p.product_images[0].image_url)}" alt="">` : "—"}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku)}</td><td>${money(p.retail_price)}</td><td>${money(p.wholesale_price)}</td><td><span class="pill ${Number(p.stock) <= 5 ? "low" : ""}">${p.stock}</span></td><td><span class="pill">${statusLabel(p.status)}</span></td><td><button class="edit" data-edit-product="${p.id}">Editar</button><button class="edit delete" type="button" data-delete-product="${p.id}" aria-label="Eliminar ${escapeHtml(p.name)}" title="Eliminar producto">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No encontramos productos.</p>';
+      content.innerHTML = `<section class="panel"><div class="actions"><button id="newProduct" class="primary" type="button">+ Nuevo producto</button></div><h2>Administrar catálogo (${products.length})</h2><input id="productSearch" class="product-search" type="search" placeholder="Buscar por nombre, SKU, categoría o estado…"><div id="productRows">${rows(products)}</div></section>`;
       document.querySelector("#newProduct").addEventListener("click", () => renderProductForm().catch(showProductError));
-      document.querySelectorAll("[data-edit-product]").forEach(button => button.addEventListener("click", () => renderProductForm(products.find(p => p.id === button.dataset.editProduct)).catch(showProductError)));
+      const wireRows = () => { document.querySelectorAll("[data-edit-product]").forEach(button => button.addEventListener("click", () => renderProductForm(products.find(p => p.id === button.dataset.editProduct)).catch(showProductError)));
       document.querySelectorAll("[data-delete-product]").forEach(button => button.addEventListener("click", async () => {
         const product = products.find(p => p.id === button.dataset.deleteProduct);
         if (!confirm(`¿Eliminar definitivamente “${product?.name || "este producto"}”? Esta acción no se puede deshacer.`)) return;
         try { await callAdmin("deleteProduct", { productId: button.dataset.deleteProduct }); await loadView("products"); }
         catch (error) { alert(error.message); }
-      }));
+      })); };
+      wireRows();
+      document.querySelector("#productSearch").addEventListener("input", (event) => { const term=event.target.value.trim().toLocaleLowerCase("es-AR"); const filtered=products.filter(p => `${p.name} ${p.sku} ${p.status} ${p.categories?.name || ""} ${p.subcategories?.name || ""}`.toLocaleLowerCase("es-AR").includes(term)); document.querySelector("#productRows").innerHTML=rows(filtered); wireRows(); });
     }
 
     function showProductError(error) {
@@ -287,6 +293,33 @@
       }));
     }
 
+    function renderCatalog(data) {
+      const categories = data.categories || [];
+      const subcategories = data.subcategories || [];
+      const categoryName = (id) => categories.find(c => c.id === id)?.name || "Sin categoría";
+      const categoryOptions = categories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+      content.innerHTML = `<section class="panel"><h2>Categorías y subcategorías</h2>
+        <p class="lead">Podés renombrar, desactivar o eliminar. Para eliminar, no debe tener productos asociados.</p>
+        <div class="catalog-tools">
+          <form id="newCategoryForm"><label>Nueva categoría<input id="newCategoryName" maxlength="100" required placeholder="Ej.: Makeup"></label><button class="primary" type="submit">Agregar</button></form>
+          <form id="newSubcategoryForm"><label>Subcategoría<input id="newSubcategoryName" maxlength="100" required placeholder="Ej.: Labiales"></label><label>Categoría<select id="newSubcategoryCategory" required>${categoryOptions}</select></label><button class="primary" type="submit">Agregar</button></form>
+        </div>
+        <h2>Categorías</h2>
+        ${categories.length ? `<table><thead><tr><th>Nombre</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${categories.map(c => `<tr><td>${escapeHtml(c.name)}</td><td><span class="pill">${c.active ? "Activa" : "Inactiva"}</span></td><td><button class="edit" data-edit-category="${c.id}">Editar</button><button class="edit" data-toggle-category="${c.id}">${c.active ? "Desactivar" : "Activar"}</button><button class="edit delete" data-delete-category="${c.id}" title="Eliminar categoría">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay categorías.</p>'}
+        <h2 style="margin-top:26px">Subcategorías</h2>
+        ${subcategories.length ? `<table><thead><tr><th>Subcategoría</th><th>Categoría</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${subcategories.map(s => `<tr><td>${escapeHtml(s.name)}</td><td>${escapeHtml(categoryName(s.category_id))}</td><td><span class="pill">${s.active ? "Activa" : "Inactiva"}</span></td><td><button class="edit" data-edit-subcategory="${s.id}">Editar</button><button class="edit" data-toggle-subcategory="${s.id}">${s.active ? "Desactivar" : "Activar"}</button><button class="edit delete" data-delete-subcategory="${s.id}" title="Eliminar subcategoría">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay subcategorías.</p>'}
+      </section>`;
+      const refresh = () => loadView("catalog");
+      document.querySelector("#newCategoryForm").addEventListener("submit", async (event) => { event.preventDefault(); try { await callAdmin("saveCategory", { name: document.querySelector("#newCategoryName").value }); refresh(); } catch (error) { alert(error.message); } });
+      document.querySelector("#newSubcategoryForm").addEventListener("submit", async (event) => { event.preventDefault(); try { await callAdmin("saveSubcategory", { name: document.querySelector("#newSubcategoryName").value, categoryId: document.querySelector("#newSubcategoryCategory").value }); refresh(); } catch (error) { alert(error.message); } });
+      document.querySelectorAll("[data-edit-category]").forEach(button => button.addEventListener("click", async () => { const item = categories.find(c => c.id === button.dataset.editCategory); const name = prompt("Nombre de la categoría:", item.name); if (name === null) return; try { await callAdmin("saveCategory", { categoryId:item.id, name, active:item.active }); refresh(); } catch (error) { alert(error.message); } }));
+      document.querySelectorAll("[data-toggle-category]").forEach(button => button.addEventListener("click", async () => { const item = categories.find(c => c.id === button.dataset.toggleCategory); try { await callAdmin("saveCategory", { categoryId:item.id, name:item.name, active:!item.active }); refresh(); } catch (error) { alert(error.message); } }));
+      document.querySelectorAll("[data-delete-category]").forEach(button => button.addEventListener("click", async () => { const item = categories.find(c => c.id === button.dataset.deleteCategory); if (!confirm(`¿Eliminar la categoría “${item.name}”? Primero debe estar sin productos ni subcategorías.`)) return; try { await callAdmin("deleteCategory", { categoryId:item.id }); refresh(); } catch (error) { alert(error.message); } }));
+      document.querySelectorAll("[data-edit-subcategory]").forEach(button => button.addEventListener("click", async () => { const item = subcategories.find(s => s.id === button.dataset.editSubcategory); const name = prompt("Nombre de la subcategoría:", item.name); if (name === null) return; const category = prompt(`Categoría (${categories.map(c => c.name).join(", ")}):`, categoryName(item.category_id)); if (category === null) return; const match = categories.find(c => c.name.toLocaleLowerCase("es-AR") === category.trim().toLocaleLowerCase("es-AR")); if (!match) return alert("Elegí una categoría existente."); try { await callAdmin("saveSubcategory", { subcategoryId:item.id, name, categoryId:match.id, active:item.active }); refresh(); } catch (error) { alert(error.message); } }));
+      document.querySelectorAll("[data-toggle-subcategory]").forEach(button => button.addEventListener("click", async () => { const item = subcategories.find(s => s.id === button.dataset.toggleSubcategory); try { await callAdmin("saveSubcategory", { subcategoryId:item.id, name:item.name, categoryId:item.category_id, active:!item.active }); refresh(); } catch (error) { alert(error.message); } }));
+      document.querySelectorAll("[data-delete-subcategory]").forEach(button => button.addEventListener("click", async () => { const item = subcategories.find(s => s.id === button.dataset.deleteSubcategory); if (!confirm(`¿Eliminar la subcategoría “${item.name}”? No debe tener productos asociados.`)) return; try { await callAdmin("deleteSubcategory", { subcategoryId:item.id }); refresh(); } catch (error) { alert(error.message); } }));
+    }
+
     async function renderAccount() {
       const { data: { session } } = await supabase.auth.getSession();
       content.innerHTML = `<section class="panel"><h2>Mi cuenta administradora</h2>
@@ -309,11 +342,12 @@
       setLoading();
       try {
         if (view === "account") { await renderAccount(); return; }
-        const data = await callAdmin(view);
+        const data = await callAdmin(view === "catalog" ? "catalogManagement" : view);
         if (view === "dashboard") renderDashboard(data);
         if (view === "products") renderProducts(data);
         if (view === "orders") renderOrders(data);
         if (view === "customers") renderCustomers(data);
+        if (view === "catalog") renderCatalog(data);
       } catch (error) {
         content.innerHTML = `<p class="empty">${escapeHtml(error.message)}</p>`;
       }
