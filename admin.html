@@ -252,36 +252,29 @@
 
     function renderCoupons(coupons) {
       const items = Array.isArray(coupons) ? coupons : coupons?.coupons || [];
-      const normalizeDate = (value) => value ? new Date(value).toISOString().slice(0, 10) : "";
-      const discountLabel = (coupon) => coupon.discount_type === "percentage"
-        ? `${Number(coupon.discount_value || 0)}%`
-        : money(coupon.discount_value);
+      const normalizeDate = (value) => value ? new Intl.DateTimeFormat("en-CA", { timeZone:"America/Argentina/Buenos_Aires", year:"numeric", month:"2-digit", day:"2-digit" }).format(new Date(value)) : "";
+      const discountLabel = (coupon) => `${Number(coupon.discount_percent || 0)}%`;
       const validity = (coupon) => {
         const start = coupon.starts_at ? new Date(coupon.starts_at).toLocaleDateString("es-AR") : "Ahora";
-        const end = coupon.ends_at ? new Date(coupon.ends_at).toLocaleDateString("es-AR") : "Sin vencimiento";
+        const end = coupon.expires_at ? new Date(coupon.expires_at).toLocaleDateString("es-AR") : "Sin vencimiento";
         return `${start} → ${end}`;
       };
-      const rows = () => items.length ? `<table><thead><tr><th>Código</th><th>Descuento</th><th>Compra mínima</th><th>Usos</th><th>Vigencia</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${items.map(coupon => `<tr>
+      const rows = () => items.length ? `<table><thead><tr><th>Código</th><th>Descuento</th><th>Vigencia</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${items.map(coupon => `<tr>
         <td><strong>${escapeHtml(coupon.code)}</strong></td>
         <td>${discountLabel(coupon)}</td>
-        <td>${coupon.minimum_amount || coupon.min_order_amount ? money(coupon.minimum_amount ?? coupon.min_order_amount) : "—"}</td>
-        <td>${Number(coupon.uses_count || 0)}${coupon.max_uses ? ` / ${Number(coupon.max_uses)}` : ""}</td>
         <td>${escapeHtml(validity(coupon))}</td>
         <td><span class="pill ${coupon.active ? "" : "low"}">${coupon.active ? "Activo" : "Inactivo"}</span></td>
         <td><button class="edit" type="button" data-edit-coupon="${coupon.id}">Editar</button><button class="edit" type="button" data-toggle-coupon="${coupon.id}">${coupon.active ? "Desactivar" : "Activar"}</button><button class="edit delete" type="button" data-delete-coupon="${coupon.id}" title="Eliminar cupón">🗑</button></td>
       </tr>`).join("")}</tbody></table>` : '<p class="empty">Todavía no hay cupones creados.</p>';
 
       content.innerHTML = `<section class="panel"><h2>Cupones de descuento</h2>
-        <p class="lead">Creá códigos para aplicar descuentos porcentuales o por importe fijo en el carrito.</p>
+        <p class="lead">Creá códigos porcentuales y definí durante qué período pueden usarse en el carrito.</p>
         <form id="couponForm" class="coupon-form">
           <input id="couponId" type="hidden">
           <label>Código<input id="couponCode" required maxlength="40" autocomplete="off" placeholder="Ej.: BIENVENIDA10"></label>
-          <label>Tipo<select id="couponType"><option value="percentage">Porcentaje</option><option value="fixed">Importe fijo</option></select></label>
-          <label>Valor<input id="couponValue" type="number" min="1" step="1" required placeholder="10"></label>
-          <label>Compra mínima<input id="couponMinimum" type="number" min="0" step="1" placeholder="Opcional"></label>
-          <label>Máximo de usos<input id="couponMaxUses" type="number" min="1" step="1" placeholder="Sin límite"></label>
-          <label>Desde<input id="couponStartsAt" type="date"></label>
-          <label>Hasta<input id="couponEndsAt" type="date"></label>
+          <label>Descuento (%)<input id="couponValue" type="number" min="1" max="100" step="1" required placeholder="10"></label>
+          <label>Desde<input id="couponStartsAt" type="date" required></label>
+          <label>Hasta<input id="couponExpiresAt" type="date" required></label>
           <label class="check coupon-active"><input id="couponActive" type="checkbox" checked> Cupón activo</label>
           <div class="coupon-form-actions"><button class="primary" type="submit">Guardar cupón</button><button id="cancelCouponEdit" class="outline hidden" type="button">Cancelar edición</button></div>
         </form>
@@ -302,32 +295,28 @@
       const editCoupon = (coupon) => {
         document.querySelector("#couponId").value = coupon.id;
         document.querySelector("#couponCode").value = coupon.code || "";
-        document.querySelector("#couponType").value = coupon.discount_type || "percentage";
-        document.querySelector("#couponValue").value = coupon.discount_value || "";
-        document.querySelector("#couponMinimum").value = coupon.minimum_amount ?? coupon.min_order_amount ?? "";
-        document.querySelector("#couponMaxUses").value = coupon.max_uses || "";
+        document.querySelector("#couponValue").value = coupon.discount_percent || "";
         document.querySelector("#couponStartsAt").value = normalizeDate(coupon.starts_at);
-        document.querySelector("#couponEndsAt").value = normalizeDate(coupon.ends_at);
+        document.querySelector("#couponExpiresAt").value = normalizeDate(coupon.expires_at);
         document.querySelector("#couponActive").checked = Boolean(coupon.active);
         cancel.classList.remove("hidden");
         form.scrollIntoView({ behavior:"smooth", block:"start" });
       };
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
-        const type = document.querySelector("#couponType").value;
         const value = Number(document.querySelector("#couponValue").value);
-        if (type === "percentage" && value > 100) { message.className = "notice is-error"; message.textContent = "El porcentaje no puede superar 100%."; return; }
+        const startsAt = document.querySelector("#couponStartsAt").value;
+        const expiresAt = document.querySelector("#couponExpiresAt").value;
+        if (value > 100) { message.className = "notice is-error"; message.textContent = "El porcentaje no puede superar 100%."; return; }
+        if (expiresAt <= startsAt) { message.className = "notice is-error"; message.textContent = "El vencimiento debe ser posterior al inicio."; return; }
         message.className = "notice is-muted"; message.textContent = "Guardando cupón…";
         try {
           await callAdmin("saveCoupon", {
             couponId: document.querySelector("#couponId").value,
             code: document.querySelector("#couponCode").value.trim().toUpperCase(),
-            discountType: type,
-            discountValue: value,
-            minimumAmount: document.querySelector("#couponMinimum").value,
-            maxUses: document.querySelector("#couponMaxUses").value,
-            startsAt: document.querySelector("#couponStartsAt").value,
-            endsAt: document.querySelector("#couponEndsAt").value,
+            discountPercent: value,
+            startsAt,
+            expiresAt,
             active: document.querySelector("#couponActive").checked,
           });
           message.className = "notice is-success"; message.textContent = "Cupón guardado.";
@@ -339,9 +328,8 @@
       document.querySelectorAll("[data-toggle-coupon]").forEach(button => button.addEventListener("click", async () => {
         const coupon = items.find(item => item.id === button.dataset.toggleCoupon);
         try { await callAdmin("saveCoupon", {
-          couponId:coupon.id, code:coupon.code, discountType:coupon.discount_type, discountValue:coupon.discount_value,
-          minimumAmount:coupon.minimum_amount ?? coupon.min_order_amount ?? "", maxUses:coupon.max_uses || "",
-          startsAt:normalizeDate(coupon.starts_at), endsAt:normalizeDate(coupon.ends_at), active:!coupon.active,
+          couponId:coupon.id, code:coupon.code, discountPercent:coupon.discount_percent,
+          startsAt:normalizeDate(coupon.starts_at), expiresAt:normalizeDate(coupon.expires_at), active:!coupon.active,
         }); await loadView("coupons"); }
         catch (error) { alert(error.message); }
       }));
