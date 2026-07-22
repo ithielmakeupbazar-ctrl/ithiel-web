@@ -35,6 +35,7 @@
         <button data-view="dashboard" class="active">Resumen</button>
         <button data-view="products">Administrar catálogo</button>
         <button data-view="catalog">Categorías</button>
+        <button data-view="coupons">Cupones</button>
         <button data-view="orders">Pedidos</button>
         <button data-view="customers">Clientes</button>
         <button data-view="account">Mi cuenta</button>
@@ -249,6 +250,109 @@
       document.querySelectorAll("[data-delete-subcategory]").forEach(button => button.addEventListener("click", async () => { const item = subcategories.find(s => s.id === button.dataset.deleteSubcategory); if (!confirm(`¿Eliminar la subcategoría “${item.name}”? No debe tener productos asociados.`)) return; try { await callAdmin("deleteSubcategory", { subcategoryId:item.id }); refresh(); } catch (error) { alert(error.message); } }));
     }
 
+    function renderCoupons(coupons) {
+      const items = Array.isArray(coupons) ? coupons : coupons?.coupons || [];
+      const normalizeDate = (value) => value ? new Date(value).toISOString().slice(0, 10) : "";
+      const discountLabel = (coupon) => coupon.discount_type === "percentage"
+        ? `${Number(coupon.discount_value || 0)}%`
+        : money(coupon.discount_value);
+      const validity = (coupon) => {
+        const start = coupon.starts_at ? new Date(coupon.starts_at).toLocaleDateString("es-AR") : "Ahora";
+        const end = coupon.ends_at ? new Date(coupon.ends_at).toLocaleDateString("es-AR") : "Sin vencimiento";
+        return `${start} → ${end}`;
+      };
+      const rows = () => items.length ? `<table><thead><tr><th>Código</th><th>Descuento</th><th>Compra mínima</th><th>Usos</th><th>Vigencia</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${items.map(coupon => `<tr>
+        <td><strong>${escapeHtml(coupon.code)}</strong></td>
+        <td>${discountLabel(coupon)}</td>
+        <td>${coupon.minimum_amount || coupon.min_order_amount ? money(coupon.minimum_amount ?? coupon.min_order_amount) : "—"}</td>
+        <td>${Number(coupon.uses_count || 0)}${coupon.max_uses ? ` / ${Number(coupon.max_uses)}` : ""}</td>
+        <td>${escapeHtml(validity(coupon))}</td>
+        <td><span class="pill ${coupon.active ? "" : "low"}">${coupon.active ? "Activo" : "Inactivo"}</span></td>
+        <td><button class="edit" type="button" data-edit-coupon="${coupon.id}">Editar</button><button class="edit" type="button" data-toggle-coupon="${coupon.id}">${coupon.active ? "Desactivar" : "Activar"}</button><button class="edit delete" type="button" data-delete-coupon="${coupon.id}" title="Eliminar cupón">🗑</button></td>
+      </tr>`).join("")}</tbody></table>` : '<p class="empty">Todavía no hay cupones creados.</p>';
+
+      content.innerHTML = `<section class="panel"><h2>Cupones de descuento</h2>
+        <p class="lead">Creá códigos para aplicar descuentos porcentuales o por importe fijo en el carrito.</p>
+        <form id="couponForm" class="coupon-form">
+          <input id="couponId" type="hidden">
+          <label>Código<input id="couponCode" required maxlength="40" autocomplete="off" placeholder="Ej.: BIENVENIDA10"></label>
+          <label>Tipo<select id="couponType"><option value="percentage">Porcentaje</option><option value="fixed">Importe fijo</option></select></label>
+          <label>Valor<input id="couponValue" type="number" min="1" step="1" required placeholder="10"></label>
+          <label>Compra mínima<input id="couponMinimum" type="number" min="0" step="1" placeholder="Opcional"></label>
+          <label>Máximo de usos<input id="couponMaxUses" type="number" min="1" step="1" placeholder="Sin límite"></label>
+          <label>Desde<input id="couponStartsAt" type="date"></label>
+          <label>Hasta<input id="couponEndsAt" type="date"></label>
+          <label class="check coupon-active"><input id="couponActive" type="checkbox" checked> Cupón activo</label>
+          <div class="coupon-form-actions"><button class="primary" type="submit">Guardar cupón</button><button id="cancelCouponEdit" class="outline hidden" type="button">Cancelar edición</button></div>
+        </form>
+        <p id="couponMessage" class="notice" aria-live="polite"></p>
+        <div id="couponRows" class="coupon-table">${rows()}</div>
+      </section>`;
+
+      const form = document.querySelector("#couponForm");
+      const message = document.querySelector("#couponMessage");
+      const cancel = document.querySelector("#cancelCouponEdit");
+      const resetForm = () => {
+        form.reset();
+        document.querySelector("#couponId").value = "";
+        document.querySelector("#couponActive").checked = true;
+        cancel.classList.add("hidden");
+        message.textContent = "";
+      };
+      const editCoupon = (coupon) => {
+        document.querySelector("#couponId").value = coupon.id;
+        document.querySelector("#couponCode").value = coupon.code || "";
+        document.querySelector("#couponType").value = coupon.discount_type || "percentage";
+        document.querySelector("#couponValue").value = coupon.discount_value || "";
+        document.querySelector("#couponMinimum").value = coupon.minimum_amount ?? coupon.min_order_amount ?? "";
+        document.querySelector("#couponMaxUses").value = coupon.max_uses || "";
+        document.querySelector("#couponStartsAt").value = normalizeDate(coupon.starts_at);
+        document.querySelector("#couponEndsAt").value = normalizeDate(coupon.ends_at);
+        document.querySelector("#couponActive").checked = Boolean(coupon.active);
+        cancel.classList.remove("hidden");
+        form.scrollIntoView({ behavior:"smooth", block:"start" });
+      };
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const type = document.querySelector("#couponType").value;
+        const value = Number(document.querySelector("#couponValue").value);
+        if (type === "percentage" && value > 100) { message.className = "notice is-error"; message.textContent = "El porcentaje no puede superar 100%."; return; }
+        message.className = "notice is-muted"; message.textContent = "Guardando cupón…";
+        try {
+          await callAdmin("saveCoupon", {
+            couponId: document.querySelector("#couponId").value,
+            code: document.querySelector("#couponCode").value.trim().toUpperCase(),
+            discountType: type,
+            discountValue: value,
+            minimumAmount: document.querySelector("#couponMinimum").value,
+            maxUses: document.querySelector("#couponMaxUses").value,
+            startsAt: document.querySelector("#couponStartsAt").value,
+            endsAt: document.querySelector("#couponEndsAt").value,
+            active: document.querySelector("#couponActive").checked,
+          });
+          message.className = "notice is-success"; message.textContent = "Cupón guardado.";
+          setTimeout(() => loadView("coupons"), 450);
+        } catch (error) { message.className = "notice is-error"; message.textContent = error.message; }
+      });
+      cancel.addEventListener("click", resetForm);
+      document.querySelectorAll("[data-edit-coupon]").forEach(button => button.addEventListener("click", () => editCoupon(items.find(coupon => coupon.id === button.dataset.editCoupon))));
+      document.querySelectorAll("[data-toggle-coupon]").forEach(button => button.addEventListener("click", async () => {
+        const coupon = items.find(item => item.id === button.dataset.toggleCoupon);
+        try { await callAdmin("saveCoupon", {
+          couponId:coupon.id, code:coupon.code, discountType:coupon.discount_type, discountValue:coupon.discount_value,
+          minimumAmount:coupon.minimum_amount ?? coupon.min_order_amount ?? "", maxUses:coupon.max_uses || "",
+          startsAt:normalizeDate(coupon.starts_at), endsAt:normalizeDate(coupon.ends_at), active:!coupon.active,
+        }); await loadView("coupons"); }
+        catch (error) { alert(error.message); }
+      }));
+      document.querySelectorAll("[data-delete-coupon]").forEach(button => button.addEventListener("click", async () => {
+        const coupon = items.find(item => item.id === button.dataset.deleteCoupon);
+        if (!confirm(`¿Eliminar definitivamente el cupón “${coupon?.code || ""}”?`)) return;
+        try { await callAdmin("deleteCoupon", { couponId:button.dataset.deleteCoupon }); await loadView("coupons"); }
+        catch (error) { alert(error.message); }
+      }));
+    }
+
     async function renderAccount() {
       const { data: { session } } = await supabase.auth.getSession();
       content.innerHTML = `<section class="panel"><h2>Mi cuenta administradora</h2>
@@ -277,6 +381,7 @@
         if (view === "orders") renderOrders(data);
         if (view === "customers") renderCustomers(data);
         if (view === "catalog") renderCatalog(data);
+        if (view === "coupons") renderCoupons(data);
       } catch (error) {
         content.innerHTML = `<p class="empty">${escapeHtml(error.message)}</p>`;
       }
