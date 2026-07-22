@@ -1,0 +1,43 @@
+:root {
+  --focus: #ff9fc2;
+  --shadow-sm: 0 8px 24px rgba(74, 17, 43, .09);
+  --shadow-md: 0 18px 44px rgba(74, 17, 43, .16);
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+}
+
+html { color-scheme: light; }
+body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+button, a, input, textarea, select { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+[hidden] { display: none !important; }
+
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes item-in {
+  from { opacity: 0; transform: translateY(22px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes cart-pop {
+  0%, 100% { transform: scale(1); }
+  45% { transform: scale(1.22); }
+}
+.is-cart-pop { animation: cart-pop .38s var(--ease-out); }
+.message { font-weight: 650; }
+.message.is-error, .notice.is-error { color: #a25119 !important; }
+.message.is-success, .notice.is-success { color: #16804b !important; }
+.message.is-muted, .notice.is-muted { color: #765763 !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

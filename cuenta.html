@@ -5,15 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Cuenta opcional y perfil simple de clientes de Ithiel Bazar y Makeup.">
   <title>Mi cuenta | Ithiel</title>
-  <style>
-    :root{--rose:#b91658;--deep:#780a38;--ink:#321522;--green:#16804b;--line:#e4b5c8;}
-    *{box-sizing:border-box} body{min-height:100vh;margin:0;display:grid;place-items:center;padding:24px;color:var(--ink);font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at 14% 0%,#ffb2cb 0,transparent 27%),linear-gradient(125deg,#5e062d,#bd1659 55%,#f26b9d)}
-    main{width:min(100%,490px);padding:32px;border-radius:20px;background:#fff;box-shadow:0 20px 60px #3215224d} h1{margin:0;color:var(--deep);text-align:center;font-size:31px;letter-spacing:2px;font-weight:700} p{color:#765763;line-height:1.45;text-align:center}.back{display:inline-flex;align-items:center;margin-bottom:18px;padding:7px 10px;border:1px solid var(--line);border-radius:999px;color:var(--deep);background:#fff8fb;font-size:13px;font-weight:600;text-decoration:none}.back:hover{background:#f8e4ec}
-    label{display:grid;gap:6px;margin:15px 0;color:#765763;font-size:13px;font-weight:600}input,textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:12px;color:var(--ink);font:inherit;background:#fff}textarea{min-height:76px;resize:vertical}.phone{display:grid;grid-template-columns:auto 1fr;border:1px solid var(--line);border-radius:9px;overflow:hidden}.phone span{display:grid;place-items:center;padding:0 11px;color:var(--deep);background:#f8e4ec;font-size:14px;font-weight:600}.phone input{border:0;border-radius:0}
-    button{display:flex;width:100%;align-items:center;justify-content:center;gap:8px;border:0;border-radius:10px;padding:13px;color:#fff;background:var(--rose);cursor:pointer;font:inherit;font-size:14px;font-weight:600}button:hover{background:var(--deep)}.google,.secondary{margin:12px 0;color:#3b2a31;border:1px solid #d9c4ce;background:#fff}.secondary{color:var(--deep)}.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.row button{margin:0}.logout{margin-top:12px;background:#fff;color:var(--deep);border:1px solid var(--line)}.consent{display:flex;gap:8px;align-items:flex-start;font-weight:400;line-height:1.35}.consent input{width:auto;margin-top:2px}.message{min-height:20px;margin:13px 0 0;font-size:13px}.account-email{padding:10px 12px;border-radius:9px;color:var(--deep);background:#f8e4ec;text-align:center;font-size:14px;font-weight:600}[hidden]{display:none!important}.icon{width:19px;height:19px;flex:0 0 19px}
-  </style>
+  <link rel="stylesheet" href="/styles/shared.css">
+  <link rel="stylesheet" href="/styles/cuenta.css">
 </head>
 <body>
+  <aside class="auth-brand-panel" aria-hidden="true">
+    <span class="auth-eyebrow">BAZAR · MAKEUP · LENCERÍA</span>
+    <strong>ITHIEL</strong>
+    <p>Tu espacio para descubrir productos, guardar tus datos y comprar más fácil.</p>
+  </aside>
   <main>
     <a class="back" href="/">Catálogo</a>
     <section id="access-view">
@@ -56,7 +56,7 @@
     const REGISTER_URL=`${SUPABASE_URL}/functions/v1/register-customer-v2`;
     const supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
     const accessView=document.querySelector("#access-view"),profileView=document.querySelector("#profile-view"),accessMessage=document.querySelector("#access-message"),profileMessage=document.querySelector("#profile-message");
-    const message=(node,text,color="#765763")=>{node.textContent=text;node.style.color=color};
+    const message=(node,text,color="#765763")=>{node.textContent=text;node.classList.remove("is-muted","is-error","is-success");node.classList.add(color==="#16804b"?"is-success":color==="#a25119"?"is-error":"is-muted")};
     async function profileRequest(body){const {data:{session}}=await supabase.auth.getSession();if(!session)throw new Error("Tu sesión venció.");const res=await fetch(REGISTER_URL,{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${session.access_token}`},body:JSON.stringify(body)});const data=await res.json();if(!res.ok)throw new Error(data.error||"No se pudieron guardar los datos.");return data;}
     function localPhone(value){let n=String(value||"").replace(/\D/g,"");if(n.startsWith("549"))n=n.slice(3);else if(n.startsWith("54"))n=n.slice(2);if(n.startsWith("9"))n=n.slice(1);return n;}
     function applyProfile(session,profile){const fallback=session.user.user_metadata?.full_name||session.user.user_metadata?.name||"";document.querySelector("#full-name").value=profile?.full_name||fallback;document.querySelector("#phone").value=localPhone(profile?.phone);document.querySelector("#address").value=profile?.default_address||"";document.querySelector("#optin").checked=Boolean(profile?.whatsapp_opt_in);}

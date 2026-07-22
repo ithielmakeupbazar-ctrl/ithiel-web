@@ -5,39 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Registro opcional, simple y sin datos obligatorios de clientes de Ithiel Bazar y Makeup.">
   <title>Registrarse | Ithiel</title>
-  <style>
-    :root { --rose:#b91658; --deep:#780a38; --ink:#321522; --green:#16804b; }
-    * { box-sizing:border-box; }
-    body { min-height:100vh; margin:0; display:grid; place-items:center; padding:24px; color:var(--ink); font-family:Arial,Helvetica,sans-serif; background:radial-gradient(circle at 14% 0%,#ffb2cb 0,transparent 27%),linear-gradient(125deg,#5e062d,#bd1659 55%,#f26b9d); }
-    main { width:min(100%,480px); padding:32px; border-radius:20px; background:#fff; box-shadow:0 20px 60px #3215224d; }
-    h1 { margin:0; color:var(--deep); text-align:center; font-size:34px; letter-spacing:4px; }
-    .top-back { display:inline-flex; align-items:center; gap:6px; margin:0 0 18px; padding:7px 10px; border:1px solid #e4b5c8; border-radius:999px; color:var(--deep); background:#fff8fb; font-size:13px; font-weight:800; text-decoration:none; }
-    .top-back:hover { background:#f8e4ec; }
-    p { color:#765763; line-height:1.45; text-align:center; }
-    label { display:grid; gap:6px; margin:15px 0; color:#765763; font-size:13px; font-weight:800; }
-    input,textarea { width:100%; border:1px solid #e4b5c8; border-radius:9px; padding:12px; color:var(--ink); background:#fff; font:inherit; }
-    textarea { min-height:78px; resize:vertical; }
-    .phone { display:grid; grid-template-columns:auto 1fr; border:1px solid #e4b5c8; border-radius:9px; overflow:hidden; background:#fff; }
-    .phone span { display:grid; place-items:center; padding:0 11px; color:var(--deep); background:#f8e4ec; font-size:14px; font-weight:800; }
-    .phone input { border:0; border-radius:0; }
-    .consent { display:flex; gap:8px; align-items:flex-start; font-weight:400; line-height:1.35; }
-    .consent input { width:auto; margin-top:2px; }
-    button,.back { display:flex; width:100%; align-items:center; justify-content:center; gap:9px; border:0; border-radius:10px; padding:13px; color:#fff; background:var(--rose); cursor:pointer; font:inherit; font-size:14px; font-weight:800; text-align:center; text-decoration:none; }
-    button:hover { background:var(--deep); }
-    .google { margin:12px 0; color:#3b2a31; border:1px solid #d9c4ce; background:#fff; }
-    .connected { color:#fff; border-color:var(--green); background:var(--green); cursor:default; }
-    .connected:hover { background:var(--green); }
-    .manual { margin:10px 0; }
-    .choose-back { margin:0 0 10px; color:var(--deep); border:1px solid #e4b5c8; background:#fff; }
-    .icon { width:19px; height:19px; flex:0 0 19px; }
-    .back { margin-top:10px; color:var(--deep); border:1px solid #e4b5c8; background:#fff; }
-    .catalog-ready { color:#fff; border:1px solid var(--green); background:var(--green); }
-    .message { min-height:20px; margin:13px 0 0; font-size:13px; }
-    .trap { position:absolute; left:-10000px; width:1px; height:1px; overflow:hidden; }
-    [hidden] { display:none !important; }
-  </style>
+  <link rel="stylesheet" href="/styles/shared.css">
+  <link rel="stylesheet" href="/styles/registro.css">
 </head>
 <body>
+  <aside class="auth-brand-panel" aria-hidden="true">
+    <span class="auth-eyebrow">BAZAR · MAKEUP · LENCERÍA</span>
+    <strong>ITHIEL</strong>
+    <p>Creá tu cuenta en pocos pasos y armá tus pedidos de manera más simple.</p>
+  </aside>
   <main>
     <a class="top-back" href="/"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" d="M3.5 10.5 12 3l8.5 7.5M6.5 9.5V21h11V9.5M10 21v-6h4v6"/></svg>Catálogo</a>
     <h1>ITHIEL</h1>
@@ -121,7 +97,7 @@
       showGoogleReady(session.user);
       try { await registerGoogleUser(session); }
       catch (error) {
-        message.style.color = "#a25119";
+        message.className = "message is-error";
         message.textContent = "Google está conectado. El catálogo ya está disponible.";
       }
       return session;
@@ -137,7 +113,7 @@
       if (error) {
         googleButton.disabled = false;
         googleButton.querySelector("span").textContent = "Continuar con Google";
-        message.style.color = "#a25119";
+        message.className = "message is-error";
         message.textContent = "No se pudo iniciar con Google.";
         return;
       }
@@ -166,7 +142,7 @@
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
-      message.style.color = "#765763";
+      message.className = "message is-muted";
       message.textContent = "Registrando…";
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -183,11 +159,11 @@
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "No se pudo registrar.");
-        message.style.color = "#16804b";
+        message.className = "message is-success";
         showWhatsappReady(document.getElementById("register-phone").value.trim());
         message.textContent = "Registro listo.";
       } catch (error) {
-        message.style.color = "#a25119";
+        message.className = "message is-error";
         message.textContent = error.message;
       }
     });
