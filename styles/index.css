@@ -42,6 +42,7 @@
     .tag .icon { width:14px; height:14px; flex-basis:14px; }
     h3 { margin:0; font-size:19px; line-height:1.2; }
     .description { margin:10px 0; color:#765763; font-size:14px; line-height:1.4; }
+    .description-more { display:inline; margin-left:4px; padding:0; border:0; color:var(--rose); background:transparent; cursor:pointer; font:inherit; font-weight:700; text-decoration:underline; }
     .price { display:grid; gap:8px; margin:18px 0 14px; }
     .price-row { display:grid; gap:4px; }
     .price-row small { color:var(--rose); font-size:10px; letter-spacing:.8px; text-transform:uppercase; font-weight:700; }
@@ -69,6 +70,7 @@
     .viewer { position:relative; width:min(760px,100%); max-height:90vh; border-radius:18px; padding:12px; background:#fff; }
     .viewer img { display:block; width:100%; max-height:82vh; object-fit:contain; }
     .viewer .close { position:absolute; top:20px; right:20px; }
+    .viewer-description { margin:12px 4px 2px; color:#765763; font-size:14px; line-height:1.45; white-space:pre-wrap; }
     .cart { width:min(560px,100%); max-height:80vh; overflow:auto; border-radius:20px; padding:22px; background:#fff; box-shadow:0 20px 60px #3215224d; }
     .cart-head { display:flex; align-items:center; justify-content:space-between; gap:16px; }
     .cart-head h2 { margin:0; }
