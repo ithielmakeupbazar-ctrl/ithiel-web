@@ -62,6 +62,71 @@
     function statusLabel(status) { return ({ published:"🟢 Publicado", draft:"🟡 Borrador", archived:"⚫ Archivado", pending:"🟠 Pendiente", processing:"🔵 En proceso", completed:"✅ Completado", cancelled:"🔴 Cancelado" })[status] || escapeHtml(status); }
     function setNotice(message = "") { notice.textContent = message; }
     function setLoading() { content.innerHTML = '<p class="empty">Cargando…</p>'; }
+    function parseNumber(value) { const n = Number(String(value ?? "").replace(",", ".")); return Number.isFinite(n) ? n : 0; }
+    function formatMoneyInput(value) { return value ? Number(value).toFixed(0) : ""; }
+    function derivePrices(supplierValue, wholesaleValue, retailValue) {
+      const supplier = parseNumber(supplierValue);
+      let wholesale = parseNumber(wholesaleValue);
+      let retail = parseNumber(retailValue);
+      if (supplier > 0 && !wholesale) wholesale = supplier * 1.8;
+      if (wholesale > 0 && !retail) retail = wholesale * 0.8;
+      if (supplier > 0 && wholesale <= 0) wholesale = supplier * 1.8;
+      if (wholesale > 0 && retail <= 0) retail = wholesale * 0.8;
+      return { supplier, wholesale, retail };
+    }
+    function parseVariantInput() {
+      return Array.from(document.querySelectorAll("[data-variant-row]"))
+        .map((row) => {
+          const color = row.querySelector("[data-variant-color]").value.trim();
+          const size = row.querySelector("[data-variant-size]").value.trim();
+          const imageUrl = row.querySelector("[data-variant-image]").value.trim();
+          const wholesale = row.querySelector("[data-variant-wholesale]").value.trim();
+          const retail = row.querySelector("[data-variant-retail]").value.trim();
+          if (!color && !size && !imageUrl && !wholesale && !retail) return null;
+          return {
+            color,
+            size,
+            imageUrl,
+            wholesalePrice: wholesale ? Number(wholesale) : "",
+            retailPrice: retail ? Number(retail) : "",
+          };
+        })
+        .filter(Boolean);
+    }
+    function variantMarkup(variant = {}) {
+      return `<div class="variant-row" data-variant-row>
+        <input data-variant-color type="text" placeholder="Color" value="${escapeHtml(variant.color || "")}">
+        <input data-variant-size type="text" placeholder="Talle" value="${escapeHtml(variant.size || "")}">
+        <input data-variant-image type="url" placeholder="URL imagen opcional" value="${escapeHtml(variant.imageUrl || "")}">
+        <input data-variant-wholesale type="number" min="1" placeholder="Mayorista" value="${escapeHtml(variant.wholesalePrice || "")}">
+        <input data-variant-retail type="number" min="1" placeholder="Minorista" value="${escapeHtml(variant.retailPrice || "")}">
+        <button class="edit delete variant-remove" type="button" data-remove-variant>Quitar</button>
+      </div>`;
+    }
+    function wirePriceSync() {
+      const supplier = document.querySelector("#productSupplier");
+      const wholesale = document.querySelector("#productWholesale");
+      const retail = document.querySelector("#productRetail");
+      const sync = (source) => {
+        const next = derivePrices(supplier.value, wholesale.value, retail.value);
+        if (source === "supplier") {
+          wholesale.value = formatMoneyInput(next.wholesale);
+          retail.value = formatMoneyInput(next.retail);
+        } else if (source === "wholesale") {
+          if (!supplier.value) supplier.value = formatMoneyInput(next.wholesale / 1.8);
+          retail.value = formatMoneyInput(next.retail);
+        } else if (source === "retail") {
+          if (wholesale.value) {
+            const baseWholesale = parseNumber(wholesale.value);
+            if (baseWholesale > 0) supplier.value = formatMoneyInput(baseWholesale / 1.8);
+          }
+        }
+      };
+      supplier.addEventListener("input", () => sync("supplier"));
+      wholesale.addEventListener("input", () => sync("wholesale"));
+      retail.addEventListener("input", () => sync("retail"));
+      sync("supplier");
+    }
 
     async function callAdmin(action, payload = {}) {
       const { data: { session } } = await supabase.auth.getSession();
@@ -94,30 +159,87 @@
     async function renderProductForm(product = null) {
       const options = await callAdmin("catalogOptions");
       const categoryOptions = ['<option value="">Elegir categoría</option>', ...options.categories.map(c => `<option value="${c.id}" ${product?.category_id === c.id ? "selected" : ""}>${escapeHtml(c.name)}</option>`)].join("");
+      const existingVariants = Array.isArray(product?.variants) ? product.variants : [];
+      const existingImages = product?.product_images?.length ? `<div class="wide"><label>Fotos actuales</label><div class="product-photos">${product.product_images.map(image => `<div class="product-photo"><img src="${escapeHtml(image.image_url)}" alt=""><button class="edit" type="button" data-delete-image="${image.id}">Quitar</button></div>`).join("")}</div></div>` : "";
+      const variantList = existingVariants.length ? existingVariants.map((variant) => variantMarkup({
+        color: variant.color || "",
+        size: variant.size || "",
+        imageUrl: variant.image_url || variant.imageUrl || "",
+        wholesalePrice: variant.wholesale_price || variant.wholesalePrice || "",
+        retailPrice: variant.retail_price || variant.retailPrice || "",
+      })).join("") : variantMarkup();
       content.innerHTML = `<section class="panel"><div class="actions"><button id="backProducts" class="outline" type="button">← Volver a productos</button></div>
         <h2>${product ? "Editar producto" : "Nuevo producto"}</h2>
         <form id="productForm" class="product-form">
+          <div class="upload-card wide">
+            <div class="upload-head">
+              <div>
+                <h3>Fotos</h3>
+                <p>Subí una o varias imágenes. La primera queda como principal.</p>
+              </div>
+              <input id="productPhoto" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+              <button class="outline" type="button" id="pickPhotos">Elegir archivos</button>
+            </div>
+            <div id="photoPreview" class="photo-preview">${product?.product_images?.length ? product.product_images.map(image => `<div class="preview-thumb"><img src="${escapeHtml(image.image_url)}" alt=""><span>Actual</span></div>`).join("") : '<div class="preview-empty">Todavía no subiste imágenes.</div>'}</div>
+          </div>
+          ${existingImages}
           <label class="wide">Nombre<input id="productName" required maxlength="180" value="${escapeHtml(product?.name || "")}"></label>
           <label class="wide">Descripción<textarea id="productDescription" rows="3" maxlength="1500">${escapeHtml(product?.description || "")}</textarea></label>
           <label>Categoría<select id="productCategory" required>${categoryOptions}</select></label>
           <label>Subcategoría<select id="productSubcategory"><option value="">Sin subcategoría</option></select></label>
-          <label>Precio minorista (opcional)<input id="productRetail" type="number" min="1" value="${product?.retail_price || ""}"></label>
-          <label>Precio mayorista<input id="productWholesale" type="number" min="1" value="${product?.wholesale_price || ""}"></label>
+          <label class="price-field">Precio proveedor<input id="productSupplier" type="number" min="1" value="${product?.supplier_price || ""}" placeholder="Opcional"></label>
+          <label class="price-field">Precio mayorista<input id="productWholesale" type="number" min="1" value="${product?.wholesale_price || ""}"></label>
+          <label class="price-field">Precio minorista<input id="productRetail" type="number" min="1" value="${product?.retail_price || ""}"></label>
           <label>Stock<input id="productStock" type="number" min="0" required value="${product?.stock ?? 30}"></label>
           <label>Estado<select id="productStatus"><option value="published" ${product?.status === "published" ? "selected" : ""}>Publicado</option><option value="draft" ${product?.status === "draft" ? "selected" : ""}>Borrador</option><option value="archived" ${product?.status === "archived" ? "selected" : ""}>Archivado</option></select></label>
-          ${product?.product_images?.length ? `<div class="wide"><label>Fotos actuales</label><div class="product-photos">${product.product_images.map(image => `<div class="product-photo"><img src="${escapeHtml(image.image_url)}" alt=""><button class="edit" type="button" data-delete-image="${image.id}">Quitar</button></div>`).join("")}</div></div>` : ""}
-          <label class="wide">Foto (opcional, JPG/PNG/WEBP hasta 4 MB)<input id="productPhoto" type="file" accept="image/jpeg,image/png,image/webp"></label>
+          <div class="wide variants-card">
+            <div class="variants-head">
+              <div>
+                <h3>Variantes</h3>
+                <p>Agregá colores, talles e imagen por variante si hace falta.</p>
+              </div>
+              <button id="addVariant" class="outline" type="button">+ Agregar variante</button>
+            </div>
+            <div id="variantList" class="variant-list">${variantList}</div>
+          </div>
           <div class="wide"><button class="primary" type="submit">${product ? "Guardar cambios" : "Crear producto"}</button></div>
         </form><p id="productMessage" class="notice"></p>
       </section>`;
       const category = document.querySelector("#productCategory");
       const subcategory = document.querySelector("#productSubcategory");
+      const photoInput = document.querySelector("#productPhoto");
+      const pickPhotos = document.querySelector("#pickPhotos");
+      const preview = document.querySelector("#photoPreview");
+      const variantListNode = document.querySelector("#variantList");
       const fillSubcategories = () => {
         const selected = category.value;
         subcategory.innerHTML = '<option value="">Sin subcategoría</option>' + options.subcategories.filter(s => s.category_id === selected).map(s => `<option value="${s.id}" ${product?.subcategory_id === s.id ? "selected" : ""}>${escapeHtml(s.name)}</option>`).join("");
       };
       category.addEventListener("change", () => { product = { ...product, subcategory_id:"" }; fillSubcategories(); });
       fillSubcategories();
+      wirePriceSync();
+      pickPhotos.addEventListener("click", () => photoInput.click());
+      photoInput.addEventListener("change", () => {
+        const files = Array.from(photoInput.files || []);
+        preview.innerHTML = files.length
+          ? files.map((file) => `<div class="preview-thumb"><img src="${URL.createObjectURL(file)}" alt=""><span>${escapeHtml(file.name)}</span></div>`).join("")
+          : '<div class="preview-empty">Todavía no subiste imágenes.</div>';
+      });
+      document.querySelector("#addVariant").addEventListener("click", () => {
+        variantListNode.insertAdjacentHTML("beforeend", variantMarkup());
+        wireVariantButtons();
+      });
+      function wireVariantButtons() {
+        document.querySelectorAll("[data-remove-variant]").forEach((button) => button.addEventListener("click", () => {
+          const rows = document.querySelectorAll("[data-variant-row]");
+          if (rows.length === 1) {
+            rows[0].querySelectorAll("input").forEach((input) => input.value = "");
+            return;
+          }
+          button.closest("[data-variant-row]").remove();
+        }));
+      }
+      wireVariantButtons();
       document.querySelector("#backProducts").addEventListener("click", () => loadView("products"));
       document.querySelectorAll("[data-delete-image]").forEach(button => button.addEventListener("click", async () => {
         if (!confirm("¿Quitar esta foto del producto?")) return;
@@ -131,13 +253,18 @@
         event.preventDefault();
         const message = document.querySelector("#productMessage"); message.className = "notice is-muted"; message.textContent = "Guardando…";
         try {
+          const variants = parseVariantInput();
           const result = await callAdmin("saveProduct", {
             id: product?.id || "", name: document.querySelector("#productName").value, description: document.querySelector("#productDescription").value,
-            categoryId: category.value, subcategoryId: subcategory.value, retailPrice: document.querySelector("#productRetail").value,
-            wholesalePrice: document.querySelector("#productWholesale").value, stock: document.querySelector("#productStock").value, status: document.querySelector("#productStatus").value,
+            categoryId: category.value, subcategoryId: subcategory.value,
+            supplierPrice: document.querySelector("#productSupplier").value,
+            retailPrice: document.querySelector("#productRetail").value,
+            wholesalePrice: document.querySelector("#productWholesale").value,
+            stock: document.querySelector("#productStock").value, status: document.querySelector("#productStatus").value,
+            variants,
           });
-          const photo = document.querySelector("#productPhoto").files[0];
-          if (photo) {
+          const photos = Array.from(photoInput.files || []);
+          for (const photo of photos) {
             const dataUrl = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(photo); });
             await callAdmin("uploadProductImage", { productId: result.id, dataUrl });
           }
@@ -150,8 +277,18 @@
     function renderProducts(products) {
       const rows = (items) => items.length ? `<table><thead><tr><th>Foto</th><th>Producto</th><th>SKU</th><th>Minorista</th><th>Mayorista</th><th>Stock</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${items.map(p => `<tr><td>${p.product_images?.[0]?.image_url ? `<img class="photo-thumb" src="${escapeHtml(p.product_images[0].image_url)}" alt="">` : "—"}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku)}</td><td>${money(p.retail_price)}</td><td>${money(p.wholesale_price)}</td><td><span class="pill ${Number(p.stock) <= 5 ? "low" : ""}">${p.stock}</span></td><td><span class="pill">${statusLabel(p.status)}</span></td><td><button class="edit" data-edit-product="${p.id}">Editar</button><button class="edit delete" type="button" data-delete-product="${p.id}" aria-label="Eliminar ${escapeHtml(p.name)}" title="Eliminar producto">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No encontramos productos.</p>';
       content.innerHTML = `<section class="panel"><div class="actions"><button id="newProduct" class="primary" type="button">+ Nuevo producto</button></div><h2>Administrar catálogo (${products.length})</h2><input id="productSearch" class="product-search" type="search" placeholder="Buscar por nombre, SKU, categoría o estado…"><div id="productRows">${rows(products)}</div></section>`;
-      document.querySelector("#newProduct").addEventListener("click", () => renderProductForm().catch(showProductError));
-      const wireRows = () => { document.querySelectorAll("[data-edit-product]").forEach(button => button.addEventListener("click", () => renderProductForm(products.find(p => p.id === button.dataset.editProduct)).catch(showProductError)));
+      document.querySelector("#newProduct").addEventListener("click", async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        try { await renderProductForm(); }
+        catch (error) { showProductError(error); }
+      });
+      const wireRows = () => { document.querySelectorAll("[data-edit-product]").forEach(button => button.addEventListener("click", async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        try { await renderProductForm(products.find(p => p.id === button.dataset.editProduct)); }
+        catch (error) { showProductError(error); }
+      }));
       document.querySelectorAll("[data-delete-product]").forEach(button => button.addEventListener("click", async () => {
         const product = products.find(p => p.id === button.dataset.deleteProduct);
         if (!confirm(`¿Eliminar definitivamente “${product?.name || "este producto"}”? Esta acción no se puede deshacer.`)) return;
@@ -405,7 +542,10 @@
       if (error) setNotice("No se pudo iniciar con Google.");
     });
     document.querySelector("#logout").addEventListener("click", () => supabase.auth.signOut().then(() => location.reload()));
-    document.querySelectorAll(".nav button").forEach(button => button.addEventListener("click", () => loadView(button.dataset.view)));
+    document.querySelectorAll(".nav button").forEach(button => button.addEventListener("click", (event) => {
+      event.preventDefault();
+      loadView(button.dataset.view);
+    }));
     setup();
   </script>
 </body>
