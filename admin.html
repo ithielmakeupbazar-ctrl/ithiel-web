@@ -56,6 +56,7 @@
     const content = document.querySelector("#content");
     let supabase;
     let currentView = "dashboard";
+    let activeSessionToken = "";
 
     function money(value) { return value === null || value === undefined || value === "" ? "—" : `$${Number(value).toLocaleString("es-AR")}`; }
     function escapeHtml(value) { return String(value ?? "").replace(/[&<>'\"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c])); }
@@ -71,8 +72,20 @@
       const supplier = parseNumber(supplierValue);
       let wholesale = parseNumber(wholesaleValue);
       let retail = parseNumber(retailValue);
-      if (supplier > 0 && !wholesale) wholesale = supplier * 1.8;
-      if (wholesale > 0 && !retail) retail = wholesale * 0.8;
+      if (supplier > 0) {
+        wholesale = supplier * 1.8;
+        retail = wholesale * 0.8;
+        return { supplier, wholesale, retail };
+      }
+      if (wholesale > 0) {
+        retail = wholesale * 0.8;
+        if (!supplier) supplier = wholesale / 1.8;
+        return { supplier, wholesale, retail };
+      }
+      if (retail > 0 && !wholesale) {
+        wholesale = retail / 0.8;
+        if (!supplier) supplier = wholesale / 1.8;
+      }
       return { supplier, wholesale, retail };
     }
     function parseVariantInput() {
@@ -173,6 +186,9 @@
       const pickPhotos = document.querySelector("#pickPhotos");
       const preview = document.querySelector("#photoPreview");
       const variantListNode = document.querySelector("#variantList");
+      const supplierInput = document.querySelector("#productSupplier");
+      const wholesaleInput = document.querySelector("#productWholesale");
+      const retailInput = document.querySelector("#productRetail");
       let selectedPhotos = existingImages.map((url) => ({ name: "Foto", url }));
       const fillSubcategories = () => {
         const selected = category.value;
@@ -180,6 +196,21 @@
       };
       category.addEventListener("change", () => { product = { ...product, subcategory_id:"" }; fillSubcategories(); });
       fillSubcategories();
+      const syncPrices = (source) => {
+        const values = derivePrices(supplierInput.value, wholesaleInput.value, retailInput.value);
+        if (source === "supplier" || source === "wholesale" || source === "retail") {
+          supplierInput.value = formatMoneyInput(values.supplier);
+          wholesaleInput.value = formatMoneyInput(values.wholesale);
+          retailInput.value = formatMoneyInput(values.retail);
+        }
+      };
+      supplierInput.addEventListener("input", () => syncPrices("supplier"));
+      supplierInput.addEventListener("blur", () => syncPrices("supplier"));
+      wholesaleInput.addEventListener("input", () => syncPrices("wholesale"));
+      wholesaleInput.addEventListener("blur", () => syncPrices("wholesale"));
+      retailInput.addEventListener("input", () => syncPrices("retail"));
+      retailInput.addEventListener("blur", () => syncPrices("retail"));
+      syncPrices("supplier");
       const renderVariantCards = () => {
         const current = Array.from(variantListNode.querySelectorAll("[data-variant-card]")).map((card) => ({
           color: card.querySelector("[data-variant-color]")?.value || "",
@@ -230,9 +261,9 @@
         event.preventDefault();
         const message = document.querySelector("#productMessage"); message.className = "notice is-muted"; message.textContent = "Guardando…";
         try {
-          const supplier = document.querySelector("#productSupplier").value;
-          const wholesale = document.querySelector("#productWholesale").value;
-          const retail = document.querySelector("#productRetail").value;
+          const supplier = supplierInput.value;
+          const wholesale = wholesaleInput.value;
+          const retail = retailInput.value;
           const derived = derivePrices(supplier, wholesale, retail);
           const result = await callAdmin("saveProduct", {
             id: product?.id || "", name: document.querySelector("#productName").value, description: document.querySelector("#productDescription").value,
@@ -255,7 +286,7 @@
       const statusLabels = { Todos:"Todos", published:"Publicado", draft:"Borrador", archived:"Archivado" };
       const categories = [...new Set(products.map((item) => item.categories?.name || item.category || "Sin categoría"))];
       const filterButtons = (items, selected, key, labels = null) => items.map((item) => `<button type="button" class="${key}-filter ${selected === item ? "active" : ""}" data-${key}="${escapeHtml(item)}">${escapeHtml(labels?.[item] || item)}</button>`).join("");
-      const rows = (items) => items.length ? `<table><thead><tr><th>Foto</th><th>Producto</th><th>SKU</th><th>Minorista</th><th>Mayorista</th><th>Stock</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${items.map(p => `<tr><td>${p.product_images?.[0]?.image_url ? `<img class="photo-thumb" src="${escapeHtml(p.product_images[0].image_url)}" alt="">` : "—"}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku)}</td><td>${money(p.retail_price)}</td><td>${money(p.wholesale_price)}</td><td><span class="pill ${Number(p.stock) <= 5 ? "low" : ""}">${p.stock}</span></td><td>${statusLabel(p.status)}</td><td><div class="row-actions"><button class="edit" data-edit-product="${p.id}">Editar</button><button class="edit delete" type="button" data-delete-product="${p.id}" aria-label="Eliminar ${escapeHtml(p.name)}" title="Eliminar producto">🗑</button></div></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No encontramos productos.</p>';
+      const rows = (items) => items.length ? `<table><thead><tr><th>Foto</th><th>Producto</th><th>SKU</th><th>Minorista</th><th>Mayorista</th><th>Stock</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${items.map(p => `<tr><td>${p.product_images?.[0]?.image_url ? `<img class="photo-thumb" src="${escapeHtml(p.product_images[0].image_url)}" alt="">` : "—"}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku)}</td><td>${money(p.retail_price)}</td><td>${money(p.wholesale_price)}</td><td><span class="pill ${Number(p.stock) <= 5 ? "low" : ""}">${p.stock}</span></td><td>${statusLabel(p.status)}</td><td><div class="row-actions"><button class="edit icon-btn" data-edit-product="${p.id}" aria-label="Editar ${escapeHtml(p.name)}" title="Editar producto">✎</button><button class="edit delete icon-btn" type="button" data-delete-product="${p.id}" aria-label="Eliminar ${escapeHtml(p.name)}" title="Eliminar producto">🗑</button></div></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No encontramos productos.</p>';
       content.innerHTML = `<section class="panel"><div class="actions"><button id="newProduct" class="primary" type="button">+ Nuevo producto</button></div><h2>Administrar catálogo (${products.length})</h2><div class="product-filters"><input id="productSearch" class="product-search" type="search" placeholder="Buscar por nombre, SKU, categoría o estado…"><div class="filter-row"><div class="filter-group">${filterButtons(["Todos", ...categories], "Todos", "category")}</div><div class="filter-group">${filterButtons(allStatuses, "Todos", "status", statusLabels)}</div></div></div><div id="productRows">${rows(products)}</div></section>`;
       document.querySelector("#newProduct").addEventListener("click", () => renderProductForm().catch(showProductError));
       const wireRows = () => { document.querySelectorAll("[data-edit-product]").forEach(button => button.addEventListener("click", () => renderProductForm(products.find(p => p.id === button.dataset.editProduct)).catch(showProductError)));
@@ -363,11 +394,11 @@
         </div>
         <details class="catalog-section catalog-fold" open>
           <summary class="catalog-section-head"><h2>Categorías</h2><span class="catalog-fold-hint">Ver / ocultar</span></summary>
-          <div class="catalog-table-wrap">${categories.length ? `<table><thead><tr><th>Nombre</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${categories.map(c => `<tr data-category-row data-category-id="${c.id}"><td>${escapeHtml(c.name)}</td><td>${statusLabel(c.active ? "published" : "draft")}</td><td><button class="edit" data-edit-category="${c.id}">Editar</button><button class="edit" data-toggle-category="${c.id}">${c.active ? "Desactivar" : "Activar"}</button><button class="edit delete" data-delete-category="${c.id}" title="Eliminar categoría">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay categorías.</p>'}</div>
+        <div class="catalog-table-wrap">${categories.length ? `<table><thead><tr><th>Nombre</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${categories.map(c => `<tr data-category-row data-category-id="${c.id}"><td>${escapeHtml(c.name)}</td><td>${statusLabel(c.active ? "published" : "draft")}</td><td><div class="row-actions"><button class="edit icon-btn" data-edit-category="${c.id}" aria-label="Editar categoría ${escapeHtml(c.name)}" title="Editar categoría">✎</button><button class="edit icon-btn" data-toggle-category="${c.id}" aria-label="${c.active ? "Desactivar" : "Activar"} categoría ${escapeHtml(c.name)}" title="${c.active ? "Desactivar" : "Activar"} categoría">${c.active ? "⏻" : "⏼"}</button><button class="edit delete icon-btn" data-delete-category="${c.id}" title="Eliminar categoría" aria-label="Eliminar categoría ${escapeHtml(c.name)}">🗑</button></div></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay categorías.</p>'}</div>
         </details>
         <details class="catalog-section catalog-fold">
           <summary class="catalog-section-head"><h2 class="section-spaced">Subcategorías</h2><span class="catalog-fold-hint">Ver / ocultar</span></summary>
-          <div class="catalog-table-wrap">${subcategories.length ? `<table><thead><tr><th>Subcategoría</th><th>Categoría</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${subcategories.map(s => `<tr data-subcategory-row data-category-id="${s.category_id}"><td>${escapeHtml(s.name)}</td><td>${escapeHtml(categoryName(s.category_id))}</td><td>${statusLabel(s.active ? "published" : "draft")}</td><td><button class="edit" data-edit-subcategory="${s.id}">Editar</button><button class="edit" data-toggle-subcategory="${s.id}">${s.active ? "Desactivar" : "Activar"}</button><button class="edit delete" data-delete-subcategory="${s.id}" title="Eliminar subcategoría">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay subcategorías.</p>'}</div>
+        <div class="catalog-table-wrap">${subcategories.length ? `<table><thead><tr><th>Subcategoría</th><th>Categoría</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${subcategories.map(s => `<tr data-subcategory-row data-category-id="${s.category_id}"><td>${escapeHtml(s.name)}</td><td>${escapeHtml(categoryName(s.category_id))}</td><td>${statusLabel(s.active ? "published" : "draft")}</td><td><div class="row-actions"><button class="edit icon-btn" data-edit-subcategory="${s.id}" aria-label="Editar subcategoría ${escapeHtml(s.name)}" title="Editar subcategoría">✎</button><button class="edit icon-btn" data-toggle-subcategory="${s.id}" aria-label="${s.active ? "Desactivar" : "Activar"} subcategoría ${escapeHtml(s.name)}" title="${s.active ? "Desactivar" : "Activar"} subcategoría">${s.active ? "⏻" : "⏼"}</button><button class="edit delete icon-btn" data-delete-subcategory="${s.id}" title="Eliminar subcategoría" aria-label="Eliminar subcategoría ${escapeHtml(s.name)}">🗑</button></div></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay subcategorías.</p>'}</div>
         </details>
       </section>`;
       const refresh = () => loadView("catalog");
@@ -517,6 +548,9 @@
     }
 
     async function showApp(session) {
+      const token = session?.access_token || "";
+      if (token && token === activeSessionToken) return;
+      activeSessionToken = token;
       document.querySelector("#accountEmail").textContent = session.user.email || "Cuenta administradora";
       loginView.classList.add("hidden");
       appView.classList.remove("hidden");
@@ -530,7 +564,13 @@
       }
       supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       supabase.auth.getSession().then(({ data: { session } }) => { if (session) showApp(session); });
-      supabase.auth.onAuthStateChange((_event, session) => { if (session) showApp(session); });
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (!session) {
+          activeSessionToken = "";
+          return;
+        }
+        if (event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") showApp(session);
+      });
     }
 
     document.querySelector("#loginForm").addEventListener("submit", async (event) => {
