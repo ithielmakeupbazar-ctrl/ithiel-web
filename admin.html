@@ -158,7 +158,7 @@
             <div class="variants-head">
               <div>
                 <h3>Variantes</h3>
-                <p>Subí fotos y asignales color y talle abajo.</p>
+                <p>Una tarjeta por foto, con color y talle. Sin URL ni precios por variante.</p>
               </div>
               <button id="addVariant" class="outline" type="button">+ Agregar tarjeta</button>
             </div>
@@ -186,7 +186,7 @@
           size: card.querySelector("[data-variant-size]")?.value || "",
         }));
         if (!selectedPhotos.length) {
-          variantListNode.innerHTML = current.length ? current.map((variant, index) => variantMarkup(variant, index, `Variante ${index + 1}`)).join("") : "";
+          variantListNode.innerHTML = current.length ? current.map((variant, index) => variantMarkup(variant, index, `Variante ${index + 1}`)).join("") : '<p class="empty variant-empty">Subí fotos para crear tarjetas de variantes.</p>';
           wireVariantButtons();
           return;
         }
@@ -256,7 +256,7 @@
       const categories = [...new Set(products.map((item) => item.categories?.name || item.category || "Sin categoría"))];
       const filterButtons = (items, selected, key, labels = null) => items.map((item) => `<button type="button" class="${key}-filter ${selected === item ? "active" : ""}" data-${key}="${escapeHtml(item)}">${escapeHtml(labels?.[item] || item)}</button>`).join("");
       const rows = (items) => items.length ? `<table><thead><tr><th>Foto</th><th>Producto</th><th>SKU</th><th>Minorista</th><th>Mayorista</th><th>Stock</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${items.map(p => `<tr><td>${p.product_images?.[0]?.image_url ? `<img class="photo-thumb" src="${escapeHtml(p.product_images[0].image_url)}" alt="">` : "—"}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku)}</td><td>${money(p.retail_price)}</td><td>${money(p.wholesale_price)}</td><td><span class="pill ${Number(p.stock) <= 5 ? "low" : ""}">${p.stock}</span></td><td>${statusLabel(p.status)}</td><td><div class="row-actions"><button class="edit" data-edit-product="${p.id}">Editar</button><button class="edit delete" type="button" data-delete-product="${p.id}" aria-label="Eliminar ${escapeHtml(p.name)}" title="Eliminar producto">🗑</button></div></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No encontramos productos.</p>';
-      content.innerHTML = `<section class="panel"><div class="actions"><button id="newProduct" class="primary" type="button">+ Nuevo producto</button></div><h2>Administrar catálogo (${products.length})</h2><div class="product-filters"><input id="productSearch" class="product-search" type="search" placeholder="Buscar por nombre, SKU, categoría o estado…"><div class="filter-row"><div class="filter-group">${filterButtons(allStatuses, "Todos", "status", statusLabels)}</div><div class="filter-group">${filterButtons(["Todos", ...categories], "Todos", "category")}</div></div></div><div id="productRows">${rows(products)}</div></section>`;
+      content.innerHTML = `<section class="panel"><div class="actions"><button id="newProduct" class="primary" type="button">+ Nuevo producto</button></div><h2>Administrar catálogo (${products.length})</h2><div class="product-filters"><input id="productSearch" class="product-search" type="search" placeholder="Buscar por nombre, SKU, categoría o estado…"><div class="filter-row"><div class="filter-group">${filterButtons(["Todos", ...categories], "Todos", "category")}</div><div class="filter-group">${filterButtons(allStatuses, "Todos", "status", statusLabels)}</div></div></div><div id="productRows">${rows(products)}</div></section>`;
       document.querySelector("#newProduct").addEventListener("click", () => renderProductForm().catch(showProductError));
       const wireRows = () => { document.querySelectorAll("[data-edit-product]").forEach(button => button.addEventListener("click", () => renderProductForm(products.find(p => p.id === button.dataset.editProduct)).catch(showProductError)));
       document.querySelectorAll("[data-delete-product]").forEach(button => button.addEventListener("click", async () => {
@@ -361,8 +361,14 @@
           <label class="catalog-filter-label">Filtrar categorías<select id="categoryFilter"><option value="all">Todas</option>${categories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("")}</select></label>
           <label class="catalog-filter-label">Filtrar subcategorías<select id="subcategoryFilter"><option value="all">Todas</option>${categories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("")}</select></label>
         </div>
-        <div class="catalog-section"><div class="catalog-section-head"><h2>Categorías</h2></div><div class="catalog-table-wrap">${categories.length ? `<table><thead><tr><th>Nombre</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${categories.map(c => `<tr data-category-row data-category-id="${c.id}"><td>${escapeHtml(c.name)}</td><td>${statusLabel(c.active ? "published" : "draft")}</td><td><button class="edit" data-edit-category="${c.id}">Editar</button><button class="edit" data-toggle-category="${c.id}">${c.active ? "Desactivar" : "Activar"}</button><button class="edit delete" data-delete-category="${c.id}" title="Eliminar categoría">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay categorías.</p>'}</div></div>
-        <div class="catalog-section"><div class="catalog-section-head"><h2 class="section-spaced">Subcategorías</h2></div><div class="catalog-table-wrap">${subcategories.length ? `<table><thead><tr><th>Subcategoría</th><th>Categoría</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${subcategories.map(s => `<tr data-subcategory-row data-category-id="${s.category_id}"><td>${escapeHtml(s.name)}</td><td>${escapeHtml(categoryName(s.category_id))}</td><td>${statusLabel(s.active ? "published" : "draft")}</td><td><button class="edit" data-edit-subcategory="${s.id}">Editar</button><button class="edit" data-toggle-subcategory="${s.id}">${s.active ? "Desactivar" : "Activar"}</button><button class="edit delete" data-delete-subcategory="${s.id}" title="Eliminar subcategoría">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay subcategorías.</p>'}</div></div>
+        <details class="catalog-section catalog-fold" open>
+          <summary class="catalog-section-head"><h2>Categorías</h2><span class="catalog-fold-hint">Ver / ocultar</span></summary>
+          <div class="catalog-table-wrap">${categories.length ? `<table><thead><tr><th>Nombre</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${categories.map(c => `<tr data-category-row data-category-id="${c.id}"><td>${escapeHtml(c.name)}</td><td>${statusLabel(c.active ? "published" : "draft")}</td><td><button class="edit" data-edit-category="${c.id}">Editar</button><button class="edit" data-toggle-category="${c.id}">${c.active ? "Desactivar" : "Activar"}</button><button class="edit delete" data-delete-category="${c.id}" title="Eliminar categoría">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay categorías.</p>'}</div>
+        </details>
+        <details class="catalog-section catalog-fold">
+          <summary class="catalog-section-head"><h2 class="section-spaced">Subcategorías</h2><span class="catalog-fold-hint">Ver / ocultar</span></summary>
+          <div class="catalog-table-wrap">${subcategories.length ? `<table><thead><tr><th>Subcategoría</th><th>Categoría</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${subcategories.map(s => `<tr data-subcategory-row data-category-id="${s.category_id}"><td>${escapeHtml(s.name)}</td><td>${escapeHtml(categoryName(s.category_id))}</td><td>${statusLabel(s.active ? "published" : "draft")}</td><td><button class="edit" data-edit-subcategory="${s.id}">Editar</button><button class="edit" data-toggle-subcategory="${s.id}">${s.active ? "Desactivar" : "Activar"}</button><button class="edit delete" data-delete-subcategory="${s.id}" title="Eliminar subcategoría">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay subcategorías.</p>'}</div>
+        </details>
       </section>`;
       const refresh = () => loadView("catalog");
       document.querySelector("#newCategoryForm").addEventListener("submit", async (event) => { event.preventDefault(); try { await callAdmin("saveCategory", { name: document.querySelector("#newCategoryName").value }); refresh(); } catch (error) { alert(error.message); } });

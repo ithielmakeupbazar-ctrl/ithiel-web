@@ -108,6 +108,7 @@
     <section class="viewer" role="dialog" aria-modal="true" aria-label="Imagen ampliada">
       <button id="close-image" class="close" type="button">Cerrar</button>
       <img id="large-image" alt="Imagen del producto">
+      <p id="image-description" class="viewer-description"></p>
     </section>
   </div>
 
@@ -127,6 +128,7 @@
     const modal = document.getElementById("modal");
     const imageModal = document.getElementById("image-modal");
     const largeImage = document.getElementById("large-image");
+    const imageDescription = document.getElementById("image-description");
     const cartItems = document.getElementById("cart-items");
     const cartTotal = document.getElementById("cart-total");
     const sendOrder = document.getElementById("send-order");
@@ -176,6 +178,10 @@
       if (!options.length) return "";
       const selected = selections[product.id]?.[key] || "";
       return `<div class="options"><span class="option-label">${label}</span><div class="option-list">${options.map((value) => `<button class="option ${selected === value ? "active" : ""}" type="button" onclick="selectOption('${product.id}','${key}','${escapeHtml(value)}')">${escapeHtml(value)}</button>`).join("")}</div></div>`;
+    }
+    function shortDescription(text) {
+      const value = String(text || "").trim();
+      return value.length > 120 ? `${value.slice(0, 117).trim()}…` : value;
     }
     window.selectOption = (id, key, value) => {
       selections[id] = { ...(selections[id] || {}), [key]: value };
@@ -259,10 +265,13 @@
       const actions = hasRetail
         ? `<button class="button secondary" type="button" onclick="addToCart('${escapeHtml(product.id)}')">Agregar</button><button class="button" type="button" onclick="consultProduct('${escapeHtml(product.id)}')">Consultar</button>`
         : `<button class="button" type="button" onclick="consultProduct('${escapeHtml(product.id)}')">Consultar precio</button>`;
-      return `<article class="card"><div class="photo">${image}<span class="availability ${available?"":"out"}">${available?"Disponible":"Consultar"}</span></div><div class="content"><p class="tag">${categoryIcon(category(product))}<span>${escapeHtml(tag)}</span></p><h3>${escapeHtml(product.title)}</h3>${product.description ? `<p class="description">${escapeHtml(product.description)}</p>` : ""}${optionButtons(product,"color","Color")}${optionButtons(product,"size","Talle")}${prices}<div class="card-actions">${actions}</div></div></article>`;
+      const description = product.description ? shortDescription(product.description) : "";
+      const moreButton = product.description && product.description.trim().length > 120 ? `<button class="description-more" type="button" onclick="window.viewProductDescription('${encodeURIComponent(product.title)}','${encodeURIComponent(product.description)}')">Ver más</button>` : "";
+      return `<article class="card"><div class="photo">${image}<span class="availability ${available?"":"out"}">${available?"Disponible":"Consultar"}</span></div><div class="content"><p class="tag">${categoryIcon(category(product))}<span>${escapeHtml(tag)}</span></p><h3>${escapeHtml(product.title)}</h3>${description ? `<p class="description">${escapeHtml(description)}${moreButton ? " " : ""}${moreButton}</p>` : ""}${optionButtons(product,"color","Color")}${optionButtons(product,"size","Talle")}${prices}<div class="card-actions">${actions}</div></div></article>`;
     }
     window.addToCart=addToCart;
-    window.viewImage=(src,title)=>{largeImage.src=src;largeImage.alt=title;imageModal.classList.add("open");imageModal.setAttribute("aria-hidden","false");document.body.classList.add("modal-open");};
+    window.viewImage=(src,title,description="")=>{largeImage.src=src;largeImage.alt=title;imageDescription.textContent=description ? description : "";imageDescription.hidden=!description;imageModal.classList.add("open");imageModal.setAttribute("aria-hidden","false");document.body.classList.add("modal-open");};
+    window.viewProductDescription=(title,description)=>{largeImage.removeAttribute("src");largeImage.alt=decodeURIComponent(title);imageDescription.textContent=decodeURIComponent(description);imageDescription.hidden=false;imageModal.classList.add("open");imageModal.setAttribute("aria-hidden","false");document.body.classList.add("modal-open");};
     document.addEventListener("click",(event)=>{const button=event.target.closest(".image-view");if(!button)return;window.viewImage(decodeURIComponent(button.dataset.image),decodeURIComponent(button.dataset.title));});
     window.consultProduct=(id)=>{const product=allProducts.find((item)=>item.id===id);if(!product)return;const chosen=selections[id]||{};const details=[chosen.color,chosen.size].filter(Boolean).join(" · ");window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Hola! Quiero consultar por: ${product.title}${details ? ` (${details})` : ""} (${product.sku}).`)}`,"_blank");};
     function renderFilters() {
