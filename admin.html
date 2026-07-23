@@ -60,7 +60,10 @@
 
     function money(value) { return value === null || value === undefined || value === "" ? "—" : `$${Number(value).toLocaleString("es-AR")}`; }
     function escapeHtml(value) { return String(value ?? "").replace(/[&<>'\"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c])); }
-    function statusLabel(status) { return ({ published:"Publicado", draft:"Borrador", archived:"Archivado", pending:"Pendiente", processing:"En proceso", completed:"Completado", cancelled:"Cancelado" })[status] || escapeHtml(status); }
+    function statusLabel(status) {
+      const label = ({ published:"Publicado", draft:"Borrador", archived:"Archivado", pending:"Pendiente", processing:"En proceso", completed:"Completado", cancelled:"Cancelado" })[status] || escapeHtml(status);
+      return `<span class="status-pill" data-status="${escapeHtml(status)}"><span class="status-dot" aria-hidden="true"></span><span>${label}</span></span>`;
+    }
     function setNotice(message = "") { notice.textContent = message; }
     function setLoading() { content.innerHTML = '<p class="empty">Cargando…</p>'; }
     function parseNumber(value) { const n = Number(String(value ?? "").replace(",", ".")); return Number.isFinite(n) ? n : 0; }
@@ -97,14 +100,12 @@
     }
     function variantMarkup(variant = {}, imageOptions = []) {
       const imageField = imageOptions.length > 1
-        ? `<select data-variant-image><option value="">Foto de variante</option>${imageOptions.map((src, index) => `<option value="${escapeHtml(src)}" ${variant.imageUrl === src ? "selected" : ""}>Foto ${index + 1}</option>`).join("")}</select>`
-        : `<input data-variant-image type="url" placeholder="URL imagen opcional" value="${escapeHtml(variant.imageUrl || "")}">`;
+        ? `<select data-variant-image><option value="">Elegir imagen</option>${imageOptions.map((src, index) => `<option value="${escapeHtml(src)}" ${variant.imageUrl === src ? "selected" : ""}>Imagen ${index + 1}</option>`).join("")}</select>`
+        : `<input data-variant-image type="url" placeholder="URL de imagen" value="${escapeHtml(variant.imageUrl || "")}">`;
       return `<div class="variant-row" data-variant-row>
-        <input data-variant-color type="text" placeholder="Color" value="${escapeHtml(variant.color || "")}">
-        <input data-variant-size type="text" placeholder="Talle" value="${escapeHtml(variant.size || "")}">
-        ${imageField}
-        <input data-variant-wholesale type="number" min="1" placeholder="Mayorista" value="${escapeHtml(variant.wholesalePrice || "")}">
-        <input data-variant-retail type="number" min="1" placeholder="Minorista" value="${escapeHtml(variant.retailPrice || "")}">
+        <label class="variant-field"><span>Color</span><input data-variant-color type="text" placeholder="Ej.: Rosa" value="${escapeHtml(variant.color || "")}"></label>
+        <label class="variant-field"><span>Talle</span><input data-variant-size type="text" placeholder="Ej.: M" value="${escapeHtml(variant.size || "")}"></label>
+        <label class="variant-field"><span>Imagen</span>${imageField}</label>
         <button class="edit delete variant-remove" type="button" data-remove-variant>Quitar</button>
       </div>`;
     }
@@ -252,7 +253,7 @@
         const files = Array.from(photoInput.files || []);
         selectedImageUrls = files.map((file, index) => `__local__${index}:${file.name}`);
         preview.innerHTML = files.length
-          ? `<div class="preview-empty">Archivo cargado (${files.length})</div>`
+          ? `<div class="preview-card"><span class="preview-count">${files.length}</span><span class="preview-label">Archivo${files.length === 1 ? "" : "s"} cargado${files.length === 1 ? "" : "s"}</span></div>`
           : '<div class="preview-empty">Todavía no subiste imágenes.</div>';
         wireVariantImageSelects();
       });
@@ -320,7 +321,7 @@
       const statusLabels = { Todos:"Todos", published:"Publicado", draft:"Borrador", archived:"Archivado" };
       const categories = [...new Set(products.map((item) => item.categories?.name || item.category || "Sin categoría"))];
       const filterButtons = (items, selected, key, labels = null) => items.map((item) => `<button type="button" class="${key}-filter ${selected === item ? "active" : ""}" data-${key}="${escapeHtml(item)}">${escapeHtml(labels?.[item] || item)}</button>`).join("");
-      const rows = (items) => items.length ? `<table><thead><tr><th>Foto</th><th>Producto</th><th>SKU</th><th>Minorista</th><th>Mayorista</th><th>Stock</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${items.map(p => `<tr><td>${p.product_images?.[0]?.image_url ? `<img class="photo-thumb" src="${escapeHtml(p.product_images[0].image_url)}" alt="">` : "—"}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku)}</td><td>${money(p.retail_price)}</td><td>${money(p.wholesale_price)}</td><td><span class="pill ${Number(p.stock) <= 5 ? "low" : ""}">${p.stock}</span></td><td><span class="status-pill" data-status="${escapeHtml(p.status)}">${statusLabel(p.status)}</span></td><td><div class="row-actions"><button class="edit" data-edit-product="${p.id}">Editar</button><button class="edit delete" type="button" data-delete-product="${p.id}" aria-label="Eliminar ${escapeHtml(p.name)}" title="Eliminar producto">🗑</button></div></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No encontramos productos.</p>';
+      const rows = (items) => items.length ? `<table><thead><tr><th>Foto</th><th>Producto</th><th>SKU</th><th>Minorista</th><th>Mayorista</th><th>Stock</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${items.map(p => `<tr><td>${p.product_images?.[0]?.image_url ? `<img class="photo-thumb" src="${escapeHtml(p.product_images[0].image_url)}" alt="">` : "—"}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku)}</td><td>${money(p.retail_price)}</td><td>${money(p.wholesale_price)}</td><td><span class="pill ${Number(p.stock) <= 5 ? "low" : ""}">${p.stock}</span></td><td>${statusLabel(p.status)}</td><td><div class="row-actions"><button class="edit" data-edit-product="${p.id}">Editar</button><button class="edit delete" type="button" data-delete-product="${p.id}" aria-label="Eliminar ${escapeHtml(p.name)}" title="Eliminar producto">🗑</button></div></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No encontramos productos.</p>';
       content.innerHTML = `<section class="panel"><div class="actions"><button id="newProduct" class="primary" type="button">+ Nuevo producto</button></div><h2>Administrar catálogo (${products.length})</h2><div class="product-filters"><input id="productSearch" class="product-search" type="search" placeholder="Buscar por nombre, SKU, categoría o estado…"><div class="filter-row"><div class="filter-group">${filterButtons(allStatuses, "Todos", "status", statusLabels)}</div><div class="filter-group">${filterButtons(["Todos", ...categories], "Todos", "category")}</div></div></div><div id="productRows">${rows(products)}</div></section>`;
       document.querySelector("#newProduct").addEventListener("click", async (event) => {
         event.preventDefault();
