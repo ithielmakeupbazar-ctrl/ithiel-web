@@ -56,10 +56,11 @@
     const content = document.querySelector("#content");
     let supabase;
     let currentView = "dashboard";
+    let activeSessionToken = "";
 
     function money(value) { return value === null || value === undefined || value === "" ? "—" : `$${Number(value).toLocaleString("es-AR")}`; }
     function escapeHtml(value) { return String(value ?? "").replace(/[&<>'\"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c])); }
-    function statusLabel(status) { return ({ published:"🟢 Publicado", draft:"🟡 Borrador", archived:"⚫ Archivado", pending:"🟠 Pendiente", processing:"🔵 En proceso", completed:"✅ Completado", cancelled:"🔴 Cancelado" })[status] || escapeHtml(status); }
+    function statusLabel(status) { return ({ published:"Publicado", draft:"Borrador", archived:"Archivado", pending:"Pendiente", processing:"En proceso", completed:"Completado", cancelled:"Cancelado" })[status] || escapeHtml(status); }
     function setNotice(message = "") { notice.textContent = message; }
     function setLoading() { content.innerHTML = '<p class="empty">Cargando…</p>'; }
     function parseNumber(value) { const n = Number(String(value ?? "").replace(",", ".")); return Number.isFinite(n) ? n : 0; }
@@ -207,7 +208,7 @@
               <input id="productPhoto" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
               <button class="outline" type="button" id="pickPhotos">Elegir archivos</button>
             </div>
-            <div id="photoPreview" class="photo-preview">${product?.product_images?.length ? product.product_images.map(image => `<div class="preview-thumb"><img src="${escapeHtml(image.image_url)}" alt=""><span>Actual</span></div>`).join("") : '<div class="preview-empty">Todavía no subiste imágenes.</div>'}</div>
+            <div id="photoPreview" class="photo-preview"><div class="preview-empty">Todavía no subiste imágenes.</div></div>
           </div>
           ${existingImages}
           <label class="wide">Nombre<input id="productName" required maxlength="180" value="${escapeHtml(product?.name || "")}"></label>
@@ -251,7 +252,7 @@
         const files = Array.from(photoInput.files || []);
         selectedImageUrls = files.map((file, index) => `__local__${index}:${file.name}`);
         preview.innerHTML = files.length
-          ? files.map((file) => `<div class="preview-thumb"><img src="${URL.createObjectURL(file)}" alt=""><span>${escapeHtml(file.name)}</span></div>`).join("")
+          ? `<div class="preview-empty">Archivo cargado (${files.length})</div>`
           : '<div class="preview-empty">Todavía no subiste imágenes.</div>';
         wireVariantImageSelects();
       });
@@ -315,8 +316,12 @@
     }
 
     function renderProducts(products) {
-      const rows = (items) => items.length ? `<table><thead><tr><th>Foto</th><th>Producto</th><th>SKU</th><th>Minorista</th><th>Mayorista</th><th>Stock</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${items.map(p => `<tr><td>${p.product_images?.[0]?.image_url ? `<img class="photo-thumb" src="${escapeHtml(p.product_images[0].image_url)}" alt="">` : "—"}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku)}</td><td>${money(p.retail_price)}</td><td>${money(p.wholesale_price)}</td><td><span class="pill ${Number(p.stock) <= 5 ? "low" : ""}">${p.stock}</span></td><td><span class="pill">${statusLabel(p.status)}</span></td><td><button class="edit" data-edit-product="${p.id}">Editar</button><button class="edit delete" type="button" data-delete-product="${p.id}" aria-label="Eliminar ${escapeHtml(p.name)}" title="Eliminar producto">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No encontramos productos.</p>';
-      content.innerHTML = `<section class="panel"><div class="actions"><button id="newProduct" class="primary" type="button">+ Nuevo producto</button></div><h2>Administrar catálogo (${products.length})</h2><input id="productSearch" class="product-search" type="search" placeholder="Buscar por nombre, SKU, categoría o estado…"><div id="productRows">${rows(products)}</div></section>`;
+      const allStatuses = ["Todos","published","draft","archived"];
+      const statusLabels = { Todos:"Todos", published:"Publicado", draft:"Borrador", archived:"Archivado" };
+      const categories = [...new Set(products.map((item) => item.categories?.name || item.category || "Sin categoría"))];
+      const filterButtons = (items, selected, key, labels = null) => items.map((item) => `<button type="button" class="${key}-filter ${selected === item ? "active" : ""}" data-${key}="${escapeHtml(item)}">${escapeHtml(labels?.[item] || item)}</button>`).join("");
+      const rows = (items) => items.length ? `<table><thead><tr><th>Foto</th><th>Producto</th><th>SKU</th><th>Minorista</th><th>Mayorista</th><th>Stock</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${items.map(p => `<tr><td>${p.product_images?.[0]?.image_url ? `<img class="photo-thumb" src="${escapeHtml(p.product_images[0].image_url)}" alt="">` : "—"}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku)}</td><td>${money(p.retail_price)}</td><td>${money(p.wholesale_price)}</td><td><span class="pill ${Number(p.stock) <= 5 ? "low" : ""}">${p.stock}</span></td><td><span class="status-pill" data-status="${escapeHtml(p.status)}">${statusLabel(p.status)}</span></td><td><div class="row-actions"><button class="edit" data-edit-product="${p.id}">Editar</button><button class="edit delete" type="button" data-delete-product="${p.id}" aria-label="Eliminar ${escapeHtml(p.name)}" title="Eliminar producto">🗑</button></div></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No encontramos productos.</p>';
+      content.innerHTML = `<section class="panel"><div class="actions"><button id="newProduct" class="primary" type="button">+ Nuevo producto</button></div><h2>Administrar catálogo (${products.length})</h2><div class="product-filters"><input id="productSearch" class="product-search" type="search" placeholder="Buscar por nombre, SKU, categoría o estado…"><div class="filter-row"><div class="filter-group">${filterButtons(allStatuses, "Todos", "status", statusLabels)}</div><div class="filter-group">${filterButtons(["Todos", ...categories], "Todos", "category")}</div></div></div><div id="productRows">${rows(products)}</div></section>`;
       document.querySelector("#newProduct").addEventListener("click", async (event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -335,8 +340,24 @@
         try { await callAdmin("deleteProduct", { productId: button.dataset.deleteProduct }); await loadView("products"); }
         catch (error) { alert(error.message); }
       })); };
+      let selectedStatus = "Todos";
+      let selectedCategory = "Todos";
+      const applyFilters = () => {
+        const term = document.querySelector("#productSearch").value.trim().toLocaleLowerCase("es-AR");
+        const filtered = products.filter((p) => {
+          const category = p.categories?.name || p.category || "Sin categoría";
+          const text = `${p.name} ${p.sku} ${p.status} ${category} ${p.subcategories?.name || ""}`.toLocaleLowerCase("es-AR");
+          const statusMatch = selectedStatus === "Todos" || p.status === selectedStatus;
+          const categoryMatch = selectedCategory === "Todos" || category === selectedCategory;
+          return statusMatch && categoryMatch && text.includes(term);
+        });
+        document.querySelector("#productRows").innerHTML = rows(filtered);
+        wireRows();
+      };
       wireRows();
-      document.querySelector("#productSearch").addEventListener("input", (event) => { const term=event.target.value.trim().toLocaleLowerCase("es-AR"); const filtered=products.filter(p => `${p.name} ${p.sku} ${p.status} ${p.categories?.name || ""} ${p.subcategories?.name || ""}`.toLocaleLowerCase("es-AR").includes(term)); document.querySelector("#productRows").innerHTML=rows(filtered); wireRows(); });
+      document.querySelector("#productSearch").addEventListener("input", applyFilters);
+      document.querySelectorAll("[data-status]").forEach((button) => button.addEventListener("click", () => { selectedStatus = button.dataset.status; document.querySelectorAll("[data-status]").forEach((item) => item.classList.toggle("active", item.dataset.status === selectedStatus)); applyFilters(); }));
+      document.querySelectorAll("[data-category]").forEach((button) => button.addEventListener("click", () => { selectedCategory = button.dataset.category; document.querySelectorAll("[data-category]").forEach((item) => item.classList.toggle("active", item.dataset.category === selectedCategory)); applyFilters(); }));
     }
 
     function showProductError(error) {
@@ -528,7 +549,7 @@
       document.querySelector("#sendPasswordReset").addEventListener("click", async () => {
         const message = document.querySelector("#adminAccountMessage");
         message.className = "notice is-muted"; message.textContent = "Enviando email…";
-        const { error } = await supabase.auth.resetPasswordForEmail(session.user.email, { redirectTo: `${window.location.origin}/cuenta` });
+        const { error } = await supabase.auth.resetPasswordForEmail(session.user.email, { redirectTo: `${window.location.origin}/cuenta.html` });
         if (error) { message.className = "notice is-error"; message.textContent = error.message; return; }
         message.className = "notice is-success"; message.textContent = "Te enviamos un email para cambiar tu contraseña.";
       });
@@ -553,6 +574,9 @@
     }
 
     async function showApp(session) {
+      const token = session?.access_token || "";
+      if (token && token === activeSessionToken) return;
+      activeSessionToken = token;
       document.querySelector("#accountEmail").textContent = session.user.email || "Cuenta administradora";
       loginView.classList.add("hidden");
       appView.classList.remove("hidden");
@@ -566,7 +590,13 @@
       }
       supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       supabase.auth.getSession().then(({ data: { session } }) => { if (session) showApp(session); });
-      supabase.auth.onAuthStateChange((_event, session) => { if (session) showApp(session); });
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (!session) {
+          activeSessionToken = "";
+          return;
+        }
+        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") showApp(session);
+      });
     }
 
     document.querySelector("#loginForm").addEventListener("submit", async (event) => {
