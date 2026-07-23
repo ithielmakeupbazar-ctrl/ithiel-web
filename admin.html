@@ -129,11 +129,29 @@
           wholesale.value = formatMoneyInput(retailValue / 0.8);
         }
       };
+      const initialize = () => {
+        const supplierValue = parseNumber(supplier.value);
+        const wholesaleValue = parseNumber(wholesale.value);
+        const retailValue = parseNumber(retail.value);
+        if (supplierValue > 0) {
+          sync("supplier");
+          return;
+        }
+        if (wholesaleValue > 0) {
+          sync("wholesale");
+          return;
+        }
+        if (retailValue > 0) {
+          sync("retail");
+        }
+      };
       supplier.addEventListener("input", () => sync("supplier"));
       supplier.addEventListener("blur", () => sync("supplier"));
       wholesale.addEventListener("input", () => sync("wholesale"));
       wholesale.addEventListener("blur", () => sync("wholesale"));
       retail.addEventListener("input", () => sync("retail"));
+      retail.addEventListener("blur", () => sync("retail"));
+      initialize();
     }
 
     async function callAdmin(action, payload = {}) {
