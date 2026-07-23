@@ -56,105 +56,12 @@
     const content = document.querySelector("#content");
     let supabase;
     let currentView = "dashboard";
-    let activeSessionToken = "";
 
     function money(value) { return value === null || value === undefined || value === "" ? "—" : `$${Number(value).toLocaleString("es-AR")}`; }
     function escapeHtml(value) { return String(value ?? "").replace(/[&<>'\"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c])); }
-    function statusLabel(status) {
-      const label = ({ published:"Publicado", draft:"Borrador", archived:"Archivado", pending:"Pendiente", processing:"En proceso", completed:"Completado", cancelled:"Cancelado" })[status] || escapeHtml(status);
-      return `<span class="status-pill" data-status="${escapeHtml(status)}"><span class="status-dot" aria-hidden="true"></span><span>${label}</span></span>`;
-    }
+    function statusLabel(status) { return ({ published:"🟢 Publicado", draft:"🟡 Borrador", archived:"⚫ Archivado", pending:"🟠 Pendiente", processing:"🔵 En proceso", completed:"✅ Completado", cancelled:"🔴 Cancelado" })[status] || escapeHtml(status); }
     function setNotice(message = "") { notice.textContent = message; }
     function setLoading() { content.innerHTML = '<p class="empty">Cargando…</p>'; }
-    function parseNumber(value) { const n = Number(String(value ?? "").replace(",", ".")); return Number.isFinite(n) ? n : 0; }
-    function formatMoneyInput(value) { return value ? Number(value).toFixed(0) : ""; }
-    function derivePrices(supplierValue, wholesaleValue, retailValue) {
-      const supplier = parseNumber(supplierValue);
-      let wholesale = parseNumber(wholesaleValue);
-      let retail = parseNumber(retailValue);
-      if (supplier > 0 && !wholesale) wholesale = supplier * 1.8;
-      if (wholesale > 0 && !retail) retail = wholesale * 0.8;
-      if (supplier > 0 && wholesale <= 0) wholesale = supplier * 1.8;
-      if (wholesale > 0 && retail <= 0) retail = wholesale * 0.8;
-      return { supplier, wholesale, retail };
-    }
-    function parseVariantInput() {
-      return Array.from(document.querySelectorAll("[data-variant-row]"))
-        .map((row) => {
-          const color = row.querySelector("[data-variant-color]").value.trim();
-          const size = row.querySelector("[data-variant-size]").value.trim();
-          const imageField = row.querySelector("[data-variant-image]");
-          const imageUrl = imageField ? imageField.value.trim() : "";
-          const wholesale = row.querySelector("[data-variant-wholesale]").value.trim();
-          const retail = row.querySelector("[data-variant-retail]").value.trim();
-          if (!color && !size && !imageUrl && !wholesale && !retail) return null;
-          return {
-            color,
-            size,
-            imageUrl,
-            wholesalePrice: wholesale ? Number(wholesale) : "",
-            retailPrice: retail ? Number(retail) : "",
-          };
-        })
-        .filter(Boolean);
-    }
-    function variantMarkup(variant = {}, imageOptions = []) {
-      const imageField = imageOptions.length > 1
-        ? `<select data-variant-image><option value="">Elegir imagen</option>${imageOptions.map((src, index) => `<option value="${escapeHtml(src)}" ${variant.imageUrl === src ? "selected" : ""}>Imagen ${index + 1}</option>`).join("")}</select>`
-        : `<input data-variant-image type="url" placeholder="URL de imagen" value="${escapeHtml(variant.imageUrl || "")}">`;
-      return `<div class="variant-row" data-variant-row>
-        <label class="variant-field"><span>Color</span><input data-variant-color type="text" placeholder="Ej.: Rosa" value="${escapeHtml(variant.color || "")}"></label>
-        <label class="variant-field"><span>Talle</span><input data-variant-size type="text" placeholder="Ej.: M" value="${escapeHtml(variant.size || "")}"></label>
-        <label class="variant-field"><span>Imagen</span>${imageField}</label>
-        <button class="edit delete variant-remove" type="button" data-remove-variant>Quitar</button>
-      </div>`;
-    }
-    function wirePriceSync() {
-      const supplier = document.querySelector("#productSupplier");
-      const wholesale = document.querySelector("#productWholesale");
-      const retail = document.querySelector("#productRetail");
-      const sync = (source) => {
-        const supplierValue = parseNumber(supplier.value);
-        const wholesaleValue = parseNumber(wholesale.value);
-        const retailValue = parseNumber(retail.value);
-        if (source === "supplier" && supplierValue > 0) {
-          wholesale.value = formatMoneyInput(supplierValue * 1.8);
-          retail.value = formatMoneyInput(supplierValue * 1.8 * 0.8);
-          return;
-        }
-        if (source === "wholesale" && wholesaleValue > 0) {
-          if (!supplierValue) supplier.value = formatMoneyInput(wholesaleValue / 1.8);
-          retail.value = formatMoneyInput(wholesaleValue * 0.8);
-          return;
-        }
-        if (source === "retail" && retailValue > 0 && !wholesaleValue && !supplierValue) {
-          wholesale.value = formatMoneyInput(retailValue / 0.8);
-        }
-      };
-      const initialize = () => {
-        const supplierValue = parseNumber(supplier.value);
-        const wholesaleValue = parseNumber(wholesale.value);
-        const retailValue = parseNumber(retail.value);
-        if (supplierValue > 0) {
-          sync("supplier");
-          return;
-        }
-        if (wholesaleValue > 0) {
-          sync("wholesale");
-          return;
-        }
-        if (retailValue > 0) {
-          sync("retail");
-        }
-      };
-      supplier.addEventListener("input", () => sync("supplier"));
-      supplier.addEventListener("blur", () => sync("supplier"));
-      wholesale.addEventListener("input", () => sync("wholesale"));
-      wholesale.addEventListener("blur", () => sync("wholesale"));
-      retail.addEventListener("input", () => sync("retail"));
-      retail.addEventListener("blur", () => sync("retail"));
-      initialize();
-    }
 
     async function callAdmin(action, payload = {}) {
       const { data: { session } } = await supabase.auth.getSession();
@@ -187,101 +94,30 @@
     async function renderProductForm(product = null) {
       const options = await callAdmin("catalogOptions");
       const categoryOptions = ['<option value="">Elegir categoría</option>', ...options.categories.map(c => `<option value="${c.id}" ${product?.category_id === c.id ? "selected" : ""}>${escapeHtml(c.name)}</option>`)].join("");
-      const existingVariants = Array.isArray(product?.variants) ? product.variants : [];
-      const imageOptions = product?.product_images?.map((image) => image.image_url) || [];
-      const existingImages = product?.product_images?.length ? `<div class="wide"><label>Fotos actuales</label><div class="product-photos">${product.product_images.map(image => `<div class="product-photo"><img src="${escapeHtml(image.image_url)}" alt=""><button class="edit" type="button" data-delete-image="${image.id}">Quitar</button></div>`).join("")}</div></div>` : "";
-      const variantList = existingVariants.length ? existingVariants.map((variant) => variantMarkup({
-        color: variant.color || "",
-        size: variant.size || "",
-        imageUrl: variant.image_url || variant.imageUrl || "",
-        wholesalePrice: variant.wholesale_price || variant.wholesalePrice || "",
-        retailPrice: variant.retail_price || variant.retailPrice || "",
-      }, imageOptions)).join("") : variantMarkup({}, imageOptions);
       content.innerHTML = `<section class="panel"><div class="actions"><button id="backProducts" class="outline" type="button">← Volver a productos</button></div>
         <h2>${product ? "Editar producto" : "Nuevo producto"}</h2>
         <form id="productForm" class="product-form">
-          <div class="upload-card wide">
-            <div class="upload-head">
-              <div>
-                <h3>Fotos</h3>
-                <p>Subí una o varias imágenes. La primera queda como principal.</p>
-              </div>
-              <input id="productPhoto" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
-              <button class="outline" type="button" id="pickPhotos">Elegir archivos</button>
-            </div>
-            <div id="photoPreview" class="photo-preview"><div class="preview-empty">Todavía no subiste imágenes.</div></div>
-          </div>
-          ${existingImages}
           <label class="wide">Nombre<input id="productName" required maxlength="180" value="${escapeHtml(product?.name || "")}"></label>
           <label class="wide">Descripción<textarea id="productDescription" rows="3" maxlength="1500">${escapeHtml(product?.description || "")}</textarea></label>
           <label>Categoría<select id="productCategory" required>${categoryOptions}</select></label>
           <label>Subcategoría<select id="productSubcategory"><option value="">Sin subcategoría</option></select></label>
-          <label class="price-field">Precio proveedor<input id="productSupplier" type="number" min="1" value="${product?.supplier_price || ""}" placeholder="Opcional"></label>
-          <label class="price-field">Precio mayorista<input id="productWholesale" type="number" min="1" value="${product?.wholesale_price || ""}"></label>
-          <label class="price-field">Precio minorista<input id="productRetail" type="number" min="1" value="${product?.retail_price || ""}"></label>
+          <label>Precio minorista (opcional)<input id="productRetail" type="number" min="1" value="${product?.retail_price || ""}"></label>
+          <label>Precio mayorista<input id="productWholesale" type="number" min="1" value="${product?.wholesale_price || ""}"></label>
           <label>Stock<input id="productStock" type="number" min="0" required value="${product?.stock ?? 30}"></label>
           <label>Estado<select id="productStatus"><option value="published" ${product?.status === "published" ? "selected" : ""}>Publicado</option><option value="draft" ${product?.status === "draft" ? "selected" : ""}>Borrador</option><option value="archived" ${product?.status === "archived" ? "selected" : ""}>Archivado</option></select></label>
-          <div class="wide variants-card">
-            <div class="variants-head">
-              <div>
-                <h3>Variantes</h3>
-                <p>Agregá colores, talles e imagen por variante si hace falta.</p>
-              </div>
-              <button id="addVariant" class="outline" type="button">+ Agregar variante</button>
-            </div>
-            <div id="variantList" class="variant-list">${variantList}</div>
-          </div>
+          ${product?.product_images?.length ? `<div class="wide"><label>Fotos actuales</label><div class="product-photos">${product.product_images.map(image => `<div class="product-photo"><img src="${escapeHtml(image.image_url)}" alt=""><button class="edit" type="button" data-delete-image="${image.id}">Quitar</button></div>`).join("")}</div></div>` : ""}
+          <label class="wide">Foto (opcional, JPG/PNG/WEBP hasta 4 MB)<input id="productPhoto" type="file" accept="image/jpeg,image/png,image/webp"></label>
           <div class="wide"><button class="primary" type="submit">${product ? "Guardar cambios" : "Crear producto"}</button></div>
         </form><p id="productMessage" class="notice"></p>
       </section>`;
       const category = document.querySelector("#productCategory");
       const subcategory = document.querySelector("#productSubcategory");
-      const photoInput = document.querySelector("#productPhoto");
-      const pickPhotos = document.querySelector("#pickPhotos");
-      const preview = document.querySelector("#photoPreview");
-      const variantListNode = document.querySelector("#variantList");
-      let selectedImageUrls = imageOptions.slice();
       const fillSubcategories = () => {
         const selected = category.value;
         subcategory.innerHTML = '<option value="">Sin subcategoría</option>' + options.subcategories.filter(s => s.category_id === selected).map(s => `<option value="${s.id}" ${product?.subcategory_id === s.id ? "selected" : ""}>${escapeHtml(s.name)}</option>`).join("");
       };
       category.addEventListener("change", () => { product = { ...product, subcategory_id:"" }; fillSubcategories(); });
       fillSubcategories();
-      wirePriceSync();
-      pickPhotos.addEventListener("click", () => photoInput.click());
-      photoInput.addEventListener("change", () => {
-        const files = Array.from(photoInput.files || []);
-        selectedImageUrls = files.map((file, index) => `__local__${index}:${file.name}`);
-        preview.innerHTML = files.length
-          ? `<div class="preview-card"><span class="preview-count">${files.length}</span><span class="preview-label">Archivo${files.length === 1 ? "" : "s"} cargado${files.length === 1 ? "" : "s"}</span></div>`
-          : '<div class="preview-empty">Todavía no subiste imágenes.</div>';
-        wireVariantImageSelects();
-      });
-      document.querySelector("#addVariant").addEventListener("click", () => {
-        variantListNode.insertAdjacentHTML("beforeend", variantMarkup({}, selectedImageUrls));
-        wireVariantButtons();
-        wireVariantImageSelects();
-      });
-      function wireVariantButtons() {
-        document.querySelectorAll("[data-remove-variant]").forEach((button) => button.addEventListener("click", () => {
-          const rows = document.querySelectorAll("[data-variant-row]");
-          if (rows.length === 1) {
-            rows[0].querySelectorAll("input").forEach((input) => input.value = "");
-            return;
-          }
-          button.closest("[data-variant-row]").remove();
-        }));
-      }
-      function wireVariantImageSelects() {
-        document.querySelectorAll("[data-variant-row]").forEach((row) => {
-          const imageCell = row.querySelector("[data-variant-image]");
-          if (!imageCell || imageCell.tagName !== "SELECT") return;
-          const current = imageCell.value;
-          imageCell.innerHTML = `<option value="">Foto de variante</option>${selectedImageUrls.map((src, index) => `<option value="${escapeHtml(src)}" ${current === src ? "selected" : ""}>Foto ${index + 1}</option>`).join("")}`;
-        });
-      }
-      wireVariantButtons();
-      wireVariantImageSelects();
       document.querySelector("#backProducts").addEventListener("click", () => loadView("products"));
       document.querySelectorAll("[data-delete-image]").forEach(button => button.addEventListener("click", async () => {
         if (!confirm("¿Quitar esta foto del producto?")) return;
@@ -295,18 +131,13 @@
         event.preventDefault();
         const message = document.querySelector("#productMessage"); message.className = "notice is-muted"; message.textContent = "Guardando…";
         try {
-          const variants = parseVariantInput();
           const result = await callAdmin("saveProduct", {
             id: product?.id || "", name: document.querySelector("#productName").value, description: document.querySelector("#productDescription").value,
-            categoryId: category.value, subcategoryId: subcategory.value,
-            supplierPrice: document.querySelector("#productSupplier").value,
-            retailPrice: document.querySelector("#productRetail").value,
-            wholesalePrice: document.querySelector("#productWholesale").value,
-            stock: document.querySelector("#productStock").value, status: document.querySelector("#productStatus").value,
-            variants,
+            categoryId: category.value, subcategoryId: subcategory.value, retailPrice: document.querySelector("#productRetail").value,
+            wholesalePrice: document.querySelector("#productWholesale").value, stock: document.querySelector("#productStock").value, status: document.querySelector("#productStatus").value,
           });
-          const photos = Array.from(photoInput.files || []);
-          for (const photo of photos) {
+          const photo = document.querySelector("#productPhoto").files[0];
+          if (photo) {
             const dataUrl = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(photo); });
             await callAdmin("uploadProductImage", { productId: result.id, dataUrl });
           }
@@ -317,48 +148,18 @@
     }
 
     function renderProducts(products) {
-      const allStatuses = ["Todos","published","draft","archived"];
-      const statusLabels = { Todos:"Todos", published:"Publicado", draft:"Borrador", archived:"Archivado" };
-      const categories = [...new Set(products.map((item) => item.categories?.name || item.category || "Sin categoría"))];
-      const filterButtons = (items, selected, key, labels = null) => items.map((item) => `<button type="button" class="${key}-filter ${selected === item ? "active" : ""}" data-${key}="${escapeHtml(item)}">${escapeHtml(labels?.[item] || item)}</button>`).join("");
-      const rows = (items) => items.length ? `<table><thead><tr><th>Foto</th><th>Producto</th><th>SKU</th><th>Minorista</th><th>Mayorista</th><th>Stock</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${items.map(p => `<tr><td>${p.product_images?.[0]?.image_url ? `<img class="photo-thumb" src="${escapeHtml(p.product_images[0].image_url)}" alt="">` : "—"}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku)}</td><td>${money(p.retail_price)}</td><td>${money(p.wholesale_price)}</td><td><span class="pill ${Number(p.stock) <= 5 ? "low" : ""}">${p.stock}</span></td><td>${statusLabel(p.status)}</td><td><div class="row-actions"><button class="edit" data-edit-product="${p.id}">Editar</button><button class="edit delete" type="button" data-delete-product="${p.id}" aria-label="Eliminar ${escapeHtml(p.name)}" title="Eliminar producto">🗑</button></div></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No encontramos productos.</p>';
-      content.innerHTML = `<section class="panel"><div class="actions"><button id="newProduct" class="primary" type="button">+ Nuevo producto</button></div><h2>Administrar catálogo (${products.length})</h2><div class="product-filters"><input id="productSearch" class="product-search" type="search" placeholder="Buscar por nombre, SKU, categoría o estado…"><div class="filter-row"><div class="filter-group">${filterButtons(allStatuses, "Todos", "status", statusLabels)}</div><div class="filter-group">${filterButtons(["Todos", ...categories], "Todos", "category")}</div></div></div><div id="productRows">${rows(products)}</div></section>`;
-      document.querySelector("#newProduct").addEventListener("click", async (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        try { await renderProductForm(); }
-        catch (error) { showProductError(error); }
-      });
-      const wireRows = () => { document.querySelectorAll("[data-edit-product]").forEach(button => button.addEventListener("click", async (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        try { await renderProductForm(products.find(p => p.id === button.dataset.editProduct)); }
-        catch (error) { showProductError(error); }
-      }));
+      const rows = (items) => items.length ? `<table><thead><tr><th>Foto</th><th>Producto</th><th>SKU</th><th>Minorista</th><th>Mayorista</th><th>Stock</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${items.map(p => `<tr><td>${p.product_images?.[0]?.image_url ? `<img class="photo-thumb" src="${escapeHtml(p.product_images[0].image_url)}" alt="">` : "—"}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku)}</td><td>${money(p.retail_price)}</td><td>${money(p.wholesale_price)}</td><td><span class="pill ${Number(p.stock) <= 5 ? "low" : ""}">${p.stock}</span></td><td><span class="pill">${statusLabel(p.status)}</span></td><td><button class="edit" data-edit-product="${p.id}">Editar</button><button class="edit delete" type="button" data-delete-product="${p.id}" aria-label="Eliminar ${escapeHtml(p.name)}" title="Eliminar producto">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No encontramos productos.</p>';
+      content.innerHTML = `<section class="panel"><div class="actions"><button id="newProduct" class="primary" type="button">+ Nuevo producto</button></div><h2>Administrar catálogo (${products.length})</h2><input id="productSearch" class="product-search" type="search" placeholder="Buscar por nombre, SKU, categoría o estado…"><div id="productRows">${rows(products)}</div></section>`;
+      document.querySelector("#newProduct").addEventListener("click", () => renderProductForm().catch(showProductError));
+      const wireRows = () => { document.querySelectorAll("[data-edit-product]").forEach(button => button.addEventListener("click", () => renderProductForm(products.find(p => p.id === button.dataset.editProduct)).catch(showProductError)));
       document.querySelectorAll("[data-delete-product]").forEach(button => button.addEventListener("click", async () => {
         const product = products.find(p => p.id === button.dataset.deleteProduct);
         if (!confirm(`¿Eliminar definitivamente “${product?.name || "este producto"}”? Esta acción no se puede deshacer.`)) return;
         try { await callAdmin("deleteProduct", { productId: button.dataset.deleteProduct }); await loadView("products"); }
         catch (error) { alert(error.message); }
       })); };
-      let selectedStatus = "Todos";
-      let selectedCategory = "Todos";
-      const applyFilters = () => {
-        const term = document.querySelector("#productSearch").value.trim().toLocaleLowerCase("es-AR");
-        const filtered = products.filter((p) => {
-          const category = p.categories?.name || p.category || "Sin categoría";
-          const text = `${p.name} ${p.sku} ${p.status} ${category} ${p.subcategories?.name || ""}`.toLocaleLowerCase("es-AR");
-          const statusMatch = selectedStatus === "Todos" || p.status === selectedStatus;
-          const categoryMatch = selectedCategory === "Todos" || category === selectedCategory;
-          return statusMatch && categoryMatch && text.includes(term);
-        });
-        document.querySelector("#productRows").innerHTML = rows(filtered);
-        wireRows();
-      };
       wireRows();
-      document.querySelector("#productSearch").addEventListener("input", applyFilters);
-      document.querySelectorAll("[data-status]").forEach((button) => button.addEventListener("click", () => { selectedStatus = button.dataset.status; document.querySelectorAll("[data-status]").forEach((item) => item.classList.toggle("active", item.dataset.status === selectedStatus)); applyFilters(); }));
-      document.querySelectorAll("[data-category]").forEach((button) => button.addEventListener("click", () => { selectedCategory = button.dataset.category; document.querySelectorAll("[data-category]").forEach((item) => item.classList.toggle("active", item.dataset.category === selectedCategory)); applyFilters(); }));
+      document.querySelector("#productSearch").addEventListener("input", (event) => { const term=event.target.value.trim().toLocaleLowerCase("es-AR"); const filtered=products.filter(p => `${p.name} ${p.sku} ${p.status} ${p.categories?.name || ""} ${p.subcategories?.name || ""}`.toLocaleLowerCase("es-AR").includes(term)); document.querySelector("#productRows").innerHTML=rows(filtered); wireRows(); });
     }
 
     function showProductError(error) {
@@ -550,7 +351,7 @@
       document.querySelector("#sendPasswordReset").addEventListener("click", async () => {
         const message = document.querySelector("#adminAccountMessage");
         message.className = "notice is-muted"; message.textContent = "Enviando email…";
-        const { error } = await supabase.auth.resetPasswordForEmail(session.user.email, { redirectTo: `${window.location.origin}/cuenta.html` });
+        const { error } = await supabase.auth.resetPasswordForEmail(session.user.email, { redirectTo: `${window.location.origin}/cuenta` });
         if (error) { message.className = "notice is-error"; message.textContent = error.message; return; }
         message.className = "notice is-success"; message.textContent = "Te enviamos un email para cambiar tu contraseña.";
       });
@@ -575,9 +376,6 @@
     }
 
     async function showApp(session) {
-      const token = session?.access_token || "";
-      if (token && token === activeSessionToken) return;
-      activeSessionToken = token;
       document.querySelector("#accountEmail").textContent = session.user.email || "Cuenta administradora";
       loginView.classList.add("hidden");
       appView.classList.remove("hidden");
@@ -591,13 +389,7 @@
       }
       supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       supabase.auth.getSession().then(({ data: { session } }) => { if (session) showApp(session); });
-      supabase.auth.onAuthStateChange((event, session) => {
-        if (!session) {
-          activeSessionToken = "";
-          return;
-        }
-        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") showApp(session);
-      });
+      supabase.auth.onAuthStateChange((_event, session) => { if (session) showApp(session); });
     }
 
     document.querySelector("#loginForm").addEventListener("submit", async (event) => {
@@ -613,10 +405,7 @@
       if (error) setNotice("No se pudo iniciar con Google.");
     });
     document.querySelector("#logout").addEventListener("click", () => supabase.auth.signOut().then(() => location.reload()));
-    document.querySelectorAll(".nav button").forEach(button => button.addEventListener("click", (event) => {
-      event.preventDefault();
-      loadView(button.dataset.view);
-    }));
+    document.querySelectorAll(".nav button").forEach(button => button.addEventListener("click", () => loadView(button.dataset.view)));
     setup();
   </script>
 </body>

@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Catálogo online de Ithiel: bazar, makeup y lencería con compra minorista, mayorista y cuenta opcional.">
   <title>Ithiel | Bazar, Makeup y Lencería</title>
-  <link rel="icon" href="favicon.ico">
   <link rel="stylesheet" href="styles/shared.css">
   <link rel="stylesheet" href="styles/index.css">
 </head>
@@ -108,10 +107,6 @@
     <section class="viewer" role="dialog" aria-modal="true" aria-label="Imagen ampliada">
       <button id="close-image" class="close" type="button">Cerrar</button>
       <img id="large-image" alt="Imagen del producto">
-      <div class="viewer-copy">
-        <h3 id="viewer-title"></h3>
-        <p id="viewer-description"></p>
-      </div>
     </section>
   </div>
 
@@ -131,8 +126,6 @@
     const modal = document.getElementById("modal");
     const imageModal = document.getElementById("image-modal");
     const largeImage = document.getElementById("large-image");
-    const viewerTitle = document.getElementById("viewer-title");
-    const viewerDescription = document.getElementById("viewer-description");
     const cartItems = document.getElementById("cart-items");
     const cartTotal = document.getElementById("cart-total");
     const sendOrder = document.getElementById("send-order");
@@ -150,11 +143,6 @@
     function escapeHtml(value) { return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
     function money(value) { return `$${Number(value || 0).toLocaleString("es-AR")}`; }
     function priceNumber(value) { return Number(value || 0); }
-    function shortDescription(value) {
-      const text = String(value || "").trim();
-      if (!text) return "";
-      return text.length > 120 ? `${text.slice(0, 117).trimEnd()}...` : text;
-    }
     function parseCsv(text) {
       const rows=[]; let row=[]; let cell=""; let quoted=false;
       for(let i=0;i<text.length;i+=1){ const char=text[i], next=text[i+1]; if(char==='"'&&quoted&&next==='"'){cell+='"';i+=1;} else if(char==='"'){quoted=!quoted;} else if(char===','&&!quoted){row.push(cell);cell="";} else if((char==='\n'||char==='\r')&&!quoted){if(char==='\r'&&next==='\n')i+=1;row.push(cell);rows.push(row);row=[];cell="";} else cell+=char; }
@@ -270,12 +258,11 @@
       const actions = hasRetail
         ? `<button class="button secondary" type="button" onclick="addToCart('${escapeHtml(product.id)}')">Agregar</button><button class="button" type="button" onclick="consultProduct('${escapeHtml(product.id)}')">Consultar</button>`
         : `<button class="button" type="button" onclick="consultProduct('${escapeHtml(product.id)}')">Consultar precio</button>`;
-      return `<article class="card"><div class="photo">${image}<span class="availability ${available?"":"out"}">${available?"Disponible":"Consultar"}</span></div><div class="content"><p class="tag">${categoryIcon(category(product))}<span>${escapeHtml(tag)}</span></p><h3>${escapeHtml(product.title)}</h3>${product.description ? `<p class="description">${escapeHtml(shortDescription(product.description))}</p>` : ""}${optionButtons(product,"color","Color")}${optionButtons(product,"size","Talle")}${prices}<div class="card-actions">${actions}</div></div></article>`;
+      return `<article class="card"><div class="photo">${image}<span class="availability ${available?"":"out"}">${available?"Disponible":"Consultar"}</span></div><div class="content"><p class="tag">${categoryIcon(category(product))}<span>${escapeHtml(tag)}</span></p><h3>${escapeHtml(product.title)}</h3>${product.description ? `<p class="description">${escapeHtml(product.description)}</p>` : ""}${optionButtons(product,"color","Color")}${optionButtons(product,"size","Talle")}${prices}<div class="card-actions">${actions}</div></div></article>`;
     }
     window.addToCart=addToCart;
-    window.viewImage=(src,title)=>{const product=allProducts.find((item)=>item.title===title);largeImage.src=src;largeImage.alt=title;viewerTitle.textContent=title;viewerDescription.textContent=product?.description || "Sin descripción disponible.";imageModal.classList.add("open");imageModal.setAttribute("aria-hidden","false");document.body.classList.add("modal-open");};
+    window.viewImage=(src,title)=>{largeImage.src=src;largeImage.alt=title;imageModal.classList.add("open");imageModal.setAttribute("aria-hidden","false");document.body.classList.add("modal-open");};
     document.addEventListener("click",(event)=>{const button=event.target.closest(".image-view");if(!button)return;window.viewImage(decodeURIComponent(button.dataset.image),decodeURIComponent(button.dataset.title));});
-    document.addEventListener("click",(event)=>{const cardNode=event.target.closest(".card");if(!cardNode||event.target.closest("button"))return;const title=cardNode.querySelector("h3")?.textContent?.trim();const product=allProducts.find((item)=>item.title===title);if(!product||!product.image)return;window.viewImage(product.image,product.title);});
     window.consultProduct=(id)=>{const product=allProducts.find((item)=>item.id===id);if(!product)return;const chosen=selections[id]||{};const details=[chosen.color,chosen.size].filter(Boolean).join(" · ");window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Hola! Quiero consultar por: ${product.title}${details ? ` (${details})` : ""} (${product.sku}).`)}`,"_blank");};
     function renderFilters() {
       const preferred=["Bazar","Makeup","Lencería"];
