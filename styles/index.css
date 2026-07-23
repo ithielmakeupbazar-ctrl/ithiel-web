@@ -42,10 +42,10 @@
     .tag .icon { width:14px; height:14px; flex-basis:14px; }
     h3 { margin:0; font-size:19px; line-height:1.2; }
     .description { margin:10px 0; color:#765763; font-size:14px; line-height:1.4; }
-    .price { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:18px 0 14px; }
+    .price { display:grid; gap:8px; margin:18px 0 14px; }
     .price-major { display:grid; color:var(--deep); font-size:22px; font-weight:700; }
     .price-major small { margin-top:3px; color:var(--rose); font-size:10px; letter-spacing:.8px; text-transform:uppercase; }
-    .price-minor { display:grid; color:#9b7785; font-size:14px; font-weight:600; text-align:right; }
+    .price-minor { display:grid; color:#9b7785; font-size:14px; font-weight:600; text-align:left; }
     .price-minor small { margin-bottom:3px; font-size:10px; letter-spacing:.8px; text-transform:uppercase; }
     .options { display:grid; gap:8px; margin:12px 0 0; }
     .option-label { color:#765763; font-size:12px; font-weight:600; }
@@ -70,6 +70,9 @@
     .viewer { position:relative; width:min(760px,100%); max-height:90vh; border-radius:18px; padding:12px; background:#fff; }
     .viewer img { display:block; width:100%; max-height:82vh; object-fit:contain; }
     .viewer .close { position:absolute; top:20px; right:20px; }
+    .viewer-copy { padding:10px 6px 4px; }
+    .viewer-copy h3 { margin:0 0 6px; font-size:18px; }
+    .viewer-copy p { margin:0; color:#765763; font-size:14px; line-height:1.5; white-space:pre-wrap; }
     .cart { width:min(560px,100%); max-height:80vh; overflow:auto; border-radius:20px; padding:22px; background:#fff; box-shadow:0 20px 60px #3215224d; }
     .cart-head { display:flex; align-items:center; justify-content:space-between; gap:16px; }
     .cart-head h2 { margin:0; }
