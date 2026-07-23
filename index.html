@@ -79,6 +79,7 @@
   </main>
 
   <button id="open-cart" class="cart-button" type="button" aria-haspopup="dialog" aria-controls="modal"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8Z"></path><path d="M9 8a3 3 0 0 1 6 0"></path></svg>Mi pedido <span id="count" class="count">0</span></button>
+  <button id="scroll-top" class="scroll-top" type="button" aria-label="Volver arriba" title="Volver arriba"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 14l7-7 7 7"></path><path d="M12 7v10"></path></svg></button>
 
   <div id="modal" class="modal" aria-hidden="true">
     <section class="cart" role="dialog" aria-modal="true" aria-label="Mi pedido">
@@ -249,11 +250,11 @@
       const hasRetail = retail !== null && retail !== undefined && Number(retail) > 0;
       const hasWholesale = wholesale !== null && wholesale !== undefined && Number(wholesale) > 0;
       const prices = hasWholesale && hasRetail
-        ? `<p class="price"><span class="price-major">${money(wholesale)}<small>Precio mayorista</small></span><span class="price-minor"><small>Precio minorista</small>${money(retail)}</span></p>`
+        ? `<div class="price"><div class="price-row"><small>Precio mayorista</small><strong>${money(wholesale)}</strong></div><div class="price-row"><small>Precio minorista</small><strong>${money(retail)}</strong></div></div>`
         : hasWholesale
-          ? `<p class="price"><span class="price-major">${money(wholesale)}<small>Precio mayorista</small></span></p>`
+          ? `<div class="price"><div class="price-row"><small>Precio mayorista</small><strong>${money(wholesale)}</strong></div></div>`
           : hasRetail
-            ? `<p class="price"><span class="price-major">${money(retail)}<small>Precio minorista</small></span></p>`
+            ? `<div class="price"><div class="price-row"><small>Precio minorista</small><strong>${money(retail)}</strong></div></div>`
             : "";
       const actions = hasRetail
         ? `<button class="button secondary" type="button" onclick="addToCart('${escapeHtml(product.id)}')">Agregar</button><button class="button" type="button" onclick="consultProduct('${escapeHtml(product.id)}')">Consultar</button>`
@@ -310,6 +311,11 @@
     imageModal.addEventListener("click",(event)=>{if(event.target===imageModal)closeImage();});
     document.addEventListener("keydown",(event)=>{if(event.key!=="Escape")return;if(modal.classList.contains("open"))setModal(modal,false);if(imageModal.classList.contains("open"))closeImage();});
     document.querySelectorAll("[data-purchase]").forEach((button)=>button.addEventListener("click",()=>{purchaseType=button.dataset.purchase;quote=null;updatePurchaseButtons();quoteCart();}));
+    const scrollTopButton = document.getElementById("scroll-top");
+    const updateScrollTop = () => scrollTopButton.classList.toggle("visible", window.scrollY > 420);
+    scrollTopButton.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+    window.addEventListener("scroll", updateScrollTop, { passive: true });
+    updateScrollTop();
     document.getElementById("register-order").addEventListener("change",(event)=>{document.getElementById("checkout-details").hidden=!event.target.checked; if(!event.target.checked){quote=null;document.getElementById("cart-notice").textContent="Podés enviar tu consulta directa por WhatsApp, sin registrarte.";updateCart();}});
     document.getElementById("phone").addEventListener("change",quoteCart);
     document.getElementById("apply-coupon").addEventListener("click",()=>{couponCode=document.getElementById("coupon").value.trim();quoteCart();});

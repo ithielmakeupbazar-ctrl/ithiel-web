@@ -59,9 +59,42 @@
 
     function money(value) { return value === null || value === undefined || value === "" ? "—" : `$${Number(value).toLocaleString("es-AR")}`; }
     function escapeHtml(value) { return String(value ?? "").replace(/[&<>'\"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c])); }
-    function statusLabel(status) { return ({ published:"🟢 Publicado", draft:"🟡 Borrador", archived:"⚫ Archivado", pending:"🟠 Pendiente", processing:"🔵 En proceso", completed:"✅ Completado", cancelled:"🔴 Cancelado" })[status] || escapeHtml(status); }
+    function statusLabel(status) {
+      const label = ({ published:"Publicado", draft:"Borrador", archived:"Archivado", pending:"Pendiente", processing:"En proceso", completed:"Completado", cancelled:"Cancelado" })[status] || escapeHtml(status);
+      return `<span class="status-pill" data-status="${escapeHtml(status)}"><span class="status-dot" aria-hidden="true"></span><span>${label}</span></span>`;
+    }
     function setNotice(message = "") { notice.textContent = message; }
     function setLoading() { content.innerHTML = '<p class="empty">Cargando…</p>'; }
+    function parseNumber(value) { const n = Number(String(value ?? "").replace(",", ".")); return Number.isFinite(n) ? n : 0; }
+    function formatMoneyInput(value) { return value ? Number(value).toFixed(0) : ""; }
+    function derivePrices(supplierValue, wholesaleValue, retailValue) {
+      const supplier = parseNumber(supplierValue);
+      let wholesale = parseNumber(wholesaleValue);
+      let retail = parseNumber(retailValue);
+      if (supplier > 0 && !wholesale) wholesale = supplier * 1.8;
+      if (wholesale > 0 && !retail) retail = wholesale * 0.8;
+      return { supplier, wholesale, retail };
+    }
+    function parseVariantInput() {
+      return Array.from(document.querySelectorAll("[data-variant-card]")).map((card) => {
+        const color = card.querySelector("[data-variant-color]")?.value.trim() || "";
+        const size = card.querySelector("[data-variant-size]")?.value.trim() || "";
+        if (!color && !size) return null;
+        return { color, size };
+      }).filter(Boolean);
+    }
+    function variantMarkup(variant = {}, index = 0, title = "") {
+      return `<div class="variant-card" data-variant-card>
+        <div class="variant-card-head">
+          <strong>${escapeHtml(title || `Foto ${index + 1}`)}</strong>
+          <button class="edit delete variant-remove" type="button" data-remove-variant>Quitar</button>
+        </div>
+        <div class="variant-card-body">
+          <label class="variant-field"><span>Color</span><input data-variant-color type="text" placeholder="Ej.: Rosa" value="${escapeHtml(variant.color || "")}"></label>
+          <label class="variant-field"><span>Talle</span><input data-variant-size type="text" placeholder="Ej.: M" value="${escapeHtml(variant.size || "")}"></label>
+        </div>
+      </div>`;
+    }
 
     async function callAdmin(action, payload = {}) {
       const { data: { session } } = await supabase.auth.getSession();
@@ -94,30 +127,96 @@
     async function renderProductForm(product = null) {
       const options = await callAdmin("catalogOptions");
       const categoryOptions = ['<option value="">Elegir categoría</option>', ...options.categories.map(c => `<option value="${c.id}" ${product?.category_id === c.id ? "selected" : ""}>${escapeHtml(c.name)}</option>`)].join("");
+      const existingVariants = Array.isArray(product?.variants) ? product.variants : [];
+      const existingImages = product?.product_images?.map((image) => image.image_url) || [];
+      const variantList = existingVariants.length ? existingVariants.map((variant, index) => variantMarkup({ color: variant.color || "", size: variant.size || "" }, index, `Variante ${index + 1}`)).join("") : "";
       content.innerHTML = `<section class="panel"><div class="actions"><button id="backProducts" class="outline" type="button">← Volver a productos</button></div>
         <h2>${product ? "Editar producto" : "Nuevo producto"}</h2>
         <form id="productForm" class="product-form">
+          <div class="upload-card wide">
+            <div class="upload-head">
+              <div>
+                <h3>Fotos</h3>
+                <p>Subí una o varias imágenes. La primera queda como principal.</p>
+              </div>
+              <input id="productPhoto" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+              <button class="outline" type="button" id="pickPhotos">Elegir archivos</button>
+            </div>
+            <div id="photoPreview" class="photo-preview"><div class="preview-empty">Todavía no subiste imágenes.</div></div>
+          </div>
+          ${product?.product_images?.length ? `<div class="wide"><label>Fotos actuales</label><div class="product-photos">${product.product_images.map(image => `<div class="product-photo"><img src="${escapeHtml(image.image_url)}" alt=""><button class="edit" type="button" data-delete-image="${image.id}">Quitar</button></div>`).join("")}</div></div>` : ""}
           <label class="wide">Nombre<input id="productName" required maxlength="180" value="${escapeHtml(product?.name || "")}"></label>
           <label class="wide">Descripción<textarea id="productDescription" rows="3" maxlength="1500">${escapeHtml(product?.description || "")}</textarea></label>
           <label>Categoría<select id="productCategory" required>${categoryOptions}</select></label>
           <label>Subcategoría<select id="productSubcategory"><option value="">Sin subcategoría</option></select></label>
-          <label>Precio minorista (opcional)<input id="productRetail" type="number" min="1" value="${product?.retail_price || ""}"></label>
+          <label>Precio proveedor<input id="productSupplier" type="number" min="1" placeholder="Opcional" value="${product?.supplier_price || ""}"></label>
           <label>Precio mayorista<input id="productWholesale" type="number" min="1" value="${product?.wholesale_price || ""}"></label>
+          <label>Precio minorista<input id="productRetail" type="number" min="1" value="${product?.retail_price || ""}"></label>
           <label>Stock<input id="productStock" type="number" min="0" required value="${product?.stock ?? 30}"></label>
           <label>Estado<select id="productStatus"><option value="published" ${product?.status === "published" ? "selected" : ""}>Publicado</option><option value="draft" ${product?.status === "draft" ? "selected" : ""}>Borrador</option><option value="archived" ${product?.status === "archived" ? "selected" : ""}>Archivado</option></select></label>
-          ${product?.product_images?.length ? `<div class="wide"><label>Fotos actuales</label><div class="product-photos">${product.product_images.map(image => `<div class="product-photo"><img src="${escapeHtml(image.image_url)}" alt=""><button class="edit" type="button" data-delete-image="${image.id}">Quitar</button></div>`).join("")}</div></div>` : ""}
-          <label class="wide">Foto (opcional, JPG/PNG/WEBP hasta 4 MB)<input id="productPhoto" type="file" accept="image/jpeg,image/png,image/webp"></label>
+          <div class="wide variants-card">
+            <div class="variants-head">
+              <div>
+                <h3>Variantes</h3>
+                <p>Subí fotos y asignales color y talle abajo.</p>
+              </div>
+              <button id="addVariant" class="outline" type="button">+ Agregar tarjeta</button>
+            </div>
+            <div id="variantList" class="variant-list">${variantList}</div>
+          </div>
           <div class="wide"><button class="primary" type="submit">${product ? "Guardar cambios" : "Crear producto"}</button></div>
         </form><p id="productMessage" class="notice"></p>
       </section>`;
       const category = document.querySelector("#productCategory");
       const subcategory = document.querySelector("#productSubcategory");
+      const photoInput = document.querySelector("#productPhoto");
+      const pickPhotos = document.querySelector("#pickPhotos");
+      const preview = document.querySelector("#photoPreview");
+      const variantListNode = document.querySelector("#variantList");
+      let selectedPhotos = existingImages.map((url) => ({ name: "Foto", url }));
       const fillSubcategories = () => {
         const selected = category.value;
         subcategory.innerHTML = '<option value="">Sin subcategoría</option>' + options.subcategories.filter(s => s.category_id === selected).map(s => `<option value="${s.id}" ${product?.subcategory_id === s.id ? "selected" : ""}>${escapeHtml(s.name)}</option>`).join("");
       };
       category.addEventListener("change", () => { product = { ...product, subcategory_id:"" }; fillSubcategories(); });
       fillSubcategories();
+      const renderVariantCards = () => {
+        const current = Array.from(variantListNode.querySelectorAll("[data-variant-card]")).map((card) => ({
+          color: card.querySelector("[data-variant-color]")?.value || "",
+          size: card.querySelector("[data-variant-size]")?.value || "",
+        }));
+        if (!selectedPhotos.length) {
+          variantListNode.innerHTML = current.length ? current.map((variant, index) => variantMarkup(variant, index, `Variante ${index + 1}`)).join("") : "";
+          wireVariantButtons();
+          return;
+        }
+        const source = current.length ? current : selectedPhotos.map(() => ({ color: "", size: "" }));
+        variantListNode.innerHTML = selectedPhotos.map((photo, index) => variantMarkup(source[index] || {}, index, photo.name || `Foto ${index + 1}`)).join("");
+        wireVariantButtons();
+      };
+      const wireVariantButtons = () => {
+        variantListNode.querySelectorAll("[data-remove-variant]").forEach((button) => button.addEventListener("click", () => {
+          const cards = variantListNode.querySelectorAll("[data-variant-card]");
+          if (cards.length === 1) {
+            cards[0].querySelectorAll("input").forEach((input) => input.value = "");
+            return;
+          }
+          button.closest("[data-variant-card]")?.remove();
+        }));
+      };
+      pickPhotos.addEventListener("click", () => photoInput.click());
+      photoInput.addEventListener("change", () => {
+        const files = Array.from(photoInput.files || []);
+        selectedPhotos = files.map((file) => ({ name: file.name, url: URL.createObjectURL(file) }));
+        preview.innerHTML = files.length ? `<div class="preview-grid">${selectedPhotos.map((photo) => `<div class="preview-mini"><img src="${photo.url}" alt=""><span>${escapeHtml(photo.name)}</span></div>`).join("")}</div>` : '<div class="preview-empty">Todavía no subiste imágenes.</div>';
+        renderVariantCards();
+      });
+      document.querySelector("#addVariant").addEventListener("click", () => {
+        variantListNode.insertAdjacentHTML("beforeend", variantMarkup({}, variantListNode.querySelectorAll("[data-variant-card]").length, `Foto ${variantListNode.querySelectorAll("[data-variant-card]").length + 1}`));
+        wireVariantButtons();
+      });
+      wireVariantButtons();
+      renderVariantCards();
       document.querySelector("#backProducts").addEventListener("click", () => loadView("products"));
       document.querySelectorAll("[data-delete-image]").forEach(button => button.addEventListener("click", async () => {
         if (!confirm("¿Quitar esta foto del producto?")) return;
@@ -131,13 +230,17 @@
         event.preventDefault();
         const message = document.querySelector("#productMessage"); message.className = "notice is-muted"; message.textContent = "Guardando…";
         try {
+          const supplier = document.querySelector("#productSupplier").value;
+          const wholesale = document.querySelector("#productWholesale").value;
+          const retail = document.querySelector("#productRetail").value;
+          const derived = derivePrices(supplier, wholesale, retail);
           const result = await callAdmin("saveProduct", {
             id: product?.id || "", name: document.querySelector("#productName").value, description: document.querySelector("#productDescription").value,
-            categoryId: category.value, subcategoryId: subcategory.value, retailPrice: document.querySelector("#productRetail").value,
-            wholesalePrice: document.querySelector("#productWholesale").value, stock: document.querySelector("#productStock").value, status: document.querySelector("#productStatus").value,
+            categoryId: category.value, subcategoryId: subcategory.value, supplierPrice: derived.supplier, wholesalePrice: derived.wholesale, retailPrice: derived.retail,
+            stock: document.querySelector("#productStock").value, status: document.querySelector("#productStatus").value, variants: parseVariantInput(),
           });
-          const photo = document.querySelector("#productPhoto").files[0];
-          if (photo) {
+          const photos = Array.from(photoInput.files || []);
+          for (const photo of photos) {
             const dataUrl = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(photo); });
             await callAdmin("uploadProductImage", { productId: result.id, dataUrl });
           }
@@ -148,8 +251,12 @@
     }
 
     function renderProducts(products) {
-      const rows = (items) => items.length ? `<table><thead><tr><th>Foto</th><th>Producto</th><th>SKU</th><th>Minorista</th><th>Mayorista</th><th>Stock</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${items.map(p => `<tr><td>${p.product_images?.[0]?.image_url ? `<img class="photo-thumb" src="${escapeHtml(p.product_images[0].image_url)}" alt="">` : "—"}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku)}</td><td>${money(p.retail_price)}</td><td>${money(p.wholesale_price)}</td><td><span class="pill ${Number(p.stock) <= 5 ? "low" : ""}">${p.stock}</span></td><td><span class="pill">${statusLabel(p.status)}</span></td><td><button class="edit" data-edit-product="${p.id}">Editar</button><button class="edit delete" type="button" data-delete-product="${p.id}" aria-label="Eliminar ${escapeHtml(p.name)}" title="Eliminar producto">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No encontramos productos.</p>';
-      content.innerHTML = `<section class="panel"><div class="actions"><button id="newProduct" class="primary" type="button">+ Nuevo producto</button></div><h2>Administrar catálogo (${products.length})</h2><input id="productSearch" class="product-search" type="search" placeholder="Buscar por nombre, SKU, categoría o estado…"><div id="productRows">${rows(products)}</div></section>`;
+      const allStatuses = ["Todos","published","draft","archived"];
+      const statusLabels = { Todos:"Todos", published:"Publicado", draft:"Borrador", archived:"Archivado" };
+      const categories = [...new Set(products.map((item) => item.categories?.name || item.category || "Sin categoría"))];
+      const filterButtons = (items, selected, key, labels = null) => items.map((item) => `<button type="button" class="${key}-filter ${selected === item ? "active" : ""}" data-${key}="${escapeHtml(item)}">${escapeHtml(labels?.[item] || item)}</button>`).join("");
+      const rows = (items) => items.length ? `<table><thead><tr><th>Foto</th><th>Producto</th><th>SKU</th><th>Minorista</th><th>Mayorista</th><th>Stock</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${items.map(p => `<tr><td>${p.product_images?.[0]?.image_url ? `<img class="photo-thumb" src="${escapeHtml(p.product_images[0].image_url)}" alt="">` : "—"}</td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku)}</td><td>${money(p.retail_price)}</td><td>${money(p.wholesale_price)}</td><td><span class="pill ${Number(p.stock) <= 5 ? "low" : ""}">${p.stock}</span></td><td>${statusLabel(p.status)}</td><td><div class="row-actions"><button class="edit" data-edit-product="${p.id}">Editar</button><button class="edit delete" type="button" data-delete-product="${p.id}" aria-label="Eliminar ${escapeHtml(p.name)}" title="Eliminar producto">🗑</button></div></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No encontramos productos.</p>';
+      content.innerHTML = `<section class="panel"><div class="actions"><button id="newProduct" class="primary" type="button">+ Nuevo producto</button></div><h2>Administrar catálogo (${products.length})</h2><div class="product-filters"><input id="productSearch" class="product-search" type="search" placeholder="Buscar por nombre, SKU, categoría o estado…"><div class="filter-row"><div class="filter-group">${filterButtons(allStatuses, "Todos", "status", statusLabels)}</div><div class="filter-group">${filterButtons(["Todos", ...categories], "Todos", "category")}</div></div></div><div id="productRows">${rows(products)}</div></section>`;
       document.querySelector("#newProduct").addEventListener("click", () => renderProductForm().catch(showProductError));
       const wireRows = () => { document.querySelectorAll("[data-edit-product]").forEach(button => button.addEventListener("click", () => renderProductForm(products.find(p => p.id === button.dataset.editProduct)).catch(showProductError)));
       document.querySelectorAll("[data-delete-product]").forEach(button => button.addEventListener("click", async () => {
@@ -159,7 +266,23 @@
         catch (error) { alert(error.message); }
       })); };
       wireRows();
-      document.querySelector("#productSearch").addEventListener("input", (event) => { const term=event.target.value.trim().toLocaleLowerCase("es-AR"); const filtered=products.filter(p => `${p.name} ${p.sku} ${p.status} ${p.categories?.name || ""} ${p.subcategories?.name || ""}`.toLocaleLowerCase("es-AR").includes(term)); document.querySelector("#productRows").innerHTML=rows(filtered); wireRows(); });
+      let selectedStatus = "Todos";
+      let selectedCategory = "Todos";
+      const applyFilters = () => {
+        const term = document.querySelector("#productSearch").value.trim().toLocaleLowerCase("es-AR");
+        const filtered = products.filter((p) => {
+          const category = p.categories?.name || p.category || "Sin categoría";
+          const text = `${p.name} ${p.sku} ${p.status} ${category} ${p.subcategories?.name || ""}`.toLocaleLowerCase("es-AR");
+          const statusMatch = selectedStatus === "Todos" || p.status === selectedStatus;
+          const categoryMatch = selectedCategory === "Todos" || category === selectedCategory;
+          return statusMatch && categoryMatch && text.includes(term);
+        });
+        document.querySelector("#productRows").innerHTML = rows(filtered);
+        wireRows();
+      };
+      document.querySelector("#productSearch").addEventListener("input", applyFilters);
+      document.querySelectorAll("[data-status]").forEach((button) => button.addEventListener("click", () => { selectedStatus = button.dataset.status; document.querySelectorAll("[data-status]").forEach((item) => item.classList.toggle("active", item.dataset.status === selectedStatus)); applyFilters(); }));
+      document.querySelectorAll("[data-category]").forEach((button) => button.addEventListener("click", () => { selectedCategory = button.dataset.category; document.querySelectorAll("[data-category]").forEach((item) => item.classList.toggle("active", item.dataset.category === selectedCategory)); applyFilters(); }));
     }
 
     function showProductError(error) {
@@ -228,20 +351,32 @@
       const subcategories = data.subcategories || [];
       const categoryName = (id) => categories.find(c => c.id === id)?.name || "Sin categoría";
       const categoryOptions = categories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
-      content.innerHTML = `<section class="panel"><h2>Categorías y subcategorías</h2>
-        <p class="lead">Podés renombrar, desactivar o eliminar. Para eliminar, no debe tener productos asociados.</p>
-        <div class="catalog-tools">
-          <form id="newCategoryForm"><label>Nueva categoría<input id="newCategoryName" maxlength="100" required placeholder="Ej.: Makeup"></label><button class="primary" type="submit">Agregar</button></form>
-          <form id="newSubcategoryForm"><label>Subcategoría<input id="newSubcategoryName" maxlength="100" required placeholder="Ej.: Labiales"></label><label>Categoría<select id="newSubcategoryCategory" required>${categoryOptions}</select></label><button class="primary" type="submit">Agregar</button></form>
+      content.innerHTML = `<section class="panel catalog-card">
+        <div class="catalog-section-head"><div><h2>Categorías y subcategorías</h2><p class="lead">Podés renombrar, desactivar o eliminar. Para eliminar, no debe tener productos asociados.</p></div></div>
+        <div class="catalog-tools catalog-tools-top">
+          <form id="newCategoryForm" class="catalog-form-card"><h3>Nueva categoría</h3><label>Nombre<input id="newCategoryName" maxlength="100" required placeholder="Ej.: Makeup"></label><button class="primary" type="submit">Agregar</button></form>
+          <form id="newSubcategoryForm" class="catalog-form-card"><h3>Nueva subcategoría</h3><label>Nombre<input id="newSubcategoryName" maxlength="100" required placeholder="Ej.: Labiales"></label><label>Categoría<select id="newSubcategoryCategory" required>${categoryOptions}</select></label><button class="primary" type="submit">Agregar</button></form>
         </div>
-        <h2>Categorías</h2>
-        ${categories.length ? `<table><thead><tr><th>Nombre</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${categories.map(c => `<tr><td>${escapeHtml(c.name)}</td><td><span class="pill">${c.active ? "Activa" : "Inactiva"}</span></td><td><button class="edit" data-edit-category="${c.id}">Editar</button><button class="edit" data-toggle-category="${c.id}">${c.active ? "Desactivar" : "Activar"}</button><button class="edit delete" data-delete-category="${c.id}" title="Eliminar categoría">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay categorías.</p>'}
-        <h2 class="section-spaced">Subcategorías</h2>
-        ${subcategories.length ? `<table><thead><tr><th>Subcategoría</th><th>Categoría</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${subcategories.map(s => `<tr><td>${escapeHtml(s.name)}</td><td>${escapeHtml(categoryName(s.category_id))}</td><td><span class="pill">${s.active ? "Activa" : "Inactiva"}</span></td><td><button class="edit" data-edit-subcategory="${s.id}">Editar</button><button class="edit" data-toggle-subcategory="${s.id}">${s.active ? "Desactivar" : "Activar"}</button><button class="edit delete" data-delete-subcategory="${s.id}" title="Eliminar subcategoría">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay subcategorías.</p>'}
+        <div class="catalog-tools catalog-tools-bottom">
+          <label class="catalog-filter-label">Filtrar categorías<select id="categoryFilter"><option value="all">Todas</option>${categories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("")}</select></label>
+          <label class="catalog-filter-label">Filtrar subcategorías<select id="subcategoryFilter"><option value="all">Todas</option>${categories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("")}</select></label>
+        </div>
+        <div class="catalog-section"><div class="catalog-section-head"><h2>Categorías</h2></div><div class="catalog-table-wrap">${categories.length ? `<table><thead><tr><th>Nombre</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${categories.map(c => `<tr data-category-row data-category-id="${c.id}"><td>${escapeHtml(c.name)}</td><td>${statusLabel(c.active ? "published" : "draft")}</td><td><button class="edit" data-edit-category="${c.id}">Editar</button><button class="edit" data-toggle-category="${c.id}">${c.active ? "Desactivar" : "Activar"}</button><button class="edit delete" data-delete-category="${c.id}" title="Eliminar categoría">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay categorías.</p>'}</div></div>
+        <div class="catalog-section"><div class="catalog-section-head"><h2 class="section-spaced">Subcategorías</h2></div><div class="catalog-table-wrap">${subcategories.length ? `<table><thead><tr><th>Subcategoría</th><th>Categoría</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${subcategories.map(s => `<tr data-subcategory-row data-category-id="${s.category_id}"><td>${escapeHtml(s.name)}</td><td>${escapeHtml(categoryName(s.category_id))}</td><td>${statusLabel(s.active ? "published" : "draft")}</td><td><button class="edit" data-edit-subcategory="${s.id}">Editar</button><button class="edit" data-toggle-subcategory="${s.id}">${s.active ? "Desactivar" : "Activar"}</button><button class="edit delete" data-delete-subcategory="${s.id}" title="Eliminar subcategoría">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay subcategorías.</p>'}</div></div>
       </section>`;
       const refresh = () => loadView("catalog");
       document.querySelector("#newCategoryForm").addEventListener("submit", async (event) => { event.preventDefault(); try { await callAdmin("saveCategory", { name: document.querySelector("#newCategoryName").value }); refresh(); } catch (error) { alert(error.message); } });
       document.querySelector("#newSubcategoryForm").addEventListener("submit", async (event) => { event.preventDefault(); try { await callAdmin("saveSubcategory", { name: document.querySelector("#newSubcategoryName").value, categoryId: document.querySelector("#newSubcategoryCategory").value }); refresh(); } catch (error) { alert(error.message); } });
+      const categoryFilter = document.querySelector("#categoryFilter");
+      const subcategoryFilter = document.querySelector("#subcategoryFilter");
+      const applyCatalogFilters = () => {
+        const categoryValue = categoryFilter.value;
+        const subcategoryValue = subcategoryFilter.value;
+        document.querySelectorAll("[data-category-row]").forEach((row) => { row.hidden = !(categoryValue === "all" || row.dataset.categoryId === categoryValue); });
+        document.querySelectorAll("[data-subcategory-row]").forEach((row) => { row.hidden = !(subcategoryValue === "all" || row.dataset.categoryId === subcategoryValue); });
+      };
+      categoryFilter.addEventListener("change", applyCatalogFilters);
+      subcategoryFilter.addEventListener("change", applyCatalogFilters);
       document.querySelectorAll("[data-edit-category]").forEach(button => button.addEventListener("click", async () => { const item = categories.find(c => c.id === button.dataset.editCategory); const name = prompt("Nombre de la categoría:", item.name); if (name === null) return; try { await callAdmin("saveCategory", { categoryId:item.id, name, active:item.active }); refresh(); } catch (error) { alert(error.message); } }));
       document.querySelectorAll("[data-toggle-category]").forEach(button => button.addEventListener("click", async () => { const item = categories.find(c => c.id === button.dataset.toggleCategory); try { await callAdmin("saveCategory", { categoryId:item.id, name:item.name, active:!item.active }); refresh(); } catch (error) { alert(error.message); } }));
       document.querySelectorAll("[data-delete-category]").forEach(button => button.addEventListener("click", async () => { const item = categories.find(c => c.id === button.dataset.deleteCategory); if (!confirm(`¿Eliminar la categoría “${item.name}”? Primero debe estar sin productos ni subcategorías.`)) return; try { await callAdmin("deleteCategory", { categoryId:item.id }); refresh(); } catch (error) { alert(error.message); } }));
