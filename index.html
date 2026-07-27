@@ -2,388 +2,88 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Catálogo online de Ithiel: bazar, makeup y lencería con compra minorista, mayorista y cuenta opcional.">
-  <title>Ithiel | Bazar, Makeup y Lencería</title>
-  <link rel="stylesheet" href="styles/shared.css">
-  <link rel="stylesheet" href="styles/index.css">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ITHIEL · Bazar, Makeup y Lencería</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+:root{--deep:#660c35;--rose:#b91658;--soft:#fff5f9;--ink:#3d2632;--line:#eed5df}*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#fff9fb,#fff);color:var(--ink);font-family:"DM Sans",sans-serif}header{min-height:330px;padding:22px 5vw 38px;color:#fff;text-align:center;background:linear-gradient(125deg,#740b39,#b91658 54%,#e26291);position:relative;overflow:hidden}header:after{content:"";position:absolute;inset:0;background:url("assets/preview-ithiel-hero.png") center/cover;opacity:.12;mix-blend-mode:luminosity}.access,.actions{position:relative;z-index:1;display:flex;justify-content:center;gap:10px;flex-wrap:wrap}.access{justify-content:flex-end}.pill{padding:9px 14px;border:1px solid #ffffff75;border-radius:999px;color:#fff;text-decoration:none;font-size:13px;background:#ffffff19}.brand{position:relative;z-index:1;margin:54px 0 7px;font:600 58px "Playfair Display",serif;letter-spacing:.12em}.sub{position:relative;z-index:1;margin:0;font-size:14px;letter-spacing:2px;text-transform:uppercase}.actions{margin-top:28px}main{width:min(1160px,90vw);margin:0 auto;padding:42px 0 72px}.title{text-align:center;margin:0 0 7px;font:600 29px "Playfair Display",serif}.copy{text-align:center;margin:0 0 28px;color:#785865}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}.card{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 7px 22px #7f234019}.image{height:175px;background:url("assets/preview-ithiel-hero.png") center/cover}.card:nth-child(2) .image{background-position:85%;filter:hue-rotate(315deg)}.card:nth-child(3) .image{background-position:70%;filter:hue-rotate(45deg)}.card:nth-child(4) .image{background-position:100%;filter:saturate(.65)}.card div:last-child{padding:14px}.tag{margin:0;color:var(--rose);font-size:11px;font-weight:700;text-transform:uppercase}.card h3{margin:6px 0;font-size:16px}.price{margin:0;color:var(--deep);font-weight:700}.section{margin-top:65px}.catalog{min-height:330px;display:flex;align-items:end;padding:22px;border-radius:18px;color:#fff;background:linear-gradient(145deg,#6f0e3a,#b91658);position:relative;overflow:hidden}.catalog-copy{padding:31px;border-radius:18px;color:#fff;background:linear-gradient(145deg,#6f0e3a,#b91658)}.catalog-copy h2{margin:8px 0;font:600 37px "Playfair Display",serif}.catalog-copy p{line-height:1.55}.catalog-copy a{display:inline-block;margin-top:10px;padding-bottom:5px;border-bottom:1px solid #fff;color:#fff;text-decoration:none;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}.bottom{display:flex;gap:15px;margin-top:65px}.bottom a{flex:1;padding:27px;border-radius:14px;color:#fff;background:var(--deep);text-align:center;text-decoration:none;font-weight:700}.bottom a:last-child{background:#9f5a75}@media(max-width:780px){.grid{grid-template-columns:repeat(2,1fr)}.catalogs{grid-template-columns:repeat(2,minmax(0,1fr))}.brand{font-size:44px}}@media(max-width:440px){.grid,.catalogs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:30px}.brand{font-size:38px}.access{justify-content:center}}
+.catalogs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:30px}.catalog{min-height:330px;display:flex;align-items:end;padding:22px;border-radius:18px;color:#fff;background:linear-gradient(145deg,#6f0e3a,#b91658);position:relative;overflow:hidden}.catalog-copy{position:relative;z-index:1;padding:0;color:#fff;background:none}.catalog:nth-child(2){background:linear-gradient(145deg,#9b504f,#c77a75)}.catalog:nth-child(3){background:linear-gradient(145deg,#705c6a,#a47d91)}.catalog:nth-child(4){background:linear-gradient(145deg,#566f7a,#8faab5)}@media(max-width:780px){.catalogs{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:440px){.catalogs{grid-template-columns:1fr}}.catalog{isolation:isolate;border:1px solid rgba(255,255,255,.2);box-shadow:0 18px 34px rgba(77,8,43,.16);transition:transform .28s ease,box-shadow .28s ease}.catalog:hover{transform:translateY(-7px);box-shadow:0 25px 42px rgba(77,8,43,.24)}.catalog:before{content:"";position:absolute;inset:0;z-index:-2;background:url("assets/preview-ithiel-hero.png") center/cover;opacity:.26;mix-blend-mode:luminosity;transform:scale(1.05)}.catalog:after{content:"";position:absolute;z-index:-1;width:210px;height:210px;right:-92px;top:-76px;border:1px solid rgba(255,255,255,.38);border-radius:47% 53% 62% 38%;transform:rotate(22deg)}.catalog:nth-child(2):after{border-radius:55% 45% 42% 58%;transform:rotate(-18deg)}.catalog:nth-child(3):after{width:250px;height:160px;top:auto;bottom:-75px;right:-55px;border-radius:50%}.catalog:nth-child(4):after{width:178px;height:178px;right:-48px;top:-50px;border-radius:50%;box-shadow:0 0 0 19px rgba(255,255,255,.1)}.catalog-copy h2{font-size:clamp(31px,3vw,43px);line-height:.95;letter-spacing:-.045em;text-shadow:0 2px 15px rgba(50,20,35,.22)}.catalog-copy p{max-width:160px;margin:13px 0 20px;font-size:14px;line-height:1.45}.catalog-copy a{font-size:11px;letter-spacing:.12em}.catalog:nth-child(1) .catalog-copy h2::before,.catalog:nth-child(2) .catalog-copy h2::before,.catalog:nth-child(3) .catalog-copy h2::before,.catalog:nth-child(4) .catalog-copy h2::before{content:"01";display:block;margin-bottom:18px;font:10px "DM Sans",sans-serif;font-weight:700;letter-spacing:.15em}.catalog:nth-child(2) .catalog-copy h2::before{content:"02"}.catalog:nth-child(3) .catalog-copy h2::before{content:"03"}.catalog:nth-child(4) .catalog-copy h2::before{content:"04"}@media(max-width:780px){.catalog{min-height:280px}} footer{margin-top:58px;padding:28px 12px 8px;border-top:1px solid var(--line);color:#765763;text-align:center;font-size:13px}.cart-button,.scroll-top{position:fixed;bottom:22px;z-index:5;border:0;color:#fff;cursor:pointer;box-shadow:0 14px 34px rgba(77,8,43,.34);transition:transform .22s ease,background .22s ease}.cart-button{right:22px;min-width:158px;padding:14px 17px;border-radius:999px;background:var(--deep);font:600 14px "DM Sans",sans-serif}.cart-button:hover,.scroll-top:hover{transform:translateY(-4px);background:var(--rose)}.cart-button span{display:inline-grid;place-items:center;min-width:20px;height:20px;margin-left:5px;border-radius:50%;color:var(--deep);background:#fff;font-size:11px}.scroll-top{left:22px;width:48px;height:48px;border-radius:50%;background:var(--deep);font-size:24px}@media(max-width:440px){.cart-button{right:14px;bottom:14px}.scroll-top{left:14px;bottom:14px}}.cart-button{display:inline-flex;align-items:center;justify-content:center;gap:8px}.cart-button svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.scroll-top{border:1px solid rgba(185,22,88,.22);color:var(--rose);background:rgba(255,248,251,.20);box-shadow:0 10px 28px rgba(116,23,63,.16);backdrop-filter:blur(10px)}.scroll-top:hover{color:#fff;background:var(--rose);box-shadow:0 14px 30px rgba(185,22,88,.28)}.scroll-top svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.brand{display:block;width:auto;height:auto;margin:54px auto 7px;filter:none;font:600 58px "Playfair Display",serif;letter-spacing:.12em}@media(max-width:780px){.brand{font-size:44px}}@media(max-width:440px){.brand{font-size:38px;margin-top:55px}}.pricing-guide{display:grid;grid-template-columns:1fr 1.25fr;gap:14px;margin:0 0 24px}.pricing-guide article{padding:22px;border-radius:15px;color:#fff;background:linear-gradient(145deg,#8e1a4d,#bc3e70)}.pricing-guide article:last-child{background:linear-gradient(145deg,#77526a,#a77b91)}.pricing-guide span{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}.pricing-guide h3{margin:11px 0 8px;font-size:22px}.pricing-guide p{margin:0;line-height:1.5;font-size:14px}@media(max-width:700px){.pricing-guide{grid-template-columns:1fr}}@media(min-width:701px){header{min-height:280px;padding-bottom:22px}.brand{margin-top:8px}}.catalog{min-height:230px;padding:18px}.catalog:nth-child(1) .catalog-copy h2::before,.catalog:nth-child(2) .catalog-copy h2::before,.catalog:nth-child(3) .catalog-copy h2::before,.catalog:nth-child(4) .catalog-copy h2::before{display:none}.catalog-copy h2{margin-top:0}@media(max-width:780px){.catalog{min-height:235px}}.pricing-guide article,.buy-grid article{position:relative;isolation:isolate;overflow:hidden;transition:transform .28s ease,box-shadow .28s ease}.pricing-guide article:before,.buy-grid article:before{content:"";position:absolute;z-index:-1;width:175px;height:175px;right:-68px;top:-70px;border:1px solid rgba(255,255,255,.38);border-radius:48% 52% 58% 42%;transform:rotate(24deg)}.pricing-guide article:after,.buy-grid article:after{content:"";position:absolute;z-index:-2;inset:0;background:url("assets/preview-ithiel-hero.png") center/cover;opacity:.18;mix-blend-mode:luminosity}.pricing-guide article:hover,.buy-grid article:hover{transform:translateY(-6px);box-shadow:0 18px 32px rgba(96,15,52,.2)}.buy-grid article{color:#fff;background:linear-gradient(145deg,#8d2854,#c45f87)}.buy-grid article:nth-child(2){background:linear-gradient(145deg,#9b5f56,#c98278)}.buy-grid article:nth-child(3){background:linear-gradient(145deg,#687f88,#9bb3bb)}.buy-grid article h3,.buy-grid article p{position:relative;z-index:1}.buy-grid article p{color:#fff}.buy-grid article strong{position:relative;z-index:1;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.34)}.card{transition:transform .28s ease,box-shadow .28s ease}.card:hover{transform:translateY(-6px);box-shadow:0 18px 32px rgba(96,15,52,.18)}.pricing-guide article:after,.buy-grid article:after{display:none}.guide-icon{position:absolute;right:18px;top:17px;width:68px;height:68px;fill:none;stroke:rgba(255,255,255,.28);stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round}.buy-grid article{background-image:none!important}.buy-grid article:before{opacity:.8}.buy-grid article{background:#a72a5d!important;color:#fff!important}.buy-grid article:nth-child(2){background:#b96c64!important}.buy-grid article:nth-child(3){background:#78939d!important}.buy-grid article h3,.buy-grid article p{color:#fff!important}.guide-icon{stroke:rgba(255,255,255,.46)!important}.buy-grid article strong{background:rgba(255,255,255,.23)!important;color:#fff!important}.whatsapp-icon{object-fit:contain;opacity:.46;filter:brightness(0) invert(1)}.whatsapp-modal{position:fixed;inset:0;z-index:20;display:grid;place-items:center;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s ease,visibility .25s ease}.whatsapp-modal.open{opacity:1;visibility:visible;pointer-events:auto}.whatsapp-backdrop{position:absolute;inset:0;background:rgba(55,20,39,.38);backdrop-filter:blur(7px)}.whatsapp-pop{position:relative;width:min(430px,calc(100% - 32px));padding:38px 30px;border:1px solid #ffffff66;border-radius:24px;color:#fff;background:linear-gradient(145deg,#7e1747,#bd356d);box-shadow:0 28px 70px rgba(53,6,32,.35);text-align:center;transform:translateY(18px) scale(.96);transition:transform .28s ease}.whatsapp-modal.open .whatsapp-pop{transform:translateY(0) scale(1)}.whatsapp-pop:before{content:"";position:absolute;right:-48px;top:-62px;width:170px;height:170px;border:1px solid #ffffff55;border-radius:48%;transform:rotate(24deg)}.whatsapp-pop-icon{position:relative;width:68px;height:68px;margin:0 auto 16px;object-fit:contain;filter:brightness(0) invert(1);opacity:.82}.whatsapp-pop h2{margin:8px 0 10px;font:500 36px "Playfair Display",serif}.whatsapp-pop p:not(.tag){margin:0 auto 22px;max-width:300px;line-height:1.55}.whatsapp-action{display:inline-block;padding:12px 18px;border:1px solid #ffffffb0;border-radius:999px;color:#fff;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;background:#ffffff1b}.whatsapp-close{position:absolute;top:12px;right:14px;width:32px;height:32px;border:1px solid #ffffff70;border-radius:50%;color:#fff;background:#ffffff18;font-size:23px;line-height:1;cursor:pointer}.whatsapp-modal{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:16px!important;overflow:auto!important}.whatsapp-backdrop{position:absolute!important;inset:0!important;width:100%!important;height:100%!important}.whatsapp-pop{position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;width:calc(100vw - 32px)!important;max-width:430px!important;max-height:calc(100vh - 32px)!important;margin:auto!important;overflow:auto!important;transform:translateY(18px) scale(.96)}.whatsapp-modal.open .whatsapp-pop{transform:translateY(0) scale(1)}html,body{max-width:100%;overflow-x:hidden}.whatsapp-modal{overflow-x:hidden!important}.whatsapp-pop{box-sizing:border-box!important}.whatsapp-pop .tag{color:#ffe1ec!important}.whatsapp-pop{overflow-x:hidden!important;overflow-y:auto!important}.whatsapp-pop:before{right:-20px!important;max-width:130px!important}.social-modal{position:fixed!important;inset:0!important;z-index:20;display:flex;align-items:center;justify-content:center;width:100vw;height:100vh;padding:16px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s ease,visibility .25s ease;overflow:hidden}.social-modal.open{opacity:1;visibility:visible;pointer-events:auto}.social-backdrop{position:absolute;inset:0;background:rgba(55,20,39,.38);backdrop-filter:blur(7px)}.social-pop{position:relative;width:calc(100vw - 32px);max-width:430px;max-height:calc(100vh - 32px);overflow-x:hidden;overflow-y:auto;margin:auto;padding:38px 30px;border:1px solid #ffffff66;border-radius:24px;color:#fff;background:linear-gradient(145deg,#7b526e,#a78198);box-shadow:0 28px 70px rgba(53,6,32,.35);text-align:center;transform:translateY(18px) scale(.96);transition:transform .28s ease}.social-modal.open .social-pop{transform:translateY(0) scale(1)}.social-pop:before{content:"";position:absolute;right:-20px;top:-62px;width:130px;height:170px;border:1px solid #ffffff55;border-radius:48%;transform:rotate(24deg)}.social-pop h2{margin:8px 0 10px;font:500 36px "Playfair Display",serif}.social-pop p:not(.tag){margin:0 auto 22px;max-width:300px;line-height:1.55}.social-pop .tag{color:#ffe6f0!important}.social-close{position:absolute;top:12px;right:14px;width:32px;height:32px;border:1px solid #ffffff70;border-radius:50%;color:#fff;background:#ffffff18;font-size:23px;line-height:1;cursor:pointer}.social-actions{position:relative;display:flex;justify-content:center;gap:10px}.social-actions a{display:inline-flex;align-items:center;gap:7px;padding:12px 15px;border:1px solid #ffffffb0;border-radius:999px;color:#fff;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:#ffffff1b}.social-actions svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  </style>
 </head>
 <body>
-  <header>
-    <div class="hero-carousel" aria-hidden="true"><div id="hero-carousel-track" class="hero-carousel-track"></div></div>
-    <nav class="top-access" aria-label="Acceso">
-      <a id="register-link" href="registro.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 21c.8-4 3.1-6 7-6s6.2 2 7 6"></path><path d="M19 8v6m-3-3h6"></path></svg>Registrarse</a>
-      <a id="account-link" href="cuenta.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="9" r="2.6"></circle><path d="M7.5 18c.7-2.7 2.2-4 4.5-4s3.8 1.3 4.5 4"></path></svg>Mi cuenta</a>
-      <a id="admin-link" href="admin.html" hidden><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>Admin</a>
-    </nav>
-    <p class="brand">ITHIEL</p>
-    <p class="subtitle"><span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16l-1.4 10H5.4L4 9Z"></path><path d="m8 9 4-5 4 5M8 13h8"></path></svg>Bazar</span> · <span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3Z"></path><path d="m19 15 .7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7L19 15Z"></path></svg>Makeup</span> · <span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"></path></svg>Lencería</span></p>
-    <div class="header-actions">
-      <a class="header-button" href="#catalogo"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect></svg>Ver catálogo</a>
-      <a class="header-button" href="#como-comprar"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"></path><path d="M8 9h8M8 13h5"></path></svg>Cómo comprar</a>
-      <a class="header-button" href="https://wa.me/5493413038668" target="_blank" rel="noopener"><img class="brand-icon" src="https://cdn.simpleicons.org/whatsapp/ffffff" alt="">WhatsApp</a>
-      <a class="header-button" href="#redes"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="2"></circle><circle cx="18" cy="6" r="2"></circle><circle cx="18" cy="18" r="2"></circle><path d="m8 11 8-4M8 13l8 4"></path></svg>Redes</a>
+<header>
+  <nav class="access">
+    <a class="pill" href="registro.html">Registrarse</a>
+    <a class="pill" href="cuenta.html">Mi cuenta</a>
+  </nav>
+  <p class="brand">ITHIEL</p>
+  <div class="sub" aria-label="Rubros">
+    <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16l-1.4 10H5.4L4 9Z"></path><path d="m8 9 4-5 4 5M8 13h8"></path></svg>Bazar</span><b>·</b>
+    <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3Z"></path></svg>Makeup</span><b>·</b>
+    <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"></path></svg>Lencería</span><b>·</b>
+    <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8 12 4l8 4-8 4-8-4Z"></path><path d="M4 8v9l8 4 8-4V8M12 12v9"></path></svg>Blanquería</span>
+  </div>
+  <nav class="actions">
+    <a class="pill" href="#bazar">Ver catálogo</a>
+    <a class="pill" href="#como-comprar">Cómo comprar</a>
+    <a class="pill" href="#experiencias">Experiencias</a>
+    <a class="pill" href="#whatsapp" id="open-whatsapp">WhatsApp</a>
+    <a class="pill" href="#envios">Envíos</a>
+    <a class="pill" href="#redes" id="open-social">Redes</a>
+  </nav>
+</header>
+<main>
+  <section>
+    <h1 class="title">Últimos ingresados</h1>
+    <p class="copy">Recién incorporadas.</p>
+    <div class="grid">
+      <article class="card"><div class="image"></div><div><p class="tag">Makeup</p><h3>Rubor compacto</h3><p class="price">$8.500</p></div></article>
+      <article class="card"><div class="image"></div><div><p class="tag">Bazar</p><h3>Neceser satinado</h3><p class="price">$12.000</p></div></article>
+      <article class="card"><div class="image"></div><div><p class="tag">Lencería</p><h3>Conjunto soft</h3><p class="price">$18.500</p></div></article>
+      <article class="card"><div class="image"></div><div><p class="tag">Makeup</p><h3>Gloss nude</h3><p class="price">$6.900</p></div></article>
     </div>
-  </header>
-
-  <main>
-    <section>
-      <h1 class="section-title"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v9l5 3"></path><circle cx="12" cy="12" r="9"></circle></svg>Últimos ingresados</h1>
-      <p class="section-copy">Novedades recién incorporadas al catálogo.</p>
-      <section id="latest" class="grid"><p class="notice">Cargando novedades...</p></section>
-    </section>
-
-    <section id="catalogo" class="section">
-      <h2 class="section-title"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect></svg>Catálogo</h2>
-      <p class="section-copy">Buscá, filtrá y armá tu pedido.</p>
-      <div class="tools">
-        <div class="search-wrap"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="5"></circle><path d="m14 14 6 6"></path></svg><input id="search" class="search" type="search" placeholder="Buscar un producto..." aria-label="Buscar productos" autocomplete="off"></div>
-      </div>
-      <nav id="filters" class="filters" aria-label="Filtrar productos"></nav>
-      <nav id="subfilters" class="subfilters" aria-label="Filtrar subcategorías"></nav>
-      <section id="products" class="grid"><p class="notice">Cargando productos...</p></section>
-    </section>
-
-    <section id="como-comprar" class="section">
-      <h2 class="section-title"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"></path><path d="M8 9h8M8 13h5"></path></svg>Cómo comprar</h2>
-      <p class="section-copy"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8Z"></path><path d="M9 8a3 3 0 0 1 6 0"></path></svg>Te acompañamos para que armes tu pedido de forma simple.</p>
-      <div class="info-grid">
-        <article class="info-card">
-          <h3><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8Z"></path><path d="M9 8a3 3 0 0 1 6 0"></path></svg>Compra minorista</h3>
-          <p>Si tu compra no cumple los requisitos mayoristas, se aplica el precio minorista. Agregá productos al pedido y consultanos por WhatsApp.</p>
-        </article>
-        <article class="info-card">
-          <h3><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8 12 4l8 4-8 4-8-4Z"></path><path d="M4 8v9l8 4 8-4V8M12 12v9"></path></svg>Compra mayorista</h3>
-          <ul>
-            <li>Primera compra: mínimo $30.000 o 15 artículos.</li>
-            <li>Compras siguientes: mínimo $10.000 o 10 artículos.</li>
-            <li>La condición mayorista tiene vigencia de 30 días.</li>
-            <li>Luego de 30 días sin comprar, vuelve a aplicar la compra inicial.</li>
-          </ul>
-        </article>
-        <article class="info-card">
-          <h3><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Atención y envíos</h3>
-          <p>Lunes a viernes: 9:00 a 18:00 hs.<br>Sábados: 9:00 a 13:00 hs.</p>
-          <p>Confirmamos stock, colores/talles, envío y medio de pago antes de preparar tu pedido.</p>
-        </article>
-      </div>
-    </section>
-    <section id="redes" class="section">
-      <h2 class="section-title"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="2"></circle><circle cx="18" cy="6" r="2"></circle><circle cx="18" cy="18" r="2"></circle><path d="m8 11 8-4M8 13l8 4"></path></svg>Redes</h2>
-      <div class="header-actions">
-        <a class="header-button social-link" href="https://www.instagram.com/ithiel.bazar.makeup/" target="_blank" rel="noopener"><img class="brand-icon" src="https://cdn.simpleicons.org/instagram/b91658" alt="">Instagram</a>
-        <a class="header-button social-link" href="https://www.facebook.com/ithielbazarmakeup" target="_blank" rel="noopener"><img class="brand-icon" src="https://cdn.simpleicons.org/facebook/b91658" alt="">Facebook</a>
-        <a class="header-button social-link" href="https://wa.me/5493413038668" target="_blank" rel="noopener"><img class="brand-icon" src="https://cdn.simpleicons.org/whatsapp/b91658" alt="">Catálogo por WhatsApp</a>
-      </div>
-    </section>
-  </main>
-
-  <button id="open-cart" class="cart-button" type="button" aria-haspopup="dialog" aria-controls="modal"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8Z"></path><path d="M9 8a3 3 0 0 1 6 0"></path></svg>Mi pedido <span id="count" class="count">0</span></button>
-  <button id="scroll-top" class="scroll-top" type="button" aria-label="Volver arriba" title="Volver arriba"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 14l7-7 7 7"></path><path d="M12 7v10"></path></svg></button>
-
-  <div id="modal" class="modal" aria-hidden="true">
-    <section class="cart" role="dialog" aria-modal="true" aria-label="Mi pedido">
-      <div class="cart-head"><h2>Mi pedido</h2><button id="close-cart" class="close" type="button">Cerrar</button></div>
-      <div id="cart-items"></div>
-      <div id="cart-controls">
-        <div class="purchase-switch"><button type="button" data-purchase="retail" class="active">Compra minorista</button><button type="button" data-purchase="wholesale">Compra mayorista</button></div>
-        <p id="cart-notice" class="cart-notice">Elegí compra mayorista para revisar si aplican esos precios.</p>
-        <div class="coupon-row"><input id="coupon" placeholder="Cupón de descuento"><button id="apply-coupon" class="button secondary" type="button">Aplicar</button></div>
-        <p id="cart-total" class="cart-total"></p>
-        <label class="register-order"><input id="register-order" type="checkbox"> Quiero registrar mi pedido y recibir seguimiento.</label>
-        <div id="checkout-details" class="checkout-details" hidden>
-          <div class="checkout-field"><label for="full-name">Nombre y apellido</label><input id="full-name" autocomplete="name"></div>
-          <div class="checkout-field"><label for="phone">WhatsApp con código de país</label><input id="phone" inputmode="tel" placeholder="5493411234567"></div>
-          <div class="delivery-options"><label><input name="delivery" value="pickup" type="radio" checked> Retiro en el local</label><label><input name="delivery" value="shipping" type="radio"> Envío</label></div>
-          <div id="address-field" class="checkout-field" hidden><label for="address">Dirección de envío</label><textarea id="address" rows="2"></textarea></div>
-          <div class="checkout-field"><label for="note">Nota (opcional)</label><textarea id="note" rows="2"></textarea></div>
-          <label class="optin"><input id="optin" type="checkbox"> Quiero recibir novedades y ofertas por WhatsApp.</label>
-        </div>
-        <button id="send-order" class="button" type="button">Continuar por WhatsApp</button>
-      </div>
-    </section>
-  </div>
-
-  <div id="image-modal" class="modal" aria-hidden="true">
-    <section class="viewer" role="dialog" aria-modal="true" aria-label="Imagen ampliada">
-      <button id="close-image" class="close" type="button">Cerrar</button>
-      <img id="large-image" alt="Imagen del producto">
-      <p id="image-description" class="viewer-description"></p>
-    </section>
-  </div>
-
-  <footer><span class="world" aria-label="Sitio web"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c3 3.4 3 14.6 0 18M12 3c-3 3.4-3 14.6 0 18"></path></svg></span>ITHIEL Bazar y Makeup · Derechos reservados 2015 - 2026 <span class="world" aria-label="Rosario, Santa Fe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg></span>Rosario, Santa Fe</footer>
-
-  <script>
-    const API = "https://bfuexiblfuqwykktltrp.supabase.co/functions/v1/";
-    const CATALOG_URL = `${API}web-catalog`;
-    const QUOTE_URL = `${API}checkout-quote`;
-    const ORDER_URL = `${API}create-order`;
-    const WHATSAPP = "5493413038668";
-    const productsContainer = document.getElementById("products");
-    const latestContainer = document.getElementById("latest");
-    const filters = document.getElementById("filters");
-    const subfilters = document.getElementById("subfilters");
-    const search = document.getElementById("search");
-    const modal = document.getElementById("modal");
-    const imageModal = document.getElementById("image-modal");
-    const largeImage = document.getElementById("large-image");
-    const imageDescription = document.getElementById("image-description");
-    const cartItems = document.getElementById("cart-items");
-    const cartTotal = document.getElementById("cart-total");
-    const sendOrder = document.getElementById("send-order");
-    const count = document.getElementById("count");
-    let allProducts = [];
-    let catalogCategories = [];
-    let selectedCategory = "Todos";
-    let selectedSubcategory = "Todos";
-    let cart = JSON.parse(localStorage.getItem("ithiel-cart") || "[]");
-    let selections = {};
-    let purchaseType = "retail";
-    let couponCode = "";
-    let quote = null;
-
-    function escapeHtml(value) { return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
-    function money(value) { return `$${Number(value || 0).toLocaleString("es-AR")}`; }
-    function priceNumber(value) { return Number(value || 0); }
-    function parseCsv(text) {
-      const rows=[]; let row=[]; let cell=""; let quoted=false;
-      for(let i=0;i<text.length;i+=1){ const char=text[i], next=text[i+1]; if(char==='"'&&quoted&&next==='"'){cell+='"';i+=1;} else if(char==='"'){quoted=!quoted;} else if(char===','&&!quoted){row.push(cell);cell="";} else if((char==='\n'||char==='\r')&&!quoted){if(char==='\r'&&next==='\n')i+=1;row.push(cell);rows.push(row);row=[];cell="";} else cell+=char; }
-      if(cell||row.length){row.push(cell);rows.push(row);} const headers=rows.shift()||[];
-      return rows.filter((item)=>item.length===headers.length).map((item)=>Object.fromEntries(headers.map((header,index)=>[header,item[index]||""])));
-    }
-    function category(product) { return product.category || "Otros"; }
-    function subcategory(product) { return product.subcategory || ""; }
-    function categoryIcon(name) {
-      const icons = {
-        "Todos": '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect></svg>',
-        "Bazar": '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16l-1.4 10H5.4L4 9Z"></path><path d="m8 9 4-5 4 5M8 13h8"></path></svg>',
-        "Makeup": '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3Z"></path></svg>',
-        "Lencería": '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"></path></svg>'
-      };
-      return icons[name] || '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8 12 4l8 4-8 4-8-4Z"></path><path d="M4 8v9l8 4 8-4V8"></path></svg>';
-    }
-    function productOptions(product, key) {
-      return [...new Set((product.variants || []).map((variant) => variant[key]).filter(Boolean))];
-    }
-    function selectedVariant(product) {
-      const selected = selections[product.id] || {};
-      return (product.variants || []).find((variant) =>
-        (!productOptions(product, "color").length || variant.color === selected.color) &&
-        (!productOptions(product, "size").length || variant.size === selected.size)
-      );
-    }
-    function optionButtons(product, key, label) {
-      const options = productOptions(product, key);
-      if (!options.length) return "";
-      const selected = selections[product.id]?.[key] || "";
-      return `<div class="options"><span class="option-label">${label}</span><div class="option-list">${options.map((value) => `<button class="option ${selected === value ? "active" : ""}" type="button" onclick="selectOption('${product.id}','${key}','${escapeHtml(value)}')">${escapeHtml(value)}</button>`).join("")}</div></div>`;
-    }
-    function shortDescription(text) {
-      const value = String(text || "").trim();
-      return value.length > 120 ? `${value.slice(0, 117).trim()}…` : value;
-    }
-    window.selectOption = (id, key, value) => {
-      selections[id] = { ...(selections[id] || {}), [key]: value };
-      renderLatest();
-      renderCatalog();
-    };
-    function addToCart(id) {
-      const product=allProducts.find((item)=>item.id===id); if(!product) return;
-      const colors = productOptions(product, "color");
-      const sizes = productOptions(product, "size");
-      const chosen = selections[id] || {};
-      if ((colors.length && !chosen.color) || (sizes.length && !chosen.size)) { alert("Elegí color y talle antes de agregar."); return; }
-      const variant = selectedVariant(product);
-      if ((colors.length || sizes.length) && !variant) { alert("Esa combinación no está disponible."); return; }
-      const itemId = `${product.id}|${chosen.color || ""}|${chosen.size || ""}`;
-      const details = [chosen.color, chosen.size].filter(Boolean).join(" · ");
-      const current=cart.find((item)=>item.id===itemId);
-      const retailPrice = variant?.retail_price ?? product.price;
-      const wholesalePrice = variant?.wholesale_price ?? product.wholesalePrice ?? retailPrice;
-      if (!retailPrice) { alert("Este producto no tiene precio minorista cargado. Consultanos por WhatsApp."); return; }
-      if(current) current.quantity+=1; else cart.push({id:itemId,productId:product.id,title:product.title,details,retailPrice,wholesalePrice,quantity:1});
-      saveCart();
-      count.classList.remove("is-cart-pop");
-      requestAnimationFrame(()=>count.classList.add("is-cart-pop"));
-    }
-    function updatePurchaseButtons() { document.querySelectorAll("[data-purchase]").forEach((button)=>button.classList.toggle("active",button.dataset.purchase===purchaseType)); }
-    function autoWholesale() {
-      const retailTotal=cart.reduce((sum,item)=>sum+priceNumber(item.retailPrice ?? item.price)*item.quantity,0);
-      const itemCount=cart.reduce((sum,item)=>sum+item.quantity,0);
-      if(retailTotal>=30000 || itemCount>=15) {
-        purchaseType="wholesale";
-        document.getElementById("cart-notice").textContent="Se aplicaron precios mayoristas automáticamente.";
-      } else {
-        purchaseType="retail";
-        const missingAmount=Math.max(0,30000-retailTotal), missingItems=Math.max(0,15-itemCount);
-        document.getElementById("cart-notice").textContent=`Te faltan ${money(missingAmount)} o ${missingItems} artículo${missingItems===1?"":"s"} para acceder a compra mayorista.`;
-      }
-      updatePurchaseButtons();
-    }
-    function saveCart() { autoWholesale(); localStorage.setItem("ithiel-cart",JSON.stringify(cart)); updateCart(); const phone=document.getElementById("phone").value.replace(/\D/g,""); if(couponCode || phone.length>=10) quoteCart(); }
-    function updateCart() {
-      const totalItems=cart.reduce((total,item)=>total+item.quantity,0); count.textContent=totalItems;
-      const cartControls=document.getElementById("cart-controls");
-      if(!cart.length){ cartItems.innerHTML='<div class="empty-cart"><span aria-hidden="true">♡</span><strong>Tu pedido está vacío</strong><p>Agregá productos del catálogo para verlos acá.</p></div>'; cartTotal.textContent="";cartControls.hidden=true;return; }
-      cartControls.hidden=false;
-      cart=cart.map((item)=>({ ...item, productId:item.productId || item.id.split("|")[0], retailPrice:item.retailPrice ?? item.price, wholesalePrice:item.wholesalePrice ?? item.price }));
-      cartItems.innerHTML=cart.map((item)=>{const unit=purchaseType==="wholesale"?item.wholesalePrice:item.retailPrice;return `<div class="cart-row"><div><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.details || "")} ${item.details ? "·" : ""} ${money(unit)} c/u</p></div><div class="quantity"><button type="button" onclick="changeQty('${escapeHtml(item.id)}',-1)">−</button><strong>${item.quantity}</strong><button type="button" onclick="changeQty('${escapeHtml(item.id)}',1)">+</button></div><button class="remove" type="button" onclick="removeItem('${escapeHtml(item.id)}')">Quitar</button></div>`}).join("");
-      const fallback=cart.reduce((sum,item)=>sum+(purchaseType==="wholesale"?priceNumber(item.wholesalePrice):priceNumber(item.retailPrice))*item.quantity,0);
-      const delivery=document.querySelector('input[name="delivery"]:checked')?.value === "shipping" ? "Envío: a coordinar" : "Retiro en el local";
-      const mode=purchaseType === "wholesale" ? "Precios mayoristas aplicados" : "Precios minoristas aplicados";
-      const total=quote ? quote.total : fallback;
-      const discount=quote?.discountAmount ? `<small>Descuento: −${money(quote.discountAmount)}</small>` : "";
-      cartTotal.innerHTML=`<span>Total: ${money(total)}</span>${discount}<small>${mode} · ${delivery}</small>`;
-      sendOrder.hidden=false;
-    }
-    window.changeQty=(id,delta)=>{const item=cart.find((product)=>product.id===id);if(!item)return;item.quantity+=delta;if(item.quantity<=0)cart=cart.filter((product)=>product.id!==id);saveCart();};
-    window.removeItem=(id)=>{cart=cart.filter((product)=>product.id!==id);saveCart();};
-    async function quoteCart() {
-      const phone=document.getElementById("phone").value.replace(/\D/g,"");
-      if(!cart.length){quote=null; updateCart(); return;}
-      const quotePhone=phone.length>=10 ? phone : "0000000000";
-      try { const response=await fetch(QUOTE_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone:quotePhone,purchaseType:"wholesale",couponCode,items:cart.map((item)=>({productId:item.productId,quantity:item.quantity}))})}); const data=await response.json(); if(!response.ok)throw new Error(data.error); quote=data; purchaseType=data.purchaseType; updatePurchaseButtons(); document.getElementById("cart-notice").textContent=data.wholesale.message; updateCart(); }
-      catch(error){ quote=null; document.getElementById("cart-notice").textContent=error.message; updateCart(); }
-    }
-    function card(product) {
-      const chosenVariant = selectedVariant(product);
-      const imageSource = chosenVariant?.image_url || product.image;
-      const available=Number(product.stock) > 0; const image=imageSource?`<button class="image-view" type="button" data-image="${encodeURIComponent(imageSource)}" data-title="${encodeURIComponent(product.title)}"><img src="${escapeHtml(imageSource)}" alt="${escapeHtml(product.title)}" loading="lazy"></button>`:'<div class="placeholder">ITHIEL</div>';
-      const tag=[category(product),subcategory(product)].filter(Boolean).join(" · ");
-      const retail = chosenVariant?.retail_price ?? product.price;
-      const wholesale = chosenVariant?.wholesale_price ?? product.wholesalePrice;
-      const hasRetail = retail !== null && retail !== undefined && Number(retail) > 0;
-      const hasWholesale = wholesale !== null && wholesale !== undefined && Number(wholesale) > 0;
-      const prices = hasWholesale && hasRetail
-        ? `<div class="price"><div class="price-row"><small>Precio mayorista</small><strong>${money(wholesale)}</strong></div><div class="price-row"><small>Precio minorista</small><strong>${money(retail)}</strong></div></div>`
-        : hasWholesale
-          ? `<div class="price"><div class="price-row"><small>Precio mayorista</small><strong>${money(wholesale)}</strong></div></div>`
-          : hasRetail
-            ? `<div class="price"><div class="price-row"><small>Precio minorista</small><strong>${money(retail)}</strong></div></div>`
-            : "";
-      const actions = hasRetail
-        ? `<button class="button secondary" type="button" onclick="addToCart('${escapeHtml(product.id)}')">Agregar</button><button class="button" type="button" onclick="consultProduct('${escapeHtml(product.id)}')">Consultar</button>`
-        : `<button class="button" type="button" onclick="consultProduct('${escapeHtml(product.id)}')">Consultar precio</button>`;
-      const description = product.description ? shortDescription(product.description) : "";
-      const moreButton = product.description && product.description.trim().length > 120 ? `<button class="description-more" type="button" onclick="window.viewProductDescription('${encodeURIComponent(product.title)}','${encodeURIComponent(product.description)}')">Ver más</button>` : "";
-      return `<article class="card"><div class="photo">${image}<span class="availability ${available?"":"out"}">${available?"Disponible":"Consultar"}</span></div><div class="content"><p class="tag">${categoryIcon(category(product))}<span>${escapeHtml(tag)}</span></p><h3>${escapeHtml(product.title)}</h3>${description ? `<p class="description">${escapeHtml(description)}${moreButton ? " " : ""}${moreButton}</p>` : ""}${optionButtons(product,"color","Color")}${optionButtons(product,"size","Talle")}${prices}<div class="card-actions">${actions}</div></div></article>`;
-    }
-    window.addToCart=addToCart;
-    window.viewImage=(src,title,description="")=>{largeImage.src=src;largeImage.alt=title;imageDescription.textContent=description ? description : "";imageDescription.hidden=!description;imageModal.classList.add("open");imageModal.setAttribute("aria-hidden","false");document.body.classList.add("modal-open");};
-    window.viewProductDescription=(title,description)=>{largeImage.removeAttribute("src");largeImage.alt=decodeURIComponent(title);imageDescription.textContent=decodeURIComponent(description);imageDescription.hidden=false;imageModal.classList.add("open");imageModal.setAttribute("aria-hidden","false");document.body.classList.add("modal-open");};
-    document.addEventListener("click",(event)=>{const button=event.target.closest(".image-view");if(!button)return;window.viewImage(decodeURIComponent(button.dataset.image),decodeURIComponent(button.dataset.title));});
-    window.consultProduct=(id)=>{const product=allProducts.find((item)=>item.id===id);if(!product)return;const chosen=selections[id]||{};const details=[chosen.color,chosen.size].filter(Boolean).join(" · ");window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Hola! Quiero consultar por: ${product.title}${details ? ` (${details})` : ""} (${product.sku}).`)}`,"_blank");};
-    function renderFilters() {
-      const preferred=["Bazar","Makeup","Lencería"];
-      const present=new Set([...catalogCategories.map((item)=>item.name),...allProducts.map(category)]);
-      filters.innerHTML=["Todos",...preferred.filter((item)=>present.has(item)),...Array.from(present).filter((item)=>!preferred.includes(item)&&item!=="Otros"),...(present.has("Otros")?["Otros"]:[])].map((item)=>`<button class="filter ${item===selectedCategory?"active":""}" type="button" data-category="${escapeHtml(item)}">${categoryIcon(item)}<span>${escapeHtml(item)}</span></button>`).join("");
-      filters.querySelectorAll(".filter").forEach((button)=>button.addEventListener("click",()=>{selectedCategory=button.dataset.category;selectedSubcategory="Todos";renderFilters();renderSubfilters();renderCatalog();}));
-    }
-    function renderSubfilters() {
-      const current=catalogCategories.find((item)=>item.name===selectedCategory);
-      const names=current?.subcategories || [...new Set(allProducts.filter((item)=>category(item)===selectedCategory).map(subcategory).filter(Boolean))];
-      if(selectedCategory==="Todos"||!names.length){subfilters.innerHTML="";return;}
-      subfilters.innerHTML=["Todos",...names].map((item)=>`<button class="subfilter ${item===selectedSubcategory?"active":""}" type="button" data-subcategory="${escapeHtml(item)}">${escapeHtml(item)}</button>`).join("");
-      subfilters.querySelectorAll(".subfilter").forEach((button)=>button.addEventListener("click",()=>{selectedSubcategory=button.dataset.subcategory;renderSubfilters();renderCatalog();}));
-    }
-    function renderCatalog() {
-      const term=search.value.trim().toLocaleLowerCase("es");
-      const visible=allProducts.filter((product)=>{const text=`${product.title} ${product.description} ${category(product)} ${subcategory(product)}`.toLocaleLowerCase("es"); return (selectedCategory==="Todos"||category(product)===selectedCategory)&&(selectedSubcategory==="Todos"||subcategory(product)===selectedSubcategory)&&text.includes(term);});
-      const selectedName=selectedSubcategory!=="Todos"?selectedSubcategory:selectedCategory;
-      const emptyMessage=selectedCategory!=="Todos"&&!term?`Próximamente vas a encontrar productos de ${escapeHtml(selectedName)} acá.`:"No encontramos productos con esa búsqueda.";
-      productsContainer.innerHTML=visible.length?visible.map(card).join(""):`<p class="notice">${emptyMessage}</p>`;
-    }
-    function renderLatest() {
-      latestContainer.innerHTML=allProducts.length
-        ? allProducts.slice(0,8).map(card).join("")
-        : '<p class="notice">Próximamente vas a encontrar novedades acá.</p>';
-    }
-    function renderHeroCarousel() {
-      const track=document.getElementById("hero-carousel-track");
-      const slides=allProducts.filter((product)=>product.image).slice(0,8);
-      if(!slides.length){track.parentElement.hidden=true;return;}
-      const items=[...slides,...slides];
-      track.innerHTML=items.map((product)=>`<div class="hero-slide"><img src="${escapeHtml(product.image)}" alt="" loading="eager"></div>`).join("");
-    }
-    async function loadProducts() {
-      try { const response=await fetch(CATALOG_URL,{cache:"no-store"}); if(!response.ok)throw new Error(); const payload=await response.json(); allProducts=payload.products || []; catalogCategories=payload.categories || []; renderHeroCarousel(); renderLatest(); renderFilters(); renderSubfilters(); renderCatalog(); }
-      catch { latestContainer.innerHTML='<p class="notice">No se pudieron cargar las novedades.</p>'; productsContainer.innerHTML='<p class="notice">No se pudo cargar el catálogo. Probá nuevamente en unos minutos.</p>'; }
-    }
-    search.addEventListener("input",renderCatalog);
-    const setModal=(node,open)=>{node.classList.toggle("open",open);node.setAttribute("aria-hidden",String(!open));document.body.classList.toggle("modal-open",open);};
-    document.getElementById("open-cart").addEventListener("click",()=>setModal(modal,true));
-    document.getElementById("close-cart").addEventListener("click",()=>setModal(modal,false));
-    modal.addEventListener("click",(event)=>{if(event.target===modal)setModal(modal,false);});
-    const closeImage=()=>{imageModal.classList.remove("open");imageModal.setAttribute("aria-hidden","true");document.body.classList.remove("modal-open");};
-    document.getElementById("close-image").addEventListener("click",closeImage);
-    imageModal.addEventListener("click",(event)=>{if(event.target===imageModal)closeImage();});
-    document.addEventListener("keydown",(event)=>{if(event.key!=="Escape")return;if(modal.classList.contains("open"))setModal(modal,false);if(imageModal.classList.contains("open"))closeImage();});
-    document.querySelectorAll("[data-purchase]").forEach((button)=>button.addEventListener("click",()=>{purchaseType=button.dataset.purchase;quote=null;updatePurchaseButtons();quoteCart();}));
-    const scrollTopButton = document.getElementById("scroll-top");
-    const updateScrollTop = () => scrollTopButton.classList.toggle("visible", window.scrollY > 420);
-    scrollTopButton.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
-    window.addEventListener("scroll", updateScrollTop, { passive: true });
-    updateScrollTop();
-    document.getElementById("register-order").addEventListener("change",(event)=>{document.getElementById("checkout-details").hidden=!event.target.checked; if(!event.target.checked){quote=null;document.getElementById("cart-notice").textContent="Podés enviar tu consulta directa por WhatsApp, sin registrarte.";updateCart();}});
-    document.getElementById("phone").addEventListener("change",quoteCart);
-    document.getElementById("apply-coupon").addEventListener("click",()=>{couponCode=document.getElementById("coupon").value.trim();quoteCart();});
-    document.querySelectorAll('input[name="delivery"]').forEach((input)=>input.addEventListener("change",()=>{document.getElementById("address-field").hidden=document.querySelector('input[name="delivery"]:checked').value!=="shipping";updateCart();}));
-    sendOrder.addEventListener("click",async()=>{
-      const registering=document.getElementById("register-order").checked, fullName=document.getElementById("full-name").value.trim(), phone=document.getElementById("phone").value.replace(/\D/g,""), fulfillmentType=document.querySelector('input[name="delivery"]:checked').value, shippingAddress=document.getElementById("address").value.trim();
-      if(!cart.length)return alert("Tu carrito está vacío.");
-      if(!registering){const lines=cart.map((item)=>`• ${item.quantity} x ${item.title}${item.details ? ` (${item.details})` : ""}`).join("\n");window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Hola! Quiero consultar/realizar este pedido:\n\n${lines}\n\nTipo de compra: ${purchaseType === "wholesale" ? "Mayorista" : "Minorista"}.\n\nQuedo atento/a a la confirmación.`)}`,"_blank");return;}
-      if(!fullName||phone.length<10)return alert("Completá nombre y WhatsApp."); if(fulfillmentType==="shipping"&&!shippingAddress)return alert("Ingresá la dirección de envío.");
-      sendOrder.disabled=true;sendOrder.textContent="Creando pedido...";
-      try { const response=await fetch(ORDER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({fullName,phone,purchaseType,couponCode,items:cart.map((item)=>({productId:item.productId,quantity:item.quantity})),fulfillmentType,shippingAddress,customerNote:document.getElementById("note").value.trim(),whatsappOptIn:document.getElementById("optin").checked})}); const data=await response.json();if(!response.ok)throw new Error(data.error);cart=[];saveCart();window.location.href=data.whatsappUrl; }
-      catch(error){alert(error.message||"No se pudo crear el pedido.");} finally {sendOrder.disabled=false;sendOrder.textContent="Continuar por WhatsApp";}
-    });
-    autoWholesale(); updateCart(); loadProducts();
-  </script>
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-    const supabase = createClient(
-      "https://bfuexiblfuqwykktltrp.supabase.co",
-      "sb_publishable_8-do7RGW8-li-7d1BnAsXQ_RYsks6iy",
-    );
-    const registerLink = document.getElementById("register-link");
-    const adminLink = document.getElementById("admin-link");
-    const ADMIN_API = "https://bfuexiblfuqwykktltrp.supabase.co/functions/v1/admin-api-v2";
-    function showPublicAccess() {
-      registerLink.hidden = false;
-      adminLink.hidden = true;
-    }
-    async function updateAccess(sessionOverride) {
-      const session = sessionOverride === undefined
-        ? (await supabase.auth.getSession()).data.session
-        : sessionOverride;
-
-      // Siempre se oculta primero: Admin aparece sólo tras validar el rol en Supabase.
-      adminLink.hidden = true;
-      registerLink.hidden = Boolean(session);
-      if (!session) {
-        showPublicAccess();
-        return;
-      }
-      try {
-        const response = await fetch(ADMIN_API, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: "sb_publishable_8-do7RGW8-li-7d1BnAsXQ_RYsks6iy",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({ action: "dashboard" }),
-        });
-        const result = await response.json().catch(() => null);
-        adminLink.hidden = !(response.ok && result?.ok === true);
-      } catch (_) {
-        adminLink.hidden = true;
-      }
-    }
-    showPublicAccess();
-    updateAccess();
-    supabase.auth.onAuthStateChange((_event, session) => updateAccess(session));
-  </script>
+  </section>
+  <section class="section" id="bazar">
+    <div class="catalogs">
+      <article class="catalog"><div class="catalog-copy"><h2>Bazar</h2><p>Último ingreso de<br>Bazar.</p><a href="#">Ver productos</a></div></article>
+      <article class="catalog"><div class="catalog-copy"><h2>Makeup</h2><p>Último ingreso de<br>Makeup.</p><a href="#">Ver productos</a></div></article>
+      <article class="catalog"><div class="catalog-copy"><h2>Lencería</h2><p>Último ingreso de<br>Lencería.</p><a href="#">Ver productos</a></div></article>
+      <article class="catalog"><div class="catalog-copy"><h2>Blanquería</h2><p>Último ingreso de<br>Blanquería.</p><a href="#">Ver productos</a></div></article>
+    </div>
+  </section>
+  <section id="como-comprar" class="buy-guide">
+    <h2 class="title">Cómo comprar</h2>
+    <p class="copy">Te acompañamos para armar tu pedido de forma simple.</p>
+    <div class="pricing-guide">
+      <article><span>Compra minorista</span><h3>Para compras sin mínimo mayorista.</h3><p>Se aplica automáticamente cuando el pedido no alcanza la condición mayorista.</p></article>
+      <article><span>Compra mayorista</span><h3>Primera compra: $30.000 o 15 artículos (mínimo).</h3><p>Compras siguientes: $10.000 o 10 artículos (mínimo). La condición mayorista se mantiene durante 30 días.</p></article>
+    </div>
+    <div class="buy-grid">
+      <article><strong>1</strong><svg class="guide-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8Z"></path><path d="M9 8a3 3 0 0 1 6 0"></path></svg><h3>Elegí tus productos</h3><p>Recorré cada rubro y agregá lo que te gusta a Mi pedido.</p></article>
+      <article><strong>2</strong><img class="guide-icon whatsapp-icon" src="assets/whatsapp.svg" alt=""><h3>Escribinos por WhatsApp</h3><p>Confirmamos stock, colores, talles y el total antes de preparar tu pedido.</p></article>
+      <article><strong>3</strong><svg class="guide-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v10H3z"></path><path d="M14 11h4l3 3v3h-7"></path><circle cx="7" cy="19" r="2"></circle><circle cx="18" cy="19" r="2"></circle></svg><h3>Retiro o envío</h3><p>Coordinamos retiro en Rosario o el envío a donde estés.</p></article>
+    </div>
+  </section>
+  <footer>ITHIEL Bazar y Makeup · Derechos reservados 2015 - 2026 · Rosario, Santa Fe</footer>
+</main>
+<button class="scroll-top" type="button" aria-label="Volver arriba" onclick="window.scrollTo({top:0,behavior:'smooth'})"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 13 5-5 5 5"></path><path d="M12 8v9"></path></svg></button>
+<button class="cart-button" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8Z"></path><path d="M9 8a3 3 0 0 1 6 0"></path></svg>Mi pedido <span>0</span></button>
+<div class="whatsapp-modal" id="whatsapp-modal" aria-hidden="true"><div class="whatsapp-backdrop" data-close-whatsapp></div><section class="whatsapp-pop" role="dialog" aria-modal="true" aria-labelledby="whatsapp-title"><button class="whatsapp-close" type="button" data-close-whatsapp aria-label="Cerrar">×</button><img src="assets/whatsapp.svg" alt="" class="whatsapp-pop-icon"><p class="tag">Contacto directo</p><h2 id="whatsapp-title">Hablemos por WhatsApp</h2><p>Consultanos por productos, stock, colores, talles o tu pedido.</p><a class="whatsapp-action" href="#">Abrir WhatsApp</a></section></div>
+<div class="social-modal" id="social-modal" aria-hidden="true"><div class="social-backdrop" data-close-social></div><section class="social-pop" role="dialog" aria-modal="true" aria-labelledby="social-title"><button class="social-close" type="button" data-close-social aria-label="Cerrar">×</button><p class="tag">Seguinos</p><h2 id="social-title">Redes Ithiel</h2><p>Encontrá novedades, productos y contenido de Ithiel.</p><div class="social-actions"><a href="#"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1"></circle></svg>Instagram</a><a href="#"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 21v-8h2.7l.4-3H14V8.1c0-.9.3-1.5 1.6-1.5h1.7V4a22 22 0 0 0-2.5-.1c-2.5 0-4.2 1.5-4.2 4.3V10H8v3h2.6v8"></path></svg>Facebook</a></div></section></div>
+<script>
+  const whatsappModal=document.querySelector("#whatsapp-modal");
+  const closeWhatsapp=()=>{whatsappModal.classList.remove("open");whatsappModal.setAttribute("aria-hidden","true");};
+  document.querySelector("#open-whatsapp")?.addEventListener("click",(event)=>{event.preventDefault();whatsappModal.classList.add("open");whatsappModal.setAttribute("aria-hidden","false");});
+  whatsappModal?.querySelectorAll("[data-close-whatsapp]").forEach((item)=>item.addEventListener("click",closeWhatsapp));
+  document.addEventListener("keydown",(event)=>{if(event.key==="Escape")closeWhatsapp();});
+</script>
+<script>
+  const socialModal=document.querySelector("#social-modal");
+  const closeSocial=()=>{socialModal.classList.remove("open");socialModal.setAttribute("aria-hidden","true");};
+  document.querySelector("#open-social")?.addEventListener("click",(event)=>{event.preventDefault();socialModal.classList.add("open");socialModal.setAttribute("aria-hidden","false");});
+  socialModal?.querySelectorAll("[data-close-social]").forEach((item)=>item.addEventListener("click",closeSocial));
+  document.addEventListener("keydown",(event)=>{if(event.key==="Escape")closeSocial();});
+</script>
 </body>
 </html>
