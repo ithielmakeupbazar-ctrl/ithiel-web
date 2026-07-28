@@ -192,28 +192,29 @@ async function googleLogin(target, redirectPage){
 }
 document.querySelector("#popup-register-google")?.addEventListener("click", event => googleLogin(event.currentTarget, "registro.html"));
 document.querySelector("#popup-account-google")?.addEventListener("click", event => googleLogin(event.currentTarget, "cuenta.html"));
-const OWNER_EMAILS = new Set(["ithielmakeupbazar@gmail.com", "todobazar8@gmail.com"]);
-function isAdminSession(session){
-  const user = session?.user;
-  const email = (user?.email || "").toLowerCase();
-  const meta = { ...(user?.app_metadata || {}), ...(user?.user_metadata || {}) };
-  return OWNER_EMAILS.has(email) || meta.role === "admin" || meta.is_admin === true || meta.admin === true;
+const ADMIN_API = "https://bfuexiblfuqwykktltrp.supabase.co/functions/v1/admin-api-v2";
+async function isAdminSession(session){
+  if(!session?.access_token) return false;
+  try{
+    const response=await fetch(ADMIN_API,{method:"POST",headers:{"Content-Type":"application/json",apikey:"sb_publishable_8-do7RGW8-li-7d1BnAsXQ_RYsks6iy",Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({action:"dashboard"})});
+    return response.ok;
+  }catch(error){return false}
 }
-function renderAccessNav(session){
-  const nav = document.querySelector(".access");
-  if(!nav) return;
+async function renderAccessNav(session){
+  const nav=document.querySelector(".access");
+  if(!nav)return;
   if(!session){
-    nav.innerHTML = '<a class="pill" href="#registro" id="open-register">Registrarse</a><a class="pill" href="#cuenta" id="open-account">Mi cuenta</a>';
-    document.querySelector("#open-register")?.addEventListener("click",(event)=>{event.preventDefault();const modal=document.querySelector("#register-modal");modal.classList.add("open");modal.setAttribute("aria-hidden","false");});
-    document.querySelector("#open-account")?.addEventListener("click",(event)=>{event.preventDefault();const modal=document.querySelector("#account-modal");modal.classList.add("open");modal.setAttribute("aria-hidden","false");});
+    nav.innerHTML='<a class="pill" href="#registro" id="open-register">Registrarse</a><a class="pill" href="#cuenta" id="open-account">Mi cuenta</a>';
+    document.querySelector("#open-register")?.addEventListener("click",event=>{event.preventDefault();const modal=document.querySelector("#register-modal");modal.classList.add("open");modal.setAttribute("aria-hidden","false")});
+    document.querySelector("#open-account")?.addEventListener("click",event=>{event.preventDefault();const modal=document.querySelector("#account-modal");modal.classList.add("open");modal.setAttribute("aria-hidden","false")});
     return;
   }
-  const adminLink = isAdminSession(session) ? '<a class="pill" href="/admin">Admin</a>' : '';
-  nav.innerHTML = `<a class="pill" href="/cuenta">Mi cuenta</a>${adminLink}`;
+  nav.innerHTML='<a class="pill" href="/cuenta">Mi cuenta</a><span class="pill admin-loading">Verificando acceso...</span>';
+  if(await isAdminSession(session))nav.innerHTML='<a class="pill" href="/cuenta">Mi cuenta</a><a class="pill" href="/admin">Admin</a>';
+  else nav.innerHTML='<a class="pill" href="/cuenta">Mi cuenta</a>';
 }
 supabase.auth.getSession().then(({data:{session}})=>renderAccessNav(session));
-supabase.auth.onAuthStateChange((_event, session)=>renderAccessNav(session));
-</script><script id="catalog-offset-fix">document.querySelector('a[href="#bazar"]')?.addEventListener("click",event=>{event.preventDefault();window.setTimeout(()=>{const target=document.querySelector("#bazar .catalogs");if(!target)return;if(window.innerWidth<760)window.scrollTo({top:Math.max(0,target.offsetTop-18),behavior:"smooth"});else target.scrollIntoView({behavior:"smooth",block:"center"})},700)});</script></body></html>
+supabase.auth.onAuthStateChange((_event,session)=>renderAccessNav(session));</script><script id="catalog-offset-fix">document.querySelector('a[href="#bazar"]')?.addEventListener("click",event=>{event.preventDefault();window.setTimeout(()=>{const target=document.querySelector("#bazar .catalogs");if(!target)return;if(window.innerWidth<760)window.scrollTo({top:Math.max(0,target.offsetTop-18),behavior:"smooth"});else target.scrollIntoView({behavior:"smooth",block:"center"})},700)});</script></body></html>
 
 
 
