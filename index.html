@@ -163,7 +163,29 @@ async function googleLogin(target, redirectPage){
 }
 document.querySelector("#popup-register-google")?.addEventListener("click", event => googleLogin(event.currentTarget, "registro.html"));
 document.querySelector("#popup-account-google")?.addEventListener("click", event => googleLogin(event.currentTarget, "cuenta.html"));
+const OWNER_EMAILS = new Set(["ithielmakeupbazar@gmail.com", "todobazar8@gmail.com"]);
+function isAdminSession(session){
+  const user = session?.user;
+  const email = (user?.email || "").toLowerCase();
+  const meta = { ...(user?.app_metadata || {}), ...(user?.user_metadata || {}) };
+  return OWNER_EMAILS.has(email) || meta.role === "admin" || meta.is_admin === true || meta.admin === true;
+}
+function renderAccessNav(session){
+  const nav = document.querySelector(".access");
+  if(!nav) return;
+  if(!session){
+    nav.innerHTML = '<a class="pill" href="#registro" id="open-register">Registrarse</a><a class="pill" href="#cuenta" id="open-account">Mi cuenta</a>';
+    document.querySelector("#open-register")?.addEventListener("click",(event)=>{event.preventDefault();const modal=document.querySelector("#register-modal");modal.classList.add("open");modal.setAttribute("aria-hidden","false");});
+    document.querySelector("#open-account")?.addEventListener("click",(event)=>{event.preventDefault();const modal=document.querySelector("#account-modal");modal.classList.add("open");modal.setAttribute("aria-hidden","false");});
+    return;
+  }
+  const adminLink = isAdminSession(session) ? '<a class="pill" href="/admin">Admin</a>' : '';
+  nav.innerHTML = `<a class="pill" href="/cuenta">Mi cuenta</a>${adminLink}`;
+}
+supabase.auth.getSession().then(({data:{session}})=>renderAccessNav(session));
+supabase.auth.onAuthStateChange((_event, session)=>renderAccessNav(session));
 </script></body></html>
+
 
 
 
