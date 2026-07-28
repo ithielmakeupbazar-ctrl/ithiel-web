@@ -39,3 +39,4 @@
     input:focus,textarea:focus { outline:none; border-color:var(--rose); box-shadow:0 0 0 4px rgba(185,22,88,.1); }
     @media(max-width:860px){body{display:grid;grid-template-columns:minmax(0,1fr);width:100%;padding:18px;background:linear-gradient(180deg,#8d073f 0,#c72b69 245px,#fff5f9 245px)}.auth-brand-panel{width:100%;min-width:0;justify-self:center;text-align:center;padding:26px 12px 18px}.auth-brand-panel strong{font-size:48px}.auth-brand-panel p{display:none}main{width:100%;max-width:520px;min-width:0;justify-self:center;margin:0;padding:28px}button,.back{min-width:0;white-space:normal}}
     @media(max-width:520px){body{padding:10px;align-items:start}.auth-brand-panel{padding:20px 8px 8px}.auth-brand-panel strong{font-size:38px;margin:8px 0}.auth-eyebrow{font-size:10px}main{padding:22px}h1{font-size:29px}}
+

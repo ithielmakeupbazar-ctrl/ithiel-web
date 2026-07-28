@@ -87,3 +87,4 @@
     input:focus,textarea:focus,select:focus { outline:none; box-shadow:0 0 0 4px rgba(238,93,149,.13); }
     @media(max-width:820px){header{align-items:flex-start}.account{flex-wrap:wrap;justify-content:flex-end}.nav{top:82px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.nav button{flex:0 0 auto}.panel{padding:14px}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:480px){main{padding-inline:12px}.cards{grid-template-columns:1fr}.login-card{padding:25px}}
+
