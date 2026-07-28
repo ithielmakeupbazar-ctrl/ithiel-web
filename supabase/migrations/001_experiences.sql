@@ -23,3 +23,26 @@ with check (auth.uid() = user_id and approved = false);
 
 create index if not exists experiences_approved_created_idx
 on public.experiences (approved, created_at desc);
+
+create or replace function public.is_admin()
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (select 1 from public.admin_users where user_id = auth.uid());
+$$;
+
+drop policy if exists "Experiencias visibles para admins" on public.experiences;
+create policy "Experiencias visibles para admins"
+on public.experiences for select
+to authenticated
+using (approved = true or public.is_admin());
+
+drop policy if exists "Admins moderan experiencias" on public.experiences;
+create policy "Admins moderan experiencias"
+on public.experiences for update
+to authenticated
+using (public.is_admin())
+with check (public.is_admin());

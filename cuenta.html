@@ -112,7 +112,7 @@ main>section>p{text-align:center!important}
 form{gap:10px!important}.row{gap:10px!important}
 textarea{min-height:70px!important}
 @media(max-width:600px){body{padding:64px 12px 18px!important}.account-brand{top:16px}main{padding:22px!important;border-radius:20px!important}main h1{font-size:34px!important}}
-</style><link rel="stylesheet" href="styles/cart-floating.css"></head>
+</style></head>
 <body>
   <div class="account-brand">ITHIEL</div>
   <main>
@@ -174,7 +174,7 @@ textarea{min-height:70px!important}
     supabase.auth.getSession().then(({data:{session}})=>{if(session)showProfile(session);});
     supabase.auth.onAuthStateChange((event,session)=>{if(session){showProfile(session);if(event==="PASSWORD_RECOVERY"){document.querySelector("#password-form").hidden=false;message(profileMessage,"Elegí tu nueva contraseña.");}}});
   </script>
-<script src="scripts/cart-floating.js"></script></body>
+</body>
 </html>
 
 

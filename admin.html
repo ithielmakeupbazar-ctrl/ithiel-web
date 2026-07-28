@@ -165,7 +165,7 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
   @media(max-width:820px){.app header{align-items:flex-start!important}.account{flex-wrap:wrap!important;justify-content:flex-end!important}.account span{display:none!important}main{width:calc(100% - 20px)!important;padding:18px!important}.cards{grid-template-columns:repeat(2,minmax(0,1fr))!important}.nav{justify-content:flex-start!important;flex-wrap:nowrap!important;overflow-x:auto!important;padding-bottom:4px!important}.nav button{flex:0 0 auto!important}}
   @media(max-width:520px){main>h1{font-size:34px!important}.cards{grid-template-columns:1fr!important}.login-card{padding:26px!important}}
   @media(prefers-reduced-motion:reduce){.home-link:hover,.outline:hover,.nav button:hover,.primary:hover,.google:hover,.edit:hover,.delete:hover,.card:hover,.panel:hover{animation:none!important}}
-</style>  <link rel="stylesheet" href="styles/admin-v2.css">
+</style>  <link rel="stylesheet" href="styles/admin-v2.css?v=20260728-4">
 </head>
 <body>
   <section id="loginView" class="login">
@@ -190,7 +190,7 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
       <h1>Administración</h1>
       <p class="lead">Productos, pedidos y comunidad.</p>
       </section><div class="admin-nav-strip"><nav class="nav" aria-label="Secciones del panel">
-        <button data-view="dashboard" class="active">Resumen</button><button data-view="orders">Pedidos</button><button data-view="products">Administrar productos</button><button data-view="catalog">Categorías</button><button data-view="customers">Clientes</button><button data-view="coupons">Cupones</button><button data-view="admins">Administradores</button><button data-view="account">Mi cuenta</button>
+        <button data-view="dashboard" class="active">Resumen</button><button data-view="orders">Pedidos</button><button data-view="products">Administrar productos</button><button data-view="catalog">Categorías</button><button data-view="customers">Clientes</button><button data-view="coupons">Cupones</button><button data-view="experiences">Experiencias</button><button data-view="admins">Administradores</button><button data-view="account">Mi cuenta</button>
       </nav></div><main class="admin-shell"><div id="content"><p class="empty">Cargando…</p></div></main>
     <footer class="admin-footer">ITHIEL Bazar y Makeup · Derechos reservados 2015 - 2026 · Rosario, Santa Fe</footer>
   </section>
@@ -389,6 +389,20 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
       }));
     }
 
+    async function renderExperiences() {
+      const { data, error } = await supabase.from("experiences").select("id,display_name,rating,comment,approved,created_at").order("created_at", { ascending:false });
+      if (error) throw error;
+      const rows = (data || []).map(item => `<tr><td>${escapeHtml(item.display_name)}</td><td><span class="stars">${"★".repeat(item.rating)}${"☆".repeat(5 - item.rating)}</span></td><td>${escapeHtml(item.comment)}</td><td>${item.approved ? '<span class="pill">Publicada</span>' : '<span class="pill">Pendiente</span>'}</td><td><button class="edit" type="button" data-experience-approve="${item.id}">${item.approved ? "Ocultar" : "Publicar"}</button></td></tr>`).join("");
+      content.innerHTML = `${viewHead("EXPERIENCIAS", "Moderación", "Revisá los comentarios antes de publicarlos.")}<section class="panel experience-admin-panel"><h2>Comentarios de clientas</h2>${rows ? `<div class="table-scroll"><table><thead><tr><th>Clienta</th><th>Calificación</th><th>Comentario</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<p class="empty">Todavía no hay comentarios.</p>'}</section>`;
+      document.querySelectorAll("[data-experience-approve]").forEach(button => button.addEventListener("click", async () => {
+        const id = button.dataset.experienceApprove;
+        const current = data.find(item => item.id === id);
+        button.disabled = true;
+        const result = await supabase.from("experiences").update({ approved: !current.approved }).eq("id", id);
+        if (result.error) alert(result.error.message); else await loadView("experiences");
+        button.disabled = false;
+      }));
+    }
     function renderCatalog(data) {
       const categories = data.categories || [];
       const subcategories = data.subcategories || [];
@@ -532,6 +546,7 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
       setLoading();
       try {
         if (view === "account") { await renderAccount(); return; }
+        if (view === "experiences") { await renderExperiences(); return; }
         const data = await callAdmin(view === "catalog" ? "catalogManagement" : view);
         if (view === "dashboard") renderDashboard(data);
         if (view === "products") renderProducts(data);
