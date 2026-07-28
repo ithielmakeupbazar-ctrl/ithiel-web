@@ -103,13 +103,18 @@ main{border-radius:24px!important;box-shadow:0 22px 58px rgba(50,21,34,.18)!impo
   .consent{color:var(--ithiel-muted)!important;font-weight:600!important}.consent input{min-height:auto!important}.message{color:var(--ithiel-muted)!important;font-size:13px!important;text-align:center!important}
   @media(max-width:860px){body{grid-template-columns:minmax(0,1fr)!important;padding:14px!important;background:linear-gradient(180deg,#9a0d49 0,#d3427b 245px,#fff5f9 245px,#fffafb 100%)!important}.auth-brand-panel,main{justify-self:center!important}.auth-brand-panel{padding:22px!important;text-align:center!important}.auth-brand-panel strong{font-size:42px!important}.auth-brand-panel p{display:none!important}}
   @media(max-width:520px){main{padding:22px!important}.row{grid-template-columns:1fr!important}}
-</style></head>
+</style><style id="account-compact-fix">
+body{display:grid!important;place-items:center!important;min-height:100vh!important;padding:76px 18px 28px!important;background:linear-gradient(145deg,#b91658 0 28%,#fff8fb 28% 100%)!important}
+.account-brand{position:absolute;top:22px;left:5vw;color:#fff;font:600 26px "Playfair Display",serif;letter-spacing:.14em}
+main{width:min(560px,100%)!important;min-height:0!important;margin:auto!important;padding:30px!important;border-radius:24px!important;background:#fff9fb!important;box-shadow:0 24px 60px rgba(74,17,43,.18)!important}
+main h1{margin:10px 0!important;text-align:center!important;font-size:40px!important}
+main>section>p{text-align:center!important}
+form{gap:10px!important}.row{gap:10px!important}
+textarea{min-height:70px!important}
+@media(max-width:600px){body{padding:64px 12px 18px!important}.account-brand{top:16px}main{padding:22px!important;border-radius:20px!important}main h1{font-size:34px!important}}
+</style><link rel="stylesheet" href="styles/cart-floating.css"></head>
 <body>
-  <aside class="auth-brand-panel" aria-hidden="true">
-    <span class="auth-eyebrow">BAZAR · MAKEUP · LENCERÍA</span>
-    <strong>ITHIEL</strong>
-    <p>Tu espacio para descubrir productos, guardar tus datos y comprar más fácil.</p>
-  </aside>
+  <div class="account-brand">ITHIEL</div>
   <main>
     <a class="back" href="/">Catálogo</a>
     <section id="access-view">
@@ -169,8 +174,10 @@ main{border-radius:24px!important;box-shadow:0 22px 58px rgba(50,21,34,.18)!impo
     supabase.auth.getSession().then(({data:{session}})=>{if(session)showProfile(session);});
     supabase.auth.onAuthStateChange((event,session)=>{if(session){showProfile(session);if(event==="PASSWORD_RECOVERY"){document.querySelector("#password-form").hidden=false;message(profileMessage,"Elegí tu nueva contraseña.");}}});
   </script>
-</body>
+<script src="scripts/cart-floating.js"></script></body>
 </html>
+
+
 
 
 

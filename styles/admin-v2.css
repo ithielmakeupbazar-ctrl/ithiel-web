@@ -12,3 +12,11 @@ table{width:100%;border-collapse:separate!important;border-spacing:0!important;f
 @keyframes ithielThinkingGlow{0%,100%{box-shadow:0 0 0 2px rgba(255,255,255,.12),0 7px 18px rgba(216,137,167,.28)}50%{box-shadow:0 0 0 5px rgba(239,169,196,.22),0 10px 30px rgba(224,121,163,.72)}}
 @media(max-width:900px){.cards,.category-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.dashboard-grid,.account-grid{grid-template-columns:1fr}.admin-hero .nav{justify-content:flex-start!important;flex-wrap:nowrap!important;overflow-x:auto!important;padding-bottom:5px!important}.admin-shell{width:calc(100% - 20px)!important}.coupon-form{grid-template-columns:1fr 1fr!important}}
 @media(max-width:620px){.admin-top .account span{display:none!important}.admin-top{padding-inline:14px!important}.admin-top .home-link,.admin-top .outline{padding:8px 11px!important}.admin-hero{padding-inline:10px}.admin-shell{margin-top:14px!important}.cards,.category-grid{grid-template-columns:1fr!important}.view-head{align-items:flex-start;flex-direction:column}.product-form{grid-template-columns:1fr!important}.product-form .wide{grid-column:auto!important}.coupon-form,.customer-form,.catalog-tools,.account-fields{grid-template-columns:1fr!important}.panel{padding:14px!important}.product-form-card{padding:18px}.view-head h2{font-size:29px}}
+/* Correcciones finales de navegación y actividad */
+#appView .admin-hero .nav{display:flex!important;visibility:visible!important;opacity:1!important;justify-content:center!important;flex-wrap:wrap!important;overflow:visible!important}
+#appView .admin-hero .nav button{display:inline-flex!important;visibility:visible!important;opacity:1!important}
+.dashboard-grid{align-items:start!important}
+.dashboard-grid>.panel{min-width:0!important;overflow-x:auto!important}
+.dashboard-grid table{width:100%!important;min-width:0!important;table-layout:auto!important}
+@media(max-width:760px){#appView .admin-hero .nav{justify-content:flex-start!important;flex-wrap:nowrap!important;overflow-x:auto!important;padding-bottom:8px!important}.dashboard-grid{grid-template-columns:1fr!important}.admin-shell{overflow:visible!important}}
+
