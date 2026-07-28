@@ -5,9 +5,78 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Cuenta opcional y perfil simple de clientes de Ithiel Bazar y Makeup.">
   <title>Mi cuenta | Ithiel</title>
-  <link rel="stylesheet" href="/styles/shared.css">
-  <link rel="stylesheet" href="/styles/cuenta.css">
-</head>
+  <style>
+:root {
+  --focus: #ff9fc2;
+  --shadow-sm: 0 8px 24px rgba(74, 17, 43, .09);
+  --shadow-md: 0 18px 44px rgba(74, 17, 43, .16);
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+}
+
+html { color-scheme: light; }
+body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+button, a, input, textarea, select { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+[hidden] { display: none !important; }
+
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes item-in {
+  from { opacity: 0; transform: translateY(22px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes cart-pop {
+  0%, 100% { transform: scale(1); }
+  45% { transform: scale(1.22); }
+}
+.is-cart-pop { animation: cart-pop .38s var(--ease-out); }
+.message { font-weight: 650; }
+.message.is-error, .notice.is-error { color: #a25119 !important; }
+.message.is-success, .notice.is-success { color: #16804b !important; }
+.message.is-muted, .notice.is-muted { color: #765763 !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+</style>
+  <style>
+    :root{--rose:#b91658;--deep:#780a38;--ink:#321522;--green:#16804b;--line:#e4b5c8;}
+    *{box-sizing:border-box} body{min-height:100vh;margin:0;display:grid;place-items:center;padding:24px;color:var(--ink);font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at 14% 0%,#ffb2cb 0,transparent 27%),linear-gradient(125deg,#5e062d,#bd1659 55%,#f26b9d)}
+    main{width:min(100%,490px);padding:32px;border-radius:20px;background:#fff;box-shadow:0 20px 60px #3215224d} h1{margin:0;color:var(--deep);text-align:center;font-size:31px;letter-spacing:2px;font-weight:700} p{color:#765763;line-height:1.45;text-align:center}.back{display:inline-flex;align-items:center;margin-bottom:18px;padding:7px 10px;border:1px solid var(--line);border-radius:999px;color:var(--deep);background:#fff8fb;font-size:13px;font-weight:600;text-decoration:none}.back:hover{background:#f8e4ec}
+    label{display:grid;gap:6px;margin:15px 0;color:#765763;font-size:13px;font-weight:600}input,textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:12px;color:var(--ink);font:inherit;background:#fff}textarea{min-height:76px;resize:vertical}.phone{display:grid;grid-template-columns:auto 1fr;border:1px solid var(--line);border-radius:9px;overflow:hidden}.phone span{display:grid;place-items:center;padding:0 11px;color:var(--deep);background:#f8e4ec;font-size:14px;font-weight:600}.phone input{border:0;border-radius:0}
+    button{display:flex;width:100%;align-items:center;justify-content:center;gap:8px;border:0;border-radius:10px;padding:13px;color:#fff;background:var(--rose);cursor:pointer;font:inherit;font-size:14px;font-weight:600}button:hover{background:var(--deep)}.google,.secondary{margin:12px 0;color:#3b2a31;border:1px solid #d9c4ce;background:#fff}.secondary{color:var(--deep)}.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.row button{margin:0}.logout{margin-top:12px;background:#fff;color:var(--deep);border:1px solid var(--line)}.consent{display:flex;gap:8px;align-items:flex-start;font-weight:400;line-height:1.35}.consent input{width:auto;margin-top:2px}.message{min-height:20px;margin:13px 0 0;font-size:13px}.account-email{padding:10px 12px;border-radius:9px;color:var(--deep);background:#f8e4ec;text-align:center;font-size:14px;font-weight:600}[hidden]{display:none!important}.icon{width:19px;height:19px;flex:0 0 19px}
+    body{grid-template-columns:minmax(320px,1fr) minmax(420px,620px);gap:clamp(28px,6vw,90px);padding:clamp(24px,5vw,72px);background:linear-gradient(90deg,#85063e 0,#ad1253 42%,#f8edf2 42%,#fff9fb 100%)}
+    .auth-brand-panel{max-width:560px;justify-self:end;color:#fff;animation:page-in .65s var(--ease-out) both}
+    .auth-brand-panel strong{display:block;margin:14px 0;font-size:clamp(54px,8vw,100px);line-height:.9;letter-spacing:.11em;text-shadow:0 16px 45px rgba(44,3,21,.25)}
+    .auth-brand-panel p{max-width:390px;margin:0;color:rgba(255,255,255,.88);text-align:left;font-size:17px}
+    .auth-eyebrow{font-size:12px;font-weight:800;letter-spacing:.22em}
+    main{justify-self:start;animation:page-in .6s .08s var(--ease-out) both;box-shadow:var(--shadow-md);border:1px solid rgba(185,22,88,.1)}
+    button,.back,input,textarea{transition:transform .22s var(--ease-out),box-shadow .22s,border-color .22s,background-color .22s}
+    button:hover,.back:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm)}button:active{transform:scale(.97)}
+    input:focus,textarea:focus{outline:none;border-color:var(--rose);box-shadow:0 0 0 4px rgba(185,22,88,.1)}
+    @media(max-width:860px){body{display:grid;grid-template-columns:minmax(0,1fr);width:100%;padding:18px;background:linear-gradient(180deg,#8d073f 0,#c72b69 245px,#fff5f9 245px)}.auth-brand-panel{width:100%;min-width:0;justify-self:center;text-align:center;padding:26px 12px 18px}.auth-brand-panel strong{font-size:48px}.auth-brand-panel p{display:none}main{width:100%;max-width:520px;min-width:0;justify-self:center;margin:0;padding:28px}}
+    @media(max-width:520px){body{padding:10px;align-items:start}.auth-brand-panel{padding:20px 8px 8px}.auth-brand-panel strong{font-size:38px;margin:8px 0}.auth-eyebrow{font-size:10px}.row{grid-template-columns:1fr}main{padding:22px}h1{font-size:27px}}
+
+</style>
+<style>
+:root{--rose:#b91658;--deep:#780a38;--ink:#321522;--line:#e4b5c8;--ease-out:cubic-bezier(.22,1,.36,1)}
+body{background:linear-gradient(110deg,#82083d 0,#bd1659 43%,#fff7fa 43%,#fff9fb 100%);font-family:Georgia,"Times New Roman",serif}
+.auth-brand-panel{position:relative;isolation:isolate;padding:38px;border-radius:28px;background:linear-gradient(145deg,#8b0d45,#c62d70);box-shadow:0 24px 55px rgba(48,3,25,.25);overflow:hidden}.auth-brand-panel:after{content:"";position:absolute;z-index:-1;inset:-70px -40px auto auto;width:260px;height:260px;border:1px solid #ffffff55;border-radius:48%;transform:rotate(25deg)}.auth-brand-panel strong{font-family:Georgia,"Times New Roman",serif}.auth-brand-panel p{font-family:Arial,Helvetica,sans-serif}
+main{border-radius:24px!important;box-shadow:0 22px 58px rgba(50,21,34,.18)!important;animation:page-in .65s var(--ease-out) both}h1{font-family:Georgia,"Times New Roman",serif!important}.back{transition:transform .22s var(--ease-out),background-color .22s,box-shadow .22s}.back:hover{background:#f8e4ec!important;box-shadow:0 8px 20px rgba(120,10,56,.13)!important}button{transition:transform .22s var(--ease-out),box-shadow .22s,background-color .22s}button:hover{transform:translateY(-2px);box-shadow:0 9px 20px rgba(120,10,56,.2)}.google{border-radius:999px!important}.row button{border-radius:999px!important}.secondary{background:#fff8fb!important}.message{font-family:Arial,Helvetica,sans-serif}
+@media(max-width:860px){body{background:linear-gradient(180deg,#8d073f 0,#c72b69 245px,#fff5f9 245px)}}
+</style></head>
 <body>
   <aside class="auth-brand-panel" aria-hidden="true">
     <span class="auth-eyebrow">BAZAR · MAKEUP · LENCERÍA</span>
@@ -75,3 +144,5 @@
   </script>
 </body>
 </html>
+
+
