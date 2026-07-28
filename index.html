@@ -14,7 +14,12 @@
   .card,.drawer-product{width:100%!important;max-width:420px!important;margin-inline:auto!important}
   .card .image,.drawer-img{height:300px!important}
   .drawer-actions{gap:12px!important}
-}</style></head><body><header><nav class="access"><a class="pill" href="#registro" id="open-register">Registrarse</a><a class="pill" href="#cuenta" id="open-account">Mi cuenta</a></nav><p class="brand">ITHIEL</p><div class="sub" aria-label="Rubros">
+}/* Ajuste responsive final para productos reales */
+.card .image,.drawer-img{background-color:#fff!important;background-size:contain!important;background-repeat:no-repeat!important;background-position:center!important}
+.card .image{height:270px!important}.drawer-img{height:270px!important}
+@media(max-width:980px){.grid,.drawer-products{grid-template-columns:repeat(2,minmax(0,1fr))!important}.card .image,.drawer-img{height:280px!important}}
+@media(max-width:760px){.grid,.drawer-products{grid-template-columns:1fr!important;gap:22px!important}.card,.drawer-product{width:100%!important;max-width:440px!important;margin-inline:auto!important}.card .image,.drawer-img{height:360px!important}.drawer-actions{gap:12px!important}}
+@media(max-width:420px){.card .image,.drawer-img{height:320px!important}}</style></head><body><header><nav class="access"><a class="pill" href="#registro" id="open-register">Registrarse</a><a class="pill" href="#cuenta" id="open-account">Mi cuenta</a></nav><p class="brand">ITHIEL</p><div class="sub" aria-label="Rubros">
   <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16l-1.4 10H5.4L4 9Z"></path><path d="m8 9 4-5 4 5M8 13h8"></path></svg>Bazar</span><b>·</b>
   <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3Z"></path></svg>Makeup</span><b>·</b>
   <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"></path></svg>Lencería</span><b>·</b>
@@ -159,6 +164,7 @@ async function googleLogin(target, redirectPage){
 document.querySelector("#popup-register-google")?.addEventListener("click", event => googleLogin(event.currentTarget, "registro.html"));
 document.querySelector("#popup-account-google")?.addEventListener("click", event => googleLogin(event.currentTarget, "cuenta.html"));
 </script></body></html>
+
 
 
 
