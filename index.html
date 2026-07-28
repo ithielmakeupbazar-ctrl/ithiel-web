@@ -213,7 +213,7 @@ function renderAccessNav(session){
 }
 supabase.auth.getSession().then(({data:{session}})=>renderAccessNav(session));
 supabase.auth.onAuthStateChange((_event, session)=>renderAccessNav(session));
-</script></body></html>
+</script><script id="catalog-offset-fix">document.querySelector('a[href="#bazar"]')?.addEventListener("click",event=>{event.preventDefault();window.setTimeout(()=>{const target=document.querySelector("#bazar .catalogs");if(!target)return;if(window.innerWidth<760)window.scrollTo({top:Math.max(0,target.offsetTop-18),behavior:"smooth"});else target.scrollIntoView({behavior:"smooth",block:"center"})},700)});</script></body></html>
 
 
 
