@@ -1,599 +1,588 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex,nofollow">
-  <meta name="description" content="Panel de administración con acceso seguro de Ithiel Bazar y Makeup.">
-  <title>ITHIEL · Administración</title>
-  <style>
-:root {
-  --focus: #ff9fc2;
-  --shadow-sm: 0 8px 24px rgba(74, 17, 43, .09);
-  --shadow-md: 0 18px 44px rgba(74, 17, 43, .16);
-  --ease-out: cubic-bezier(.22, 1, .36, 1);
-}
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
-html { color-scheme: light; }
-body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-button, a, input, textarea, select { font: inherit; }
-button, a { -webkit-tap-highlight-color: transparent; }
-button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 3px;
-}
-[hidden] { display: none !important; }
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 
-@keyframes page-in {
-  from { opacity: 0; transform: translateY(18px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes item-in {
-  from { opacity: 0; transform: translateY(22px) scale(.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-@keyframes cart-pop {
-  0%, 100% { transform: scale(1); }
-  45% { transform: scale(1.22); }
-}
-.is-cart-pop { animation: cart-pop .38s var(--ease-out); }
-.message { font-weight: 650; }
-.message.is-error, .notice.is-error { color: #a25119 !important; }
-.message.is-success, .notice.is-success { color: #16804b !important; }
-.message.is-muted, .notice.is-muted { color: #765763 !important; }
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    scroll-behavior: auto !important;
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
+function readServiceKey() {
+  try {
+    const keys = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}");
+    if (typeof keys?.default === "string" && keys.default) return keys.default;
+  } catch (_) {
+    // El proyecto puede usar la variable clásica en lugar del paquete de secretos.
   }
+  return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 }
 
-</style>
-  <style>
-    :root { --wine:#9d0c48; --pink:#ee5d95; --ink:#261822; --paper:#fff8fb; --line:#ecd9e2; --muted:#725d68; --ok:#16754b; --warn:#a54619; }
-    * { box-sizing:border-box; }
-    body { margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink); background:#f8f1f4; }
-    button,input { font:inherit; }
-    button { cursor:pointer; }
-    .hidden { display:none !important; }
-    .login { min-height:100vh; display:grid; place-items:center; padding:24px; background:radial-gradient(circle at top,#f19ab9 0,#b40a51 42%,#621033 100%); }
-    .login-card { width:min(100%,420px); padding:34px; border-radius:22px; background:#fffafd; box-shadow:0 22px 60px #3e0a264d; }
-    .login-back { display:inline-flex; align-items:center; margin-bottom:22px; padding:7px 10px; border:1px solid #d9bdcb; border-radius:999px; color:var(--wine); background:#fff8fb; font-size:13px; font-weight:700; text-decoration:none; }
-    .login-back:hover { background:#f8e4ec; }
-    .brand { font-weight:700; letter-spacing:.12em; font-size:28px; color:var(--wine); text-align:center; }
-    .subtitle { text-align:center; margin:8px 0 26px; color:var(--muted); font-size:14px; }
-    label { display:grid; gap:6px; font-size:14px; font-weight:600; margin:14px 0; }
-    input { width:100%; padding:12px 13px; border:1px solid #d9bdcb; border-radius:10px; background:white; }
-    input:focus { outline:3px solid #ffc8dc; border-color:var(--pink); }
-    .primary,.google,.nav button { border:0; border-radius:10px; padding:12px 14px; font-weight:600; }
-    .primary { width:100%; background:var(--wine); color:white; margin-top:8px; }
-    .google { display:flex; width:100%; align-items:center; justify-content:center; gap:9px; margin-top:12px; background:white; border:1px solid #d5c7ce; color:#33242b; }
-    .notice { min-height:20px; margin:14px 0 0; font-size:14px; text-align:center; color:var(--warn); }
-    .app { min-height:100vh; }
-    header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px clamp(18px,4vw,56px); background:#fff; border-bottom:1px solid var(--line); }
-    header .brand { text-align:left; font-size:21px; }
-    .account { display:flex; align-items:center; gap:10px; color:var(--muted); font-size:14px; }
-    .outline { border:1px solid #d4bec9; color:var(--wine); background:white; border-radius:8px; padding:8px 10px; font-weight:600; }
-    .home-link { display:inline-flex; align-items:center; padding:7px 9px; border:1px solid #d9bdcb; border-radius:999px; color:var(--wine); background:#fff8fb; text-decoration:none; font-weight:600; font-size:13px; }
-    .home-link:hover { background:#f8e4ec; }
-    .google-icon { width:18px; height:18px; flex:0 0 18px; }
-    main { max-width:1200px; margin:auto; padding:28px 20px 54px; }
-    h1 { font-size:25px; margin:0 0 6px; }
-    .lead { margin:0 0 22px; color:var(--muted); }
-    .nav { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:24px; }
-    .nav button { background:#eadbe2; color:#5e3447; padding:9px 13px; }
-    .nav button.active { background:var(--wine); color:white; }
-    .cards { display:grid; grid-template-columns:repeat(5,minmax(120px,1fr)); gap:13px; margin:18px 0 26px; }
-    .card,.panel { background:white; border:1px solid var(--line); border-radius:14px; box-shadow:0 4px 14px #5d15300b; }
-    .card { padding:17px; }
-    .card small { color:var(--muted); display:block; }
-    .card strong { display:block; margin-top:8px; font-size:28px; color:var(--wine); }
-    .panel { padding:20px; overflow:auto; }
-    .panel h2 { margin:0 0 15px; font-size:18px; }
-    table { width:100%; border-collapse:collapse; font-size:14px; }
-    th,td { padding:11px 8px; text-align:left; border-bottom:1px solid #f0e5ea; vertical-align:top; }
-    th { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
-    th:last-child,td:last-child { position:sticky; right:0; background:#fff; box-shadow:-8px 0 12px #fff; }
-    .pill { display:inline-block; padding:4px 8px; border-radius:100px; background:#f4dce6; color:#7c1743; font-size:12px; font-weight:600; }
-    .pill.low { background:#ffe4d9; color:#9a3715; }
-    .empty { color:var(--muted); padding:20px 0; }
-    .customer-form { display:grid; grid-template-columns:1.2fr 1fr auto auto; gap:10px; align-items:end; margin-bottom:22px; }
-    .customer-form label { margin:0; }
-    .check { display:flex; align-items:center; gap:7px; font-size:13px; font-weight:600; white-space:nowrap; padding-bottom:11px; }
-    .check input { width:auto; }
-    .customer-form .primary { width:auto; margin:0; white-space:nowrap; }
-    .product-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-    .product-form .wide { grid-column:1 / -1; }
-    textarea,select { width:100%; padding:12px 13px; border:1px solid #d9bdcb; border-radius:10px; background:white; font:inherit; }
-    textarea:focus,select:focus { outline:3px solid #ffc8dc; border-color:var(--pink); }
-    .actions { display:flex; gap:10px; flex-wrap:wrap; margin:0 0 17px; }
-    .actions .primary { width:auto; margin:0; }
-    .product-search { max-width:500px; margin:0 0 16px; }
-    .photo-thumb { width:42px; height:42px; object-fit:cover; border-radius:7px; background:#f2e7eb; vertical-align:middle; }
-    .product-photos { display:flex; flex-wrap:wrap; gap:10px; margin:4px 0 8px; }
-    .product-photo { display:grid; gap:4px; justify-items:center; color:var(--muted); font-size:11px; }
-    .product-photo img { width:76px; height:76px; object-fit:cover; border-radius:9px; background:#f2e7eb; }
-    .edit { border:1px solid #d4bec9; color:var(--wine); background:white; border-radius:7px; padding:6px 8px; font-weight:600; font-size:12px; }
-    .delete { color:#a12835; border-color:#e9c2c7; margin-left:5px; }
-    .delete:hover { color:#fff; background:#a12835; border-color:#a12835; }
-    .catalog-tools { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:20px; }
-    .catalog-tools form { display:flex; gap:8px; align-items:end; }
-    .catalog-tools label { flex:1; margin:0; }
-    .coupon-form { display:grid; grid-template-columns:repeat(4,minmax(140px,1fr)); gap:12px; align-items:end; margin:0 0 8px; padding:18px; border:1px solid var(--line); border-radius:14px; background:var(--paper); }
-    .coupon-form label { margin:0; }
-    .coupon-form .coupon-active { align-self:center; padding:12px 0 0; }
-    .coupon-form-actions { display:flex; gap:8px; grid-column:1 / -1; }
-    .coupon-form-actions .primary { width:auto; margin:0; }
-    .coupon-table { margin-top:22px; }
-    @media (max-width:820px) { .customer-form,.product-form,.catalog-tools,.coupon-form { grid-template-columns:1fr; } .catalog-tools form { display:grid; grid-template-columns:1fr; } .check { padding:0; } }
-    @media (max-width:820px) { .cards { grid-template-columns:repeat(2,1fr); } .account span { display:none; } }
-    .login-card { animation:page-in .6s var(--ease-out) both; box-shadow:var(--shadow-md); }
-    header { position:sticky; top:0; z-index:5; backdrop-filter:blur(14px); background:rgba(255,255,255,.92); }
-    button,.home-link,input,textarea,select,.card { transition:transform .22s var(--ease-out),box-shadow .22s,border-color .22s,background-color .22s; }
-    button:hover,.home-link:hover { transform:translateY(-2px); box-shadow:var(--shadow-sm); }
-    button:active { transform:scale(.97); }
-    .card:hover { transform:translateY(-4px); box-shadow:var(--shadow-sm); }
-    .nav { position:sticky; top:76px; z-index:4; padding:8px; border:1px solid var(--line); border-radius:14px; background:rgba(248,241,244,.9); backdrop-filter:blur(12px); }
-    .panel { box-shadow:var(--shadow-sm); }
-    .section-spaced { margin-top:26px; }
-    input:focus,textarea:focus,select:focus { outline:none; box-shadow:0 0 0 4px rgba(238,93,149,.13); }
-    @media(max-width:820px){header{align-items:flex-start}.account{flex-wrap:wrap;justify-content:flex-end}.nav{top:82px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.nav button{flex:0 0 auto}.panel{padding:14px}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:480px){main{padding-inline:12px}.cards{grid-template-columns:1fr}.login-card{padding:25px}}
+const SERVICE_KEY = readServiceKey();
+const adminDb = createClient(SUPABASE_URL, SERVICE_KEY, {
+  auth: { autoRefreshToken: false, persistSession: false },
+});
 
-</style>
-<style>
-:root{--wine:#851044;--pink:#b91658;--ink:#442c3a;--paper:#fff9fb;--line:#ead4de;--muted:#765767}
-body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.login{background:linear-gradient(130deg,#760b38 0,#b91658 54%,#e26291 100%);position:relative;overflow:hidden}.login:after{content:"";position:absolute;inset:-80px -30px auto auto;width:280px;height:280px;border:1px solid #ffffff45;border-radius:48%;transform:rotate(25deg)}.login-card{position:relative;z-index:1;background:rgba(255,249,251,.97);border:1px solid #ffffff8a;box-shadow:0 24px 60px rgba(54,4,29,.28);border-radius:26px}.login-back{color:var(--wine);border-color:#e4b5c8;background:#fff8fb}.brand{color:var(--wine)}.subtitle{color:var(--muted)}label{color:var(--ink)}input{border-color:#dcb9ca;background:#fff8fb}input:focus{box-shadow:0 0 0 4px rgba(185,22,88,.13)}.primary{background:var(--wine)}.primary:hover{background:#b91658}.google{border-color:#dcb9ca;background:#fff;color:var(--ink)}.app{background:linear-gradient(180deg,#fff9fb,#fff)}header{background:rgba(255,249,251,.94);border-bottom-color:var(--line)}.nav button{background:#f0dfe6;color:#6c4054}.nav button.active{background:var(--wine)}.card,.panel{border-color:var(--line);background:#fff}.pill{background:#f5e3ea;color:var(--wine)}.edit,.outline{border-color:#dcb9ca;color:var(--wine)}
-</style><style id="ithiel-admin-final-theme">
-  :root{--wine:#a70d4c;--hot:#cf2e70;--cream:#fff9fb;--ink:#432b39;--muted:#806878;--line:#eed3df;--terr:#bc746c;--lilac:#92778b;--blue:#78929b;--soft-button:#d889a7;--soft-button-hover:#cf7497;--button-glow:rgba(224,121,163,.52)}
-  body{background:radial-gradient(circle at 12% 8%,#f8dce8,transparent 28%),radial-gradient(circle at 90% 12%,#f4bfd2,transparent 25%),#fff9fb!important;color:var(--ink)!important;font-family:"DM Sans","Segoe UI",Arial,sans-serif!important}
-  .login{background:linear-gradient(130deg,#760b38 0,#b91658 54%,#e26291 100%)!important;position:relative;overflow:hidden}.login:after{content:"";position:absolute;right:-70px;top:-95px;width:310px;height:310px;border:1px solid rgba(255,255,255,.38);border-radius:48%;transform:rotate(25deg)}
-  .login-card{position:relative;z-index:1;border:1px solid rgba(255,255,255,.65)!important;border-radius:28px!important;background:rgba(255,249,251,.97)!important;box-shadow:0 28px 80px rgba(80,17,45,.3)!important}.login-card .brand{font-family:Georgia,"Times New Roman",serif!important;font-size:34px!important;letter-spacing:.16em!important}.login-card input{border-radius:999px!important;background:#fff5f9!important}.login-back,.google{border-radius:999px!important}.primary{border-radius:999px!important;background:var(--wine)!important}.primary:hover{background:var(--hot)!important}
-  .app{min-height:100vh;background:transparent!important} .app header{position:sticky!important;top:0!important;z-index:10;min-height:74px!important;padding:12px clamp(18px,4vw,56px)!important;background:#fff!important;border-bottom:1px solid var(--line)!important;box-shadow:0 10px 28px rgba(139,23,64,.06)!important;backdrop-filter:blur(14px)}
-  header .brand{font:700 22px Arial,sans-serif!important;letter-spacing:3px!important;color:var(--wine)!important;text-align:left!important}.account{gap:10px!important;color:#6f5967!important}.account span{color:#6f5967!important;font-weight:600}.home-link,.outline{display:inline-flex!important;align-items:center!important;min-height:38px!important;border-radius:999px!important;border:1px solid var(--soft-button)!important;background:var(--soft-button)!important;color:#fff!important;padding:9px 15px!important;font-weight:700!important;text-decoration:none!important;box-shadow:0 5px 14px rgba(190,102,136,.18)!important}
-  main{width:min(1180px,calc(100% - 32px))!important;max-width:none!important;margin:28px auto 48px!important;padding:28px!important;border:1px solid var(--line)!important;border-radius:26px!important;background:var(--cream)!important;box-shadow:0 18px 50px rgba(139,23,64,.13)!important} main>h1{margin:0 0 6px!important;text-align:center!important;color:var(--ink)!important;font:42px Georgia,"Times New Roman",serif!important;font-weight:500!important}.lead{text-align:center!important;margin:0 0 22px!important;color:var(--muted)!important}
-  .nav{position:static!important;display:flex!important;justify-content:center!important;flex-wrap:wrap!important;gap:10px!important;margin:22px 0 26px!important;padding:0!important;border:0!important;background:transparent!important;backdrop-filter:none!important}.nav button{border:1px solid #e4b6c8!important;border-radius:999px!important;background:#fff7fa!important;color:var(--wine)!important;padding:10px 16px!important;font-weight:700!important;box-shadow:none!important}.nav button.active{background:#f8dce7!important;color:var(--wine)!important;border-color:#d58ca9!important;box-shadow:0 7px 18px rgba(111,10,52,.10)!important}
-  .card,.panel{border:1px solid var(--line)!important;border-radius:18px!important;background:#fff!important;box-shadow:0 6px 20px rgba(139,23,64,.07)!important}.cards{grid-template-columns:repeat(4,minmax(0,1fr))!important}.card{border-top:5px solid var(--wine)!important}.card:nth-child(2){border-top-color:var(--terr)!important}.card:nth-child(3){border-top-color:var(--lilac)!important}.card:nth-child(4){border-top-color:var(--blue)!important}.card small,th{font-weight:600!important;color:var(--muted)!important}.card strong{font-family:Georgia,"Times New Roman",serif!important;font-weight:500!important;color:var(--wine)!important}.panel h2{font:28px Georgia,"Times New Roman",serif!important;font-weight:500!important;color:var(--ink)!important}
-  table{border-spacing:0!important} th{background:#fff0f6!important;font-size:11px!important;letter-spacing:.08em!important} th:first-child{border-top-left-radius:16px!important} th:last-child{border-top-right-radius:16px!important}.pill{border-radius:999px!important;background:#f5e3ea!important;color:var(--wine)!important;font-weight:600!important}.pill.low{background:#ffe1e4!important;color:#b42335!important}
-  input,textarea,select{border-radius:14px!important;border-color:#e9c6d5!important;background:#fff!important;color:var(--ink)!important}.product-form,.coupon-form,.customer-form{border-radius:20px!important}.actions .primary,.customer-form .primary,.coupon-form-actions .primary{border-radius:999px!important}.edit,.delete,.outline,.home-link,.nav button,.primary,.google{transition:transform .25s ease,box-shadow .25s ease,background .25s ease,border-color .25s ease!important}
-  @keyframes ithielThinkingGlow{0%,100%{box-shadow:0 0 0 2px rgba(255,255,255,.12),0 7px 18px rgba(216,137,167,.28)}50%{box-shadow:0 0 0 5px rgba(239,169,196,.22),0 10px 30px rgba(224,121,163,.72)}}
-  .home-link:hover,.outline:hover,.nav button:hover,.primary:hover,.google:hover,.edit:hover,.delete:hover,.card:hover,.panel:hover{transform:translateY(-3px)!important;animation:ithielThinkingGlow 1.35s ease-in-out infinite!important}.nav button:hover{background:var(--soft-button)!important;color:#fff!important;border-color:var(--soft-button)!important}.edit:hover{background:var(--soft-button)!important;color:#fff!important;border-color:var(--soft-button)!important}.delete:hover{background:#c85b72!important;color:#fff!important;border-color:#c85b72!important}
-  footer,.footer{color:var(--muted)!important;text-align:center!important}
-  @media(max-width:820px){.app header{align-items:flex-start!important}.account{flex-wrap:wrap!important;justify-content:flex-end!important}.account span{display:none!important}main{width:calc(100% - 20px)!important;padding:18px!important}.cards{grid-template-columns:repeat(2,minmax(0,1fr))!important}.nav{justify-content:flex-start!important;flex-wrap:nowrap!important;overflow-x:auto!important;padding-bottom:4px!important}.nav button{flex:0 0 auto!important}}
-  @media(max-width:520px){main>h1{font-size:34px!important}.cards{grid-template-columns:1fr!important}.login-card{padding:26px!important}}
-  @media(prefers-reduced-motion:reduce){.home-link:hover,.outline:hover,.nav button:hover,.primary:hover,.google:hover,.edit:hover,.delete:hover,.card:hover,.panel:hover{animation:none!important}}
-</style>  <link rel="stylesheet" href="styles/admin-v2.css?v=20260728-4">
-</head>
-<body>
-  <section id="loginView" class="login">
-    <form id="loginForm" class="login-card">
-      <a class="login-back" href="/">Catálogo</a>
-      <div class="brand">ITHIEL</div>
-      <p class="subtitle">Panel de administración</p>
-      <label>Email<input id="email" type="email" autocomplete="email" required></label>
-      <label>Contraseña<input id="password" type="password" autocomplete="current-password" required></label>
-      <button class="primary" type="submit">Ingresar</button>
-      <button id="googleLogin" class="google" type="button"><svg class="google-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.23-.2-1.77H12v3.37h5.52c-.11.84-.7 2.1-2.01 2.95l-.02.11 2.92 2.26.2.02c1.84-1.7 2.99-4.2 2.99-6.94Z"/><path fill="#34A853" d="M12 22c2.7 0 4.97-.89 6.63-2.42l-3.16-2.4c-.85.59-1.99 1-3.47 1-2.65 0-4.9-1.74-5.7-4.16l-.1.01-3.03 2.35-.03.1A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.3 14.02A5.98 5.98 0 0 1 5.98 12c0-.7.12-1.37.31-2.02v-.13L3.23 7.47l-.1.05A10 10 0 0 0 2 12c0 1.61.38 3.14 1.13 4.47l3.17-2.45Z"/><path fill="#EA4335" d="M12 5.82c1.87 0 3.13.8 3.85 1.47l2.81-2.74C16.96 2.96 14.7 2 12 2a10 10 0 0 0-8.87 5.47l3.16 2.51C7.1 7.56 9.35 5.82 12 5.82Z"/></svg>Continuar con Google</button>
-      <p id="loginNotice" class="notice" aria-live="polite"></p>
-    </form>
-  </section>
+class ClientError extends Error {}
 
-  <section id="appView" class="app hidden">
-    <header class="admin-top">
-      <div class="brand">ITHIEL</div>
-      <div class="account"><span id="accountEmail"></span><a class="home-link" href="/">Catálogo</a><button id="logout" class="outline">Salir</button></div>
-    </header>
-    <section class="admin-hero">
-      <h1>Administración</h1>
-      <p class="lead">Productos, pedidos y comunidad.</p>
-      </section><div class="admin-nav-strip"><nav class="nav" aria-label="Secciones del panel">
-        <button data-view="dashboard" class="active">Resumen</button><button data-view="orders">Pedidos</button><button data-view="products">Administrar productos</button><button data-view="catalog">Categorías</button><button data-view="customers">Clientes</button><button data-view="coupons">Cupones</button><button data-view="experiences">Experiencias</button><button data-view="admins">Administradores</button><button data-view="account">Mi cuenta</button>
-      </nav></div><main class="admin-shell"><div id="content"><p class="empty">Cargando…</p></div></main>
-    <footer class="admin-footer">ITHIEL Bazar y Makeup · Derechos reservados 2015 - 2026 · Rosario, Santa Fe</footer>
-  </section>
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+function cors(_request: Request) {
+  return {
+    // La seguridad sigue estando en requireAdmin (token + tabla admin_users).
+    // Así funciona desde Cloudflare, Netlify y el futuro dominio propio.
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "authorization, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
+}
 
-    const SUPABASE_URL = "https://bfuexiblfuqwykktltrp.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_8-do7RGW8-li-7d1BnAsXQ_RYsks6iy";
-    const ADMIN_API = `${SUPABASE_URL}/functions/v1/admin-api-v2`;
-    const loginView = document.querySelector("#loginView");
-    const appView = document.querySelector("#appView");
-    const notice = document.querySelector("#loginNotice");
-    const content = document.querySelector("#content");
-    let supabase;
-    let currentView = "dashboard";
+function reply(request: Request, body: unknown, status = 200) {
+  return Response.json(body, { status, headers: cors(request) });
+}
 
-    function money(value) { return value === null || value === undefined || value === "" ? "—" : `$${Number(value).toLocaleString("es-AR")}`; }
-    function escapeHtml(value) { return String(value ?? "").replace(/[&<>'\"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c])); }
-    function statusLabel(status) {
-      const label = ({ published:"Publicado", draft:"Borrador", archived:"Archivado", pending:"Pendiente", processing:"En proceso", completed:"Completado", cancelled:"Cancelado" })[status] || escapeHtml(status);
-      return `<span class="status-pill" data-status="${escapeHtml(status)}"><span class="status-dot" aria-hidden="true"></span><span>${label}</span></span>`;
+async function requireAdmin(request: Request) {
+  const header = request.headers.get("authorization") ?? "";
+  const token = header.replace(/^Bearer\s+/i, "").trim();
+  if (!token) throw new Error("UNAUTHORIZED");
+
+  const { data: auth, error: authError } = await adminDb.auth.getUser(token);
+  if (authError || !auth.user?.id) throw new Error("UNAUTHORIZED");
+
+  const { data: admin, error: adminError } = await adminDb
+    .from("admin_users")
+    .select("user_id,email")
+    .eq("user_id", auth.user.id)
+    .maybeSingle();
+
+  if (adminError) throw adminError;
+  if (!admin) throw new Error("FORBIDDEN");
+  return auth.user;
+}
+
+async function dashboard() {
+  const [products, lowStock, pendingOrders, processingOrders, coupons] = await Promise.all([
+    adminDb.from("products").select("id", { count: "exact", head: true }),
+    adminDb.from("low_stock_products").select("id", { count: "exact", head: true }),
+    adminDb.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    adminDb.from("orders").select("id", { count: "exact", head: true }).eq("status", "processing"),
+    adminDb.from("coupons").select("id", { count: "exact", head: true }).eq("active", true),
+  ]);
+
+  const errors = [products, lowStock, pendingOrders, processingOrders, coupons]
+    .map((entry) => entry.error)
+    .filter(Boolean);
+  if (errors.length) throw errors[0];
+
+  const { data: alerts, error: alertsError } = await adminDb
+    .from("low_stock_products")
+    .select("id,sku,name,stock,status")
+    .order("stock", { ascending: true })
+    .limit(10);
+  if (alertsError) throw alertsError;
+
+  return {
+    totals: {
+      products: products.count ?? 0,
+      lowStock: lowStock.count ?? 0,
+      pendingOrders: pendingOrders.count ?? 0,
+      processingOrders: processingOrders.count ?? 0,
+      activeCoupons: coupons.count ?? 0,
+    },
+    alerts: alerts ?? [],
+  };
+}
+
+async function listProducts() {
+  const pageSize = 500;
+  const products = [];
+
+  for (let from = 0; ; from += pageSize) {
+    const to = from + pageSize - 1;
+
+    const { data, error } = await adminDb
+      .from("products")
+      .select("id,sku,name,description,category_id,subcategory_id,supplier_price,retail_price,wholesale_price,stock,status,created_at,categories(name),subcategories(name),product_images(id,image_url,position)")
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    if (error) throw error;
+
+    const batch = data ?? [];
+    products.push(...batch);
+
+    if (batch.length < pageSize) break;
+  }
+
+  return products;
+}
+
+async function catalogOptions() {
+  const [{ data: categories, error: categoryError }, { data: subcategories, error: subcategoryError }] = await Promise.all([
+    adminDb.from("categories").select("id,name").eq("active", true).order("name"),
+    adminDb.from("subcategories").select("id,category_id,name").eq("active", true).order("name"),
+  ]);
+  if (categoryError) throw categoryError;
+  if (subcategoryError) throw subcategoryError;
+  return { categories: categories ?? [], subcategories: subcategories ?? [] };
+}
+
+async function catalogManagement() {
+  const [{ data: categories, error: categoryError }, { data: subcategories, error: subcategoryError }] = await Promise.all([
+    adminDb.from("categories").select("id,name,active").order("name"),
+    adminDb.from("subcategories").select("id,category_id,name,active").order("name"),
+  ]);
+  if (categoryError) throw categoryError;
+  if (subcategoryError) throw subcategoryError;
+  return { categories: categories ?? [], subcategories: subcategories ?? [] };
+}
+
+function catalogName(value: unknown, label: string) {
+  const name = String(value ?? "").trim().replace(/\s+/g, " ").slice(0, 100);
+  if (!name) throw new Error(`Ingresá el nombre de la ${label}.`);
+  return name;
+}
+
+async function saveCategory(body: Record<string, unknown>) {
+  const id = String(body.categoryId ?? "");
+  const name = catalogName(body.name, "categoría");
+  if (id) {
+    const { data, error } = await adminDb.from("categories").update({ name, active: body.active !== false }).eq("id", id).select("id,name,active").single();
+    if (error) throw error;
+    return data;
+  }
+  const { data, error } = await adminDb.from("categories").insert({ name, active: true }).select("id,name,active").single();
+  if (error) throw error;
+  return data;
+}
+
+async function saveSubcategory(body: Record<string, unknown>) {
+  const id = String(body.subcategoryId ?? "");
+  const categoryId = String(body.categoryId ?? "");
+  const name = catalogName(body.name, "subcategoría");
+  if (!categoryId) throw new Error("Elegí la categoría principal.");
+  const { data: category, error: categoryError } = await adminDb.from("categories").select("id").eq("id", categoryId).maybeSingle();
+  if (categoryError) throw categoryError;
+  if (!category) throw new Error("La categoría elegida no existe.");
+  if (id) {
+    const { data, error } = await adminDb.from("subcategories").update({ category_id: categoryId, name, active: body.active !== false }).eq("id", id).select("id,category_id,name,active").single();
+    if (error) throw error;
+    return data;
+  }
+  const { data, error } = await adminDb.from("subcategories").insert({ category_id: categoryId, name, active: true }).select("id,category_id,name,active").single();
+  if (error) throw error;
+  return data;
+}
+
+async function deleteCategory(body: Record<string, unknown>) {
+  const categoryId = String(body.categoryId ?? "");
+  if (!categoryId) throw new Error("Categoría no válida.");
+  const [{ count: productCount, error: productError }, { count: subcategoryCount, error: subcategoryError }] = await Promise.all([
+    adminDb.from("products").select("id", { count: "exact", head: true }).eq("category_id", categoryId),
+    adminDb.from("subcategories").select("id", { count: "exact", head: true }).eq("category_id", categoryId),
+  ]);
+  if (productError) throw productError;
+  if (subcategoryError) throw subcategoryError;
+  if (Number(productCount ?? 0) > 0) throw new Error("No se puede eliminar: esta categoría tiene productos. Archivala o mové los productos primero.");
+  if (Number(subcategoryCount ?? 0) > 0) throw new Error("Primero eliminá o mové sus subcategorías.");
+  const { error } = await adminDb.from("categories").delete().eq("id", categoryId);
+  if (error) throw error;
+  return { deleted: true };
+}
+
+async function deleteSubcategory(body: Record<string, unknown>) {
+  const subcategoryId = String(body.subcategoryId ?? "");
+  if (!subcategoryId) throw new Error("Subcategoría no válida.");
+  const { count, error: productError } = await adminDb.from("products").select("id", { count: "exact", head: true }).eq("subcategory_id", subcategoryId);
+  if (productError) throw productError;
+  if (Number(count ?? 0) > 0) throw new Error("No se puede eliminar: esta subcategoría tiene productos. Movelos o dejala inactiva.");
+  const { error } = await adminDb.from("subcategories").delete().eq("id", subcategoryId);
+  if (error) throw error;
+  return { deleted: true };
+}
+
+function productValues(body: Record<string, unknown>) {
+  const name = String(body.name ?? "").trim().slice(0, 180);
+  const description = String(body.description ?? "").trim().slice(0, 1500) || null;
+  const categoryId = String(body.categoryId ?? "");
+  const subcategoryId = String(body.subcategoryId ?? "") || null;
+
+  const supplierRaw = String(body.supplierPrice ?? "").trim();
+  const retailRaw = String(body.retailPrice ?? "").trim();
+
+  // Compatibilidad:
+  // - El admin nuevo envía supplierPrice.
+  // - El admin anterior no lo enviaba; en ese caso se reconstruye desde retailPrice.
+  const supplierPrice = supplierRaw
+    ? Number(supplierRaw)
+    : retailRaw
+      ? Number(retailRaw) / 1.8
+      : null;
+
+  // Regla oficial de precios Ithiel:
+  // minorista = proveedor + 80%, redondeado hacia arriba al múltiplo de $500.
+  // mayorista = minorista - 20%.
+  const retailPrice = supplierPrice === null
+    ? null
+    : Math.ceil((supplierPrice * 1.8) / 500) * 500;
+
+  const wholesalePrice = retailPrice === null
+    ? null
+    : Math.round(retailPrice * 0.8);
+
+  const stock = Number(body.stock);
+  const status = body.status === "draft"
+    ? "draft"
+    : body.status === "archived"
+      ? "archived"
+      : "published";
+
+  if (!name) throw new Error("Ingresá el nombre del producto.");
+  if (!categoryId) throw new Error("Elegí una categoría.");
+  if (supplierPrice === null || !Number.isFinite(supplierPrice) || supplierPrice <= 0) {
+    throw new Error("El precio proveedor no es válido.");
+  }
+  if (!Number.isInteger(stock) || stock < 0 || stock > 99999) {
+    throw new Error("Ingresá un stock válido.");
+  }
+
+  return {
+    name,
+    description,
+    category_id: categoryId,
+    subcategory_id: subcategoryId,
+    supplier_price: Math.round(supplierPrice),
+    retail_price: retailPrice,
+    wholesale_price: wholesalePrice,
+    stock,
+    status,
+  };
+}
+
+async function saveProduct(body: Record<string, unknown>) {
+  const id = String(body.id ?? "");
+  const values = productValues(body);
+  if (id) {
+    const { data, error } = await adminDb.from("products").update(values).eq("id", id).select("id").single();
+    if (error) throw error;
+    const { error: variantError } = await adminDb.from("product_variants").update({
+      retail_price: values.retail_price,
+      wholesale_price: values.wholesale_price,
+    }).eq("product_id", id);
+    if (variantError) throw variantError;
+    return { id: data.id, created: false };
+  }
+  const sku = `ITH-${Date.now().toString().slice(-8)}`;
+  const { data, error } = await adminDb.from("products").insert({ ...values, sku }).select("id").single();
+  if (error) throw error;
+  return { id: data.id, created: true };
+}
+
+async function uploadProductImage(body: Record<string, unknown>) {
+  const productId = String(body.productId ?? "");
+  const dataUrl = String(body.dataUrl ?? "");
+  if (!productId) throw new Error("Primero guardá el producto.");
+  const match = dataUrl.match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/);
+  if (!match) throw new Error("Elegí una imagen JPG, PNG o WEBP.");
+  const bytes = Uint8Array.from(atob(match[2]), (char) => char.charCodeAt(0));
+  if (bytes.byteLength > 4_000_000) throw new Error("La foto pesa demasiado. Usá una de hasta 4 MB.");
+  const extension = match[1] === "image/png" ? "png" : match[1] === "image/webp" ? "webp" : "jpg";
+  const path = `admin/${productId}/${crypto.randomUUID()}.${extension}`;
+  const { error: uploadError } = await adminDb.storage.from("product-images").upload(path, bytes, {
+    contentType: match[1], upsert: false,
+  });
+  if (uploadError) throw uploadError;
+  const { data: publicUrl } = adminDb.storage.from("product-images").getPublicUrl(path);
+  const { data: last, error: lastError } = await adminDb.from("product_images").select("position").eq("product_id", productId).order("position", { ascending: false }).limit(1).maybeSingle();
+  if (lastError) throw lastError;
+  const { error: imageError } = await adminDb.from("product_images").insert({
+    product_id: productId, image_url: publicUrl.publicUrl, position: Number(last?.position ?? 0) + 1,
+  });
+  if (imageError) throw imageError;
+  return { url: publicUrl.publicUrl };
+}
+
+async function deleteProductImage(body: Record<string, unknown>) {
+  const imageId = String(body.imageId ?? "");
+  if (!imageId) throw new Error("Imagen no válida.");
+  const { error } = await adminDb.from("product_images").delete().eq("id", imageId);
+  if (error) throw error;
+  return { deleted: true };
+}
+
+async function deleteProduct(body: Record<string, unknown>) {
+  const productId = String(body.productId ?? "");
+  if (!productId) throw new Error("Producto no válido.");
+
+  const { count: saleCount, error: salesError } = await adminDb
+    .from("order_items")
+    .select("id", { count: "exact", head: true })
+    .eq("product_id", productId);
+  if (salesError) throw salesError;
+  if (Number(saleCount ?? 0) > 0) {
+    throw new Error("No se puede eliminar este producto porque ya está relacionado con una venta. Cambiá su estado a Archivado.");
+  }
+
+  // Se eliminan primero las relaciones que no deben quedar huérfanas.
+  const { data: images, error: imagesError } = await adminDb
+    .from("product_images")
+    .select("image_url")
+    .eq("product_id", productId);
+  if (imagesError) throw imagesError;
+
+  const { error: variantsError } = await adminDb.from("product_variants").delete().eq("product_id", productId);
+  if (variantsError) throw variantsError;
+  const { error: imageRowsError } = await adminDb.from("product_images").delete().eq("product_id", productId);
+  if (imageRowsError) throw imageRowsError;
+
+  const { error } = await adminDb.from("products").delete().eq("id", productId);
+  if (error) throw error;
+
+  const paths = (images ?? []).map(({ image_url }) => {
+    try {
+      const marker = "/product-images/";
+      const path = new URL(String(image_url)).pathname.split(marker)[1];
+      return path ? decodeURIComponent(path) : "";
+    } catch (_) { return ""; }
+  }).filter(Boolean);
+  if (paths.length) await adminDb.storage.from("product-images").remove(paths);
+  return { deleted: true };
+}
+
+async function listCoupons() {
+  const { data, error } = await adminDb
+    .from("coupons")
+    .select("id,code,discount_percent,starts_at,expires_at,active,created_at")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+function couponValues(body: Record<string, unknown>) {
+  const code = String(body.code ?? "").trim().toUpperCase().replace(/\s+/g, "").slice(0, 40);
+  const discountPercent = Number(body.discountPercent);
+  const startsAt = String(body.startsAt ?? "").trim();
+  const expiresAt = String(body.expiresAt ?? "").trim();
+  const argentinaDate = (value: string, endOfDay = false) => new Date(
+    /^\d{4}-\d{2}-\d{2}$/.test(value)
+      ? `${value}T${endOfDay ? "23:59:59.999" : "00:00:00.000"}-03:00`
+      : value,
+  );
+  const startsDate = argentinaDate(startsAt);
+  const expiresDate = argentinaDate(expiresAt, true);
+
+  if (!/^[A-Z0-9_-]{3,40}$/.test(code)) {
+    throw new ClientError("El código debe tener entre 3 y 40 caracteres: letras, números, guion o guion bajo.");
+  }
+  if (!Number.isFinite(discountPercent) || discountPercent <= 0 || discountPercent > 100) {
+    throw new ClientError("Ingresá un porcentaje entre 1 y 100.");
+  }
+  if (Number.isNaN(startsDate.getTime()) || Number.isNaN(expiresDate.getTime())) {
+    throw new ClientError("Completá las fechas de inicio y vencimiento.");
+  }
+  if (expiresDate <= startsDate) {
+    throw new ClientError("El vencimiento debe ser posterior al inicio.");
+  }
+  return {
+    code,
+    discount_percent: discountPercent,
+    starts_at: startsDate.toISOString(),
+    expires_at: expiresDate.toISOString(),
+    active: body.active !== false,
+  };
+}
+
+async function saveCoupon(body: Record<string, unknown>) {
+  const couponId = String(body.couponId ?? "");
+  const values = couponValues(body);
+  const query = couponId
+    ? adminDb.from("coupons").update(values).eq("id", couponId)
+    : adminDb.from("coupons").insert(values);
+  const { data, error } = await query
+    .select("id,code,discount_percent,starts_at,expires_at,active,created_at")
+    .single();
+  if (error?.code === "23505") throw new ClientError("Ya existe un cupón con ese código.");
+  if (error) throw error;
+  return { ...data, created: !couponId };
+}
+
+async function deleteCoupon(body: Record<string, unknown>) {
+  const couponId = String(body.couponId ?? "");
+  if (!couponId) throw new ClientError("Cupón no válido.");
+  const { error } = await adminDb.from("coupons").delete().eq("id", couponId);
+  if (error?.code === "23503") {
+    throw new ClientError("Este cupón ya fue usado en pedidos. Desactivalo en lugar de eliminarlo.");
+  }
+  if (error) throw error;
+  return { deleted: true };
+}
+
+async function updateOrderStatus(body: Record<string, unknown>) {
+  const orderId = String(body.orderId ?? "");
+  const status = String(body.status ?? "");
+  if (!orderId || !["pending", "processing", "completed", "cancelled"].includes(status)) {
+    throw new Error("Estado de pedido no válido.");
+  }
+  const { data, error } = await adminDb.rpc("set_order_status", {
+    p_order_id: orderId,
+    p_status: status,
+  });
+  if (error) throw error;
+  return data;
+}
+
+async function listOrders() {
+  const { data, error } = await adminDb
+    .from("orders")
+    .select("id,order_number,status,purchase_type,fulfillment_type,total,item_count,created_at,customers(full_name,phone)")
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (error) throw error;
+  return data ?? [];
+}
+
+async function listCustomers() {
+  const { data, error } = await adminDb
+    .from("customers")
+    .select("id,full_name,phone,whatsapp_opt_in,whatsapp_opted_in_at,created_at,updated_at")
+    .order("created_at", { ascending: false })
+    .limit(250);
+  if (error) throw error;
+  return data ?? [];
+}
+
+async function createCustomer(body: Record<string, unknown>) {
+  const fullName = String(body.fullName ?? "").trim().slice(0, 100);
+  const phone = String(body.phone ?? "").replace(/\D/g, "");
+  const whatsappOptIn = body.whatsappOptIn === true;
+  if (!fullName) throw new Error("Ingresá el nombre de la clienta.");
+  if (!/^[0-9]{10,15}$/.test(phone)) {
+    throw new Error("Ingresá un WhatsApp válido con código de país.");
+  }
+
+  const { data: existing, error: searchError } = await adminDb
+    .from("customers")
+    .select("id,whatsapp_opt_in,whatsapp_opted_in_at")
+    .eq("phone", phone)
+    .maybeSingle();
+  if (searchError) throw searchError;
+
+  if (existing) {
+    const { error } = await adminDb.from("customers").update({
+      full_name: fullName,
+      whatsapp_opt_in: Boolean(existing.whatsapp_opt_in) || whatsappOptIn,
+      whatsapp_opted_in_at: existing.whatsapp_opted_in_at ?? (whatsappOptIn ? new Date().toISOString() : null),
+      updated_at: new Date().toISOString(),
+    }).eq("id", existing.id);
+    if (error) throw error;
+    return { created: false, id: existing.id };
+  }
+
+  const { data, error } = await adminDb.from("customers").insert({
+    full_name: fullName,
+    phone,
+    whatsapp_opt_in: whatsappOptIn,
+    whatsapp_opted_in_at: whatsappOptIn ? new Date().toISOString() : null,
+  }).select("id").single();
+  if (error) throw error;
+  return { created: true, id: data.id };
+}
+
+async function deleteCustomer(body: Record<string, unknown>) {
+  const customerId = String(body.customerId ?? "");
+  if (!customerId) throw new Error("Cliente no válido.");
+  const { count, error: ordersError } = await adminDb
+    .from("orders")
+    .select("id", { count: "exact", head: true })
+    .eq("customer_id", customerId);
+  if (ordersError) throw ordersError;
+  if (Number(count ?? 0) > 0) {
+    throw new Error("No se puede eliminar esta clienta porque tiene pedidos registrados.");
+  }
+  const { error } = await adminDb.from("customers").delete().eq("id", customerId);
+  if (error) throw error;
+  return { deleted: true };
+}
+
+function adminEmail(value: unknown) {
+  const email = String(value ?? "").trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+    throw new ClientError("Ingresá un email válido.");
+  }
+  return email;
+}
+
+async function listAdmins() {
+  const { data, error } = await adminDb.from("admin_users").select("user_id,email").order("email");
+  if (error) throw error;
+  return data ?? [];
+}
+
+async function grantAdmin(body: Record<string, unknown>) {
+  const email = adminEmail(body.email);
+  const { data: users, error: usersError } = await adminDb.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  if (usersError) throw usersError;
+  const user = users.users.find((item) => item.email?.toLowerCase() === email);
+  if (!user) throw new ClientError("Esta cuenta todavía no inició sesión. Pedile que entre al panel una vez y probá de nuevo.");
+  const { data: existing, error: existingError } = await adminDb.from("admin_users").select("user_id").eq("user_id", user.id).maybeSingle();
+  if (existingError) throw existingError;
+  if (existing) return { created: false, user_id: user.id, email };
+  const { error } = await adminDb.from("admin_users").insert({ user_id: user.id, email });
+  if (error) throw error;
+  return { created: true, user_id: user.id, email };
+}
+
+async function revokeAdmin(body: Record<string, unknown>, callerId: string) {
+  const userId = String(body.userId ?? "");
+  if (!userId) throw new ClientError("Administrador no válido.");
+  if (userId === callerId) throw new ClientError("No podés quitar tu propio acceso desde el panel.");
+  const { count, error: countError } = await adminDb.from("admin_users").select("user_id", { count: "exact", head: true });
+  if (countError) throw countError;
+  if (Number(count ?? 0) <= 1) throw new ClientError("Debe quedar al menos un administrador.");
+  const { error } = await adminDb.from("admin_users").delete().eq("user_id", userId);
+  if (error) throw error;
+  return { deleted: true };
+}
+Deno.serve(async (request) => {
+  if (request.method === "OPTIONS") return new Response("ok", { headers: cors(request) });
+  if (request.method !== "POST") return reply(request, { error: "Método no permitido." }, 405);
+
+  try {
+    if (!SUPABASE_URL || !SERVICE_KEY) throw new Error("Falta la configuración privada de Supabase.");
+    const caller = await requireAdmin(request);
+    const body = await request.json();
+    const action = String(body?.action ?? "dashboard");
+
+    if (action === "dashboard") return reply(request, { ok: true, data: await dashboard() });
+    if (action === "products") return reply(request, { ok: true, data: await listProducts() });
+    if (action === "catalogOptions") return reply(request, { ok: true, data: await catalogOptions() });
+    if (action === "catalogManagement") return reply(request, { ok: true, data: await catalogManagement() });
+    if (action === "saveCategory") return reply(request, { ok: true, data: await saveCategory(body) });
+    if (action === "saveSubcategory") return reply(request, { ok: true, data: await saveSubcategory(body) });
+    if (action === "deleteCategory") return reply(request, { ok: true, data: await deleteCategory(body) });
+    if (action === "deleteSubcategory") return reply(request, { ok: true, data: await deleteSubcategory(body) });
+    if (action === "saveProduct") return reply(request, { ok: true, data: await saveProduct(body) });
+    if (action === "uploadProductImage") return reply(request, { ok: true, data: await uploadProductImage(body) }, 201);
+    if (action === "deleteProductImage") return reply(request, { ok: true, data: await deleteProductImage(body) });
+    if (action === "deleteProduct") return reply(request, { ok: true, data: await deleteProduct(body) });
+    if (action === "coupons") return reply(request, { ok: true, data: await listCoupons() });
+    if (action === "saveCoupon") return reply(request, { ok: true, data: await saveCoupon(body) });
+    if (action === "deleteCoupon") return reply(request, { ok: true, data: await deleteCoupon(body) });
+    if (action === "orders") return reply(request, { ok: true, data: await listOrders() });
+    if (action === "updateOrderStatus") return reply(request, { ok: true, data: await updateOrderStatus(body) });
+    if (action === "customers") return reply(request, { ok: true, data: await listCustomers() });
+    if (action === "createCustomer") return reply(request, { ok: true, data: await createCustomer(body) }, 201);
+    if (action === "deleteCustomer") return reply(request, { ok: true, data: await deleteCustomer(body) });
+    if (action === "admins") return reply(request, { ok: true, data: await listAdmins() });
+    if (action === "grantAdmin") return reply(request, { ok: true, data: await grantAdmin(body) });
+    if (action === "revokeAdmin") return reply(request, { ok: true, data: await revokeAdmin(body, caller.id) });
+
+    return reply(request, { error: "Acción no válida." }, 400);
+  } catch (error) {
+    console.error(error);
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return reply(request, { error: "Iniciá sesión para continuar." }, 401);
     }
-    function setNotice(message = "") { notice.textContent = message; }
-    function setLoading() { content.innerHTML = '<p class="empty">Cargando…</p>'; }
-    function viewHead(label, title, copy, action = "") { return `<section class="view-head"><div><span class="eyebrow">${label}</span><h2>${title}</h2><p>${copy}</p></div>${action}</section>`; }
-    const icons = {
-      edit:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l11-11-4-4L4 16v4Z"></path></svg>',
-      pause:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"></path></svg>',
-      play:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7V5Z"></path></svg>',
-      trash:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"></path></svg>'
-    };
-
-    async function callAdmin(action, payload = {}) {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Tu sesión venció. Volvé a ingresar.");
-      const response = await fetch(ADMIN_API, {
-        method: "POST",
-        headers: { "Content-Type":"application/json", apikey:SUPABASE_ANON_KEY, Authorization:`Bearer ${session.access_token}` },
-        body: JSON.stringify({ action, ...payload }),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "No se pudo cargar la información.");
-      return result.data;
+    if (error instanceof Error && error.message === "FORBIDDEN") {
+      return reply(request, { error: "Tu cuenta no está autorizada para este panel." }, 403);
     }
-
-    function renderDashboard(data) {
-      const t = data.totals;
-      content.innerHTML = `${viewHead("RESUMEN", "Administración", "Vista general del negocio.")}
-        <div class="cards">
-          <article class="card"><small>Productos</small><strong>${t.products}</strong></article>
-          <article class="card"><small>Stock para revisar</small><strong>${t.lowStock}</strong></article>
-          <article class="card"><small>Pedidos pendientes</small><strong>${t.pendingOrders}</strong></article>
-          <article class="card"><small>Cupones activos</small><strong>${t.activeCoupons}</strong></article>
-        </div>
-        <div class="dashboard-grid">
-          <section class="panel"><h2>Productos para revisar</h2>
-            ${data.alerts.length ? `<table><thead><tr><th>Producto</th><th>SKU</th><th>Referencia</th><th>Estado</th></tr></thead><tbody>${data.alerts.slice(0,6).map(p => `<tr><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku)}</td><td><span class="pill low">${p.stock}</span></td><td>${statusLabel(p.status)}</td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay productos para revisar.</p>'}
-          </section>
-          <section class="panel"><h2>Actividad de pedidos</h2><table><tbody><tr><td>Pendientes</td><td><span class="pill">${t.pendingOrders}</span></td></tr><tr><td>En proceso</td><td><span class="pill">${t.processingOrders}</span></td></tr><tr><td>Cupones activos</td><td><span class="pill">${t.activeCoupons}</span></td></tr></tbody></table></section>
-        </div>`;
+    if (error instanceof ClientError) {
+      return reply(request, { error: error.message }, 400);
     }
-
-    async function renderProductForm(product = null) {
-      const options = await callAdmin("catalogOptions");
-      const categoryOptions = ['<option value="">Elegir categoría</option>', ...options.categories.map(c => `<option value="${c.id}" ${product?.category_id === c.id ? "selected" : ""}>${escapeHtml(c.name)}</option>`)].join("");
-      const inferredSupplier = product?.retail_price ? Math.round(Number(product.retail_price) / 1.8) : "";
-      content.innerHTML = `<div class="product-form-modal"><section class="product-form-card">
-        <header class="form-top"><div><span class="eyebrow">${product ? "EDITAR PRODUCTO" : "NUEVO PRODUCTO"}</span><h2>${product ? "Editar producto" : "Agregar producto"}</h2></div><button id="backProducts" class="icon-action" type="button" aria-label="Cerrar">×</button></header>
-        <form id="productForm" class="product-form">
-          <label class="wide">Nombre del producto<input id="productName" required maxlength="180" value="${escapeHtml(product?.name || "")}"></label>
-          <label class="wide">Descripción<textarea id="productDescription" rows="3" maxlength="1500">${escapeHtml(product?.description || "")}</textarea></label>
-          <label>Categoría<select id="productCategory" required>${categoryOptions}</select></label>
-          <label>Subcategoría<select id="productSubcategory"><option value="">Sin subcategoría</option></select></label>
-          <label>Código / SKU<input value="${escapeHtml(product?.sku || "Se genera automáticamente")}" readonly></label>
-          <label>Precio proveedor · interno<input id="productSupplier" type="number" min="1" value="${inferredSupplier}"><small>No se muestra en la tienda.</small></label>
-          <label>Precio minorista<input id="productRetail" type="number" min="1" value="${product?.retail_price || ""}" readonly><small>Proveedor + 80%</small></label>
-          <label>Precio mayorista<input id="productWholesale" type="number" min="1" value="${product?.wholesale_price || ""}" readonly><small>Minorista - 20%</small></label>
-          <label>Referencia de pedidos<input id="productStock" type="number" min="0" required value="${product?.stock ?? 30}"></label>
-          <label>Estado<select id="productStatus"><option value="published" ${product?.status === "published" ? "selected" : ""}>Publicado</option><option value="draft" ${product?.status === "draft" ? "selected" : ""}>Borrador</option><option value="archived" ${product?.status === "archived" ? "selected" : ""}>Oculto</option></select></label>
-          ${product?.product_images?.length ? `<div class="wide"><label>Fotos actuales</label><div class="product-photos">${product.product_images.map(image => `<div class="product-photo"><img src="${escapeHtml(image.image_url)}" alt=""><button class="edit" type="button" data-delete-image="${image.id}">Quitar</button></div>`).join("")}</div></div>` : ""}
-          <label class="wide upload-field">Imagen del producto<input id="productPhoto" type="file" accept="image/jpeg,image/png,image/webp"><small>JPG, PNG o WEBP hasta 4 MB.</small></label>
-          <footer class="wide form-footer"><button id="cancelProduct" class="outline" type="button">Cancelar</button><button class="primary" type="submit">${product ? "Guardar cambios" : "Crear producto"}</button></footer>
-        </form><p id="productMessage" class="notice"></p>
-      </section></div>`;
-      const category = document.querySelector("#productCategory");
-      const subcategory = document.querySelector("#productSubcategory");
-      const supplier = document.querySelector("#productSupplier");
-      const retail = document.querySelector("#productRetail");
-      const wholesale = document.querySelector("#productWholesale");
-      const calculatePrices = () => { const cost=Number(supplier.value)||0; const retailValue=Math.round(cost*1.8); retail.value=retailValue||""; wholesale.value=retailValue?Math.round(retailValue*.8):""; };
-      const fillSubcategories = () => { const selected=category.value; subcategory.innerHTML='<option value="">Sin subcategoría</option>'+options.subcategories.filter(s=>s.category_id===selected).map(s=>`<option value="${s.id}" ${product?.subcategory_id===s.id?"selected":""}>${escapeHtml(s.name)}</option>`).join(""); };
-      supplier.addEventListener("input", calculatePrices);
-      category.addEventListener("change", () => { product={...product,subcategory_id:""}; fillSubcategories(); });
-      fillSubcategories();
-      document.querySelector("#backProducts").addEventListener("click",()=>loadView("products"));
-      document.querySelector("#cancelProduct").addEventListener("click",()=>loadView("products"));
-      document.querySelectorAll("[data-delete-image]").forEach(button=>button.addEventListener("click",async()=>{if(!confirm("¿Quitar esta foto del producto?"))return;try{await callAdmin("deleteProductImage",{imageId:button.dataset.deleteImage});const products=await callAdmin("products");await renderProductForm(products.find(item=>item.id===product.id))}catch(error){alert(error.message)}}));
-      document.querySelector("#productForm").addEventListener("submit",async(event)=>{event.preventDefault();const message=document.querySelector("#productMessage");message.className="notice is-muted";message.textContent="Guardando…";try{const result=await callAdmin("saveProduct",{id:product?.id||"",name:document.querySelector("#productName").value,description:document.querySelector("#productDescription").value,categoryId:category.value,subcategoryId:subcategory.value,retailPrice:retail.value,wholesalePrice:wholesale.value,stock:document.querySelector("#productStock").value,status:document.querySelector("#productStatus").value});const photo=document.querySelector("#productPhoto").files[0];if(photo){const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(photo)});await callAdmin("uploadProductImage",{productId:result.id,dataUrl})}message.className="notice is-success";message.textContent=result.created?"Producto creado.":"Producto actualizado.";setTimeout(()=>loadView("products"),550)}catch(error){message.className="notice is-error";message.textContent=error.message}});
-    }
-
-    function renderProducts(products) {
-      const productRow = p => `<tr><td>${p.product_images?.[0]?.image_url?`<img class="photo-thumb" src="${escapeHtml(p.product_images[0].image_url)}" alt="">`:"—"}</td><td><strong>${escapeHtml(p.name)}</strong><br><small>${escapeHtml(p.sku)}</small></td><td>${escapeHtml(p.categories?.name||"Sin categoría")}</td><td>${money(p.retail_price)}</td><td>${money(p.wholesale_price)}</td><td><span class="pill ${Number(p.stock)<=5?"low":""}">${p.stock}</span></td><td>${statusLabel(p.status)}</td><td><div class="actions"><button class="icon-action" data-edit-product="${p.id}" title="Editar">${icons.edit}</button><button class="icon-action" data-toggle-product="${p.id}" title="${p.status==="published"?"Ocultar":"Publicar"}">${p.status==="published"?icons.pause:icons.play}</button><button class="icon-action delete" data-delete-product="${p.id}" title="Eliminar">${icons.trash}</button></div></td></tr>`;
-      const rows = items => items.length?`<table><thead><tr><th>Foto</th><th>Producto</th><th>Categoría</th><th>Minorista</th><th>Mayorista</th><th>Referencia</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${items.map(productRow).join("")}</tbody></table>`:'<p class="empty">No encontramos productos.</p>';
-      content.innerHTML = `${viewHead("PRODUCTOS","Administrar productos","Agregá, editá precios y organizá productos.",'<button id="newProduct" class="primary" type="button">+ Agregar producto</button>')}<section class="panel"><input id="productSearch" class="product-search" type="search" placeholder="Buscar por nombre, SKU, categoría o estado…"><div id="productRows">${rows(products)}</div></section>`;
-      document.querySelector("#newProduct").addEventListener("click",()=>renderProductForm().catch(showProductError));
-      const wireRows=()=>{document.querySelectorAll("[data-edit-product]").forEach(button=>button.addEventListener("click",()=>renderProductForm(products.find(p=>p.id===button.dataset.editProduct)).catch(showProductError)));document.querySelectorAll("[data-toggle-product]").forEach(button=>button.addEventListener("click",async()=>{const p=products.find(item=>item.id===button.dataset.toggleProduct);try{await callAdmin("saveProduct",{id:p.id,name:p.name,description:p.description||"",categoryId:p.category_id,subcategoryId:p.subcategory_id||"",retailPrice:p.retail_price,wholesalePrice:p.wholesale_price,stock:p.stock,status:p.status==="published"?"archived":"published"});await loadView("products")}catch(error){alert(error.message)}}));document.querySelectorAll("[data-delete-product]").forEach(button=>button.addEventListener("click",async()=>{const product=products.find(p=>p.id===button.dataset.deleteProduct);if(!confirm(`¿Eliminar definitivamente “${product?.name||"este producto"}”?`))return;try{await callAdmin("deleteProduct",{productId:button.dataset.deleteProduct});await loadView("products")}catch(error){alert(error.message)}}))};
-      wireRows();
-      document.querySelector("#productSearch").addEventListener("input",event=>{const term=event.target.value.trim().toLocaleLowerCase("es-AR");const filtered=products.filter(p=>`${p.name} ${p.sku} ${p.status} ${p.categories?.name||""} ${p.subcategories?.name||""}`.toLocaleLowerCase("es-AR").includes(term));document.querySelector("#productRows").innerHTML=rows(filtered);wireRows()});
-    }
-
-    function showProductError(error) {
-      content.innerHTML = `<section class="panel"><h2>No se pudo abrir el editor</h2><p class="empty">${escapeHtml(error.message || "Actualizá la función admin-api y probá nuevamente.")}</p><button class="outline" id="backProductsError" type="button">← Volver a productos</button></section>`;
-      document.querySelector("#backProductsError").addEventListener("click", () => loadView("products"));
-    }
-
-    function orderActions(order) {
-      if (order.status === "pending") return `<button class="edit" data-order-status="processing" data-order-id="${order.id}">En proceso</button><button class="edit" data-order-status="cancelled" data-order-id="${order.id}">Cancelar</button>`;
-      if (order.status === "processing") return `<button class="edit" data-order-status="completed" data-order-id="${order.id}">Completar</button><button class="edit" data-order-status="cancelled" data-order-id="${order.id}">Cancelar</button>`;
-      return "—";
-    }
-
-    function renderOrders(orders) {
-      content.innerHTML = `${viewHead("PEDIDOS","Gestionar pedidos","Seguimiento de compras.")}<section class="panel"><h2>Últimos pedidos</h2>
-        ${orders.length ? `<table><thead><tr><th>N°</th><th>Cliente</th><th>Tipo</th><th>Entrega</th><th>Total</th><th>Estado</th><th>Fecha</th><th>Acción</th></tr></thead><tbody>${orders.map(o => `<tr><td>#${escapeHtml(o.order_number)}</td><td>${escapeHtml(o.customers?.full_name || "Sin registro")}<br><small>${escapeHtml(o.customers?.phone || "")}</small></td><td>${o.purchase_type === "wholesale" ? "Mayorista" : "Minorista"}</td><td>${o.fulfillment_type === "shipping" ? "Envío" : "Retiro"}</td><td>${money(o.total)}</td><td><span class="pill">${statusLabel(o.status)}</span></td><td>${new Date(o.created_at).toLocaleDateString("es-AR")}</td><td>${orderActions(o)}</td></tr>`).join("")}</tbody></table>` : '<p class="empty">Todavía no hay pedidos registrados.</p>'}
-      </section>`;
-      document.querySelectorAll("[data-order-status]").forEach(button => button.addEventListener("click", async () => {
-        const status = button.dataset.orderStatus;
-        const action = status === "completed" ? "completar" : status === "processing" ? "pasar a En proceso" : "cancelar";
-        if (!confirm(`¿Querés ${action} este pedido?`)) return;
-        try { await callAdmin("updateOrderStatus", { orderId: button.dataset.orderId, status }); await loadView("orders"); }
-        catch (error) { alert(error.message); }
-      }));
-    }
-
-    function renderCustomers(customers) {
-      content.innerHTML = `${viewHead("CLIENTES","Clientas","Datos y pedidos recientes.")}<section class="panel"><h2>Clientes</h2>
-        <form id="customerForm" class="customer-form">
-          <label>Nombre<input id="customerName" required maxlength="100" placeholder="Nombre y apellido"></label>
-          <label>WhatsApp<input id="customerPhone" required inputmode="numeric" placeholder="5493411234567"></label>
-          <label class="check"><input id="customerConsent" type="checkbox"> Acepta novedades</label>
-          <button class="primary" type="submit">Guardar cliente</button>
-        </form>
-        <div id="customerMessage" class="notice"></div>
-        ${customers.length ? `<table><thead><tr><th>Cliente</th><th>WhatsApp</th><th>Novedades</th><th>Alta</th><th>Acción</th></tr></thead><tbody>${customers.map(c => `<tr><td>${escapeHtml(c.full_name)}</td><td>+${escapeHtml(c.phone)}</td><td>${c.whatsapp_opt_in ? '<span class="pill">Sí</span>' : 'No'}</td><td>${new Date(c.created_at).toLocaleDateString("es-AR")}</td><td><button class="edit delete" type="button" data-delete-customer="${c.id}" aria-label="Eliminar ${escapeHtml(c.full_name)}" title="Eliminar cliente">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">Todavía no hay clientes registrados.</p>'}
-      </section>`;
-      document.querySelector("#customerForm").addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const message = document.querySelector("#customerMessage");
-        message.textContent = "Guardando…";
-        try {
-          const result = await callAdmin("createCustomer", {
-            fullName: document.querySelector("#customerName").value,
-            phone: document.querySelector("#customerPhone").value,
-            whatsappOptIn: document.querySelector("#customerConsent").checked,
-          });
-          message.className = "notice is-success";
-          message.textContent = result.created ? "Cliente registrado." : "Cliente actualizado.";
-          await loadView("customers");
-        } catch (error) {
-          message.className = "notice is-error";
-          message.textContent = error.message;
-        }
-      });
-      document.querySelectorAll("[data-delete-customer]").forEach(button => button.addEventListener("click", async () => {
-        const customer = customers.find(c => c.id === button.dataset.deleteCustomer);
-        if (!confirm(`¿Eliminar definitivamente a “${customer?.full_name || "esta cliente"}”? Esta acción no se puede deshacer.`)) return;
-        try { await callAdmin("deleteCustomer", { customerId: button.dataset.deleteCustomer }); await loadView("customers"); }
-        catch (error) { alert(error.message); }
-      }));
-    }
-
-    function renderAdmins(admins) {
-      content.innerHTML = `${viewHead("ADMINISTRADORES","Gestionar administradores","Accesos y permisos.")}<section class="panel"><h2>Administradores</h2>
-        <p class="empty">La persona debe haber iniciado sesión al menos una vez antes de poder agregarla.</p>
-        <form id="adminForm" class="customer-form">
-          <label>Email<input id="adminEmail" type="email" required autocomplete="email" placeholder="nombre@correo.com"></label>
-          <button class="primary" type="submit">Dar acceso</button>
-        </form>
-        <p id="adminMessage" class="notice"></p>
-        ${admins.length ? `<table><thead><tr><th>Email</th><th>Acción</th></tr></thead><tbody>${admins.map(admin => `<tr><td>${escapeHtml(admin.email || "Sin email")}</td><td>${admin.email === document.querySelector("#accountEmail")?.textContent ? '<span class="pill">Tu cuenta</span>' : `<button class="edit delete" type="button" data-revoke-admin="${escapeHtml(admin.user_id)}" data-admin-email="${escapeHtml(admin.email || "")}">Quitar acceso</button>`}</td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay administradores registrados.</p>'}
-      </section>`;
-      document.querySelector("#adminForm").addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const message = document.querySelector("#adminMessage");
-        message.className = "notice is-muted"; message.textContent = "Otorgando acceso…";
-        try {
-          const result = await callAdmin("grantAdmin", { email: document.querySelector("#adminEmail").value });
-          message.className = "notice is-success"; message.textContent = result.created ? "Acceso de administradora otorgado." : "Esta cuenta ya era administradora.";
-          await loadView("admins");
-        } catch (error) { message.className = "notice is-error"; message.textContent = error.message; }
-      });
-      document.querySelectorAll("[data-revoke-admin]").forEach(button => button.addEventListener("click", async () => {
-        if (!confirm(`¿Quitar acceso de administradora a “${button.dataset.adminEmail}”?`)) return;
-        try { await callAdmin("revokeAdmin", { userId: button.dataset.revokeAdmin }); await loadView("admins"); }
-        catch (error) { alert(error.message); }
-      }));
-    }
-
-    async function renderExperiences() {
-      const { data, error } = await supabase.from("experiences").select("id,display_name,rating,comment,approved,created_at").order("created_at", { ascending:false });
-      if (error) throw error;
-      const rows = (data || []).map(item => `<tr><td>${escapeHtml(item.display_name)}</td><td><span class="stars">${"★".repeat(item.rating)}${"☆".repeat(5 - item.rating)}</span></td><td>${escapeHtml(item.comment)}</td><td>${item.approved ? '<span class="pill">Publicada</span>' : '<span class="pill">Pendiente</span>'}</td><td><button class="edit" type="button" data-experience-approve="${item.id}">${item.approved ? "Ocultar" : "Publicar"}</button></td></tr>`).join("");
-      content.innerHTML = `${viewHead("EXPERIENCIAS", "Moderación", "Revisá los comentarios antes de publicarlos.")}<section class="panel experience-admin-panel"><h2>Comentarios de clientas</h2>${rows ? `<div class="table-scroll"><table><thead><tr><th>Clienta</th><th>Calificación</th><th>Comentario</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<p class="empty">Todavía no hay comentarios.</p>'}</section>`;
-      document.querySelectorAll("[data-experience-approve]").forEach(button => button.addEventListener("click", async () => {
-        const id = button.dataset.experienceApprove;
-        const current = data.find(item => item.id === id);
-        button.disabled = true;
-        const result = await supabase.from("experiences").update({ approved: !current.approved }).eq("id", id);
-        if (result.error) alert(result.error.message); else await loadView("experiences");
-        button.disabled = false;
-      }));
-    }
-    function renderCatalog(data) {
-      const categories = data.categories || [];
-      const subcategories = data.subcategories || [];
-      const categoryName = (id) => categories.find(c => c.id === id)?.name || "Sin categoría";
-      const categoryOptions = categories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
-      content.innerHTML = `${viewHead("CATEGORÍAS","Categorías y subcategorías","Organizá los productos de la tienda.")}<section class="panel"><h2>Categorías y subcategorías</h2>
-        <p class="lead">Podés renombrar, desactivar o eliminar. Para eliminar, no debe tener productos asociados.</p>
-        <div class="catalog-tools">
-          <form id="newCategoryForm"><label>Nueva categoría<input id="newCategoryName" maxlength="100" required placeholder="Ej.: Makeup"></label><button class="primary" type="submit">Agregar</button></form>
-          <form id="newSubcategoryForm"><label>Subcategoría<input id="newSubcategoryName" maxlength="100" required placeholder="Ej.: Labiales"></label><label>Categoría<select id="newSubcategoryCategory" required>${categoryOptions}</select></label><button class="primary" type="submit">Agregar</button></form>
-        </div>
-        <h2>Categorías</h2>
-        ${categories.length ? `<table><thead><tr><th>Nombre</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${categories.map(c => `<tr><td>${escapeHtml(c.name)}</td><td><span class="pill">${c.active ? "Activa" : "Inactiva"}</span></td><td><button class="edit" data-edit-category="${c.id}">Editar</button><button class="edit" data-toggle-category="${c.id}">${c.active ? "Desactivar" : "Activar"}</button><button class="edit delete" data-delete-category="${c.id}" title="Eliminar categoría">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay categorías.</p>'}
-        <h2 class="section-spaced">Subcategorías</h2>
-        ${subcategories.length ? `<table><thead><tr><th>Subcategoría</th><th>Categoría</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${subcategories.map(s => `<tr><td>${escapeHtml(s.name)}</td><td>${escapeHtml(categoryName(s.category_id))}</td><td><span class="pill">${s.active ? "Activa" : "Inactiva"}</span></td><td><button class="edit" data-edit-subcategory="${s.id}">Editar</button><button class="edit" data-toggle-subcategory="${s.id}">${s.active ? "Desactivar" : "Activar"}</button><button class="edit delete" data-delete-subcategory="${s.id}" title="Eliminar subcategoría">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay subcategorías.</p>'}
-      </section>`;
-      const refresh = () => loadView("catalog");
-      document.querySelector("#newCategoryForm").addEventListener("submit", async (event) => { event.preventDefault(); try { await callAdmin("saveCategory", { name: document.querySelector("#newCategoryName").value }); refresh(); } catch (error) { alert(error.message); } });
-      document.querySelector("#newSubcategoryForm").addEventListener("submit", async (event) => { event.preventDefault(); try { await callAdmin("saveSubcategory", { name: document.querySelector("#newSubcategoryName").value, categoryId: document.querySelector("#newSubcategoryCategory").value }); refresh(); } catch (error) { alert(error.message); } });
-      document.querySelectorAll("[data-edit-category]").forEach(button => button.addEventListener("click", async () => { const item = categories.find(c => c.id === button.dataset.editCategory); const name = prompt("Nombre de la categoría:", item.name); if (name === null) return; try { await callAdmin("saveCategory", { categoryId:item.id, name, active:item.active }); refresh(); } catch (error) { alert(error.message); } }));
-      document.querySelectorAll("[data-toggle-category]").forEach(button => button.addEventListener("click", async () => { const item = categories.find(c => c.id === button.dataset.toggleCategory); try { await callAdmin("saveCategory", { categoryId:item.id, name:item.name, active:!item.active }); refresh(); } catch (error) { alert(error.message); } }));
-      document.querySelectorAll("[data-delete-category]").forEach(button => button.addEventListener("click", async () => { const item = categories.find(c => c.id === button.dataset.deleteCategory); if (!confirm(`¿Eliminar la categoría “${item.name}”? Primero debe estar sin productos ni subcategorías.`)) return; try { await callAdmin("deleteCategory", { categoryId:item.id }); refresh(); } catch (error) { alert(error.message); } }));
-      document.querySelectorAll("[data-edit-subcategory]").forEach(button => button.addEventListener("click", async () => { const item = subcategories.find(s => s.id === button.dataset.editSubcategory); const name = prompt("Nombre de la subcategoría:", item.name); if (name === null) return; const category = prompt(`Categoría (${categories.map(c => c.name).join(", ")}):`, categoryName(item.category_id)); if (category === null) return; const match = categories.find(c => c.name.toLocaleLowerCase("es-AR") === category.trim().toLocaleLowerCase("es-AR")); if (!match) return alert("Elegí una categoría existente."); try { await callAdmin("saveSubcategory", { subcategoryId:item.id, name, categoryId:match.id, active:item.active }); refresh(); } catch (error) { alert(error.message); } }));
-      document.querySelectorAll("[data-toggle-subcategory]").forEach(button => button.addEventListener("click", async () => { const item = subcategories.find(s => s.id === button.dataset.toggleSubcategory); try { await callAdmin("saveSubcategory", { subcategoryId:item.id, name:item.name, categoryId:item.category_id, active:!item.active }); refresh(); } catch (error) { alert(error.message); } }));
-      document.querySelectorAll("[data-delete-subcategory]").forEach(button => button.addEventListener("click", async () => { const item = subcategories.find(s => s.id === button.dataset.deleteSubcategory); if (!confirm(`¿Eliminar la subcategoría “${item.name}”? No debe tener productos asociados.`)) return; try { await callAdmin("deleteSubcategory", { subcategoryId:item.id }); refresh(); } catch (error) { alert(error.message); } }));
-    }
-
-    function renderCoupons(coupons) {
-      const items = Array.isArray(coupons) ? coupons : coupons?.coupons || [];
-      const normalizeDate = (value) => value ? new Intl.DateTimeFormat("en-CA", { timeZone:"America/Argentina/Buenos_Aires", year:"numeric", month:"2-digit", day:"2-digit" }).format(new Date(value)) : "";
-      const discountLabel = (coupon) => `${Number(coupon.discount_percent || 0)}%`;
-      const validity = (coupon) => {
-        const start = coupon.starts_at ? new Date(coupon.starts_at).toLocaleDateString("es-AR") : "Ahora";
-        const end = coupon.expires_at ? new Date(coupon.expires_at).toLocaleDateString("es-AR") : "Sin vencimiento";
-        return `${start} → ${end}`;
-      };
-      const rows = () => items.length ? `<table><thead><tr><th>Código</th><th>Descuento</th><th>Vigencia</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${items.map(coupon => `<tr>
-        <td><strong>${escapeHtml(coupon.code)}</strong></td>
-        <td>${discountLabel(coupon)}</td>
-        <td>${escapeHtml(validity(coupon))}</td>
-        <td><span class="pill ${coupon.active ? "" : "low"}">${coupon.active ? "Activo" : "Inactivo"}</span></td>
-        <td><button class="edit" type="button" data-edit-coupon="${coupon.id}">Editar</button><button class="edit" type="button" data-toggle-coupon="${coupon.id}">${coupon.active ? "Desactivar" : "Activar"}</button><button class="edit delete" type="button" data-delete-coupon="${coupon.id}" title="Eliminar cupón">🗑</button></td>
-      </tr>`).join("")}</tbody></table>` : '<p class="empty">Todavía no hay cupones creados.</p>';
-
-      content.innerHTML = `${viewHead("CUPONES","Administrar cupones","Descuentos y vigencia.")}<section class="panel"><h2>Cupones de descuento</h2>
-        <p class="lead">Creá códigos porcentuales y definí durante qué período pueden usarse en el carrito.</p>
-        <form id="couponForm" class="coupon-form">
-          <input id="couponId" type="hidden">
-          <label>Código<input id="couponCode" required maxlength="40" autocomplete="off" placeholder="Ej.: BIENVENIDA10"></label>
-          <label>Descuento (%)<input id="couponValue" type="number" min="1" max="100" step="1" required placeholder="10"></label>
-          <label>Desde<input id="couponStartsAt" type="date" required></label>
-          <label>Hasta<input id="couponExpiresAt" type="date" required></label>
-          <label class="check coupon-active"><input id="couponActive" type="checkbox" checked> Cupón activo</label>
-          <div class="coupon-form-actions"><button class="primary" type="submit">Guardar cupón</button><button id="cancelCouponEdit" class="outline hidden" type="button">Cancelar edición</button></div>
-        </form>
-        <p id="couponMessage" class="notice" aria-live="polite"></p>
-        <div id="couponRows" class="coupon-table">${rows()}</div>
-      </section>`;
-
-      const form = document.querySelector("#couponForm");
-      const message = document.querySelector("#couponMessage");
-      const cancel = document.querySelector("#cancelCouponEdit");
-      const resetForm = () => {
-        form.reset();
-        document.querySelector("#couponId").value = "";
-        document.querySelector("#couponActive").checked = true;
-        cancel.classList.add("hidden");
-        message.textContent = "";
-      };
-      const editCoupon = (coupon) => {
-        document.querySelector("#couponId").value = coupon.id;
-        document.querySelector("#couponCode").value = coupon.code || "";
-        document.querySelector("#couponValue").value = coupon.discount_percent || "";
-        document.querySelector("#couponStartsAt").value = normalizeDate(coupon.starts_at);
-        document.querySelector("#couponExpiresAt").value = normalizeDate(coupon.expires_at);
-        document.querySelector("#couponActive").checked = Boolean(coupon.active);
-        cancel.classList.remove("hidden");
-        form.scrollIntoView({ behavior:"smooth", block:"start" });
-      };
-      form.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const value = Number(document.querySelector("#couponValue").value);
-        const startsAt = document.querySelector("#couponStartsAt").value;
-        const expiresAt = document.querySelector("#couponExpiresAt").value;
-        if (value > 100) { message.className = "notice is-error"; message.textContent = "El porcentaje no puede superar 100%."; return; }
-        if (expiresAt <= startsAt) { message.className = "notice is-error"; message.textContent = "El vencimiento debe ser posterior al inicio."; return; }
-        message.className = "notice is-muted"; message.textContent = "Guardando cupón…";
-        try {
-          await callAdmin("saveCoupon", {
-            couponId: document.querySelector("#couponId").value,
-            code: document.querySelector("#couponCode").value.trim().toUpperCase(),
-            discountPercent: value,
-            startsAt,
-            expiresAt,
-            active: document.querySelector("#couponActive").checked,
-          });
-          message.className = "notice is-success"; message.textContent = "Cupón guardado.";
-          setTimeout(() => loadView("coupons"), 450);
-        } catch (error) { message.className = "notice is-error"; message.textContent = error.message; }
-      });
-      cancel.addEventListener("click", resetForm);
-      document.querySelectorAll("[data-edit-coupon]").forEach(button => button.addEventListener("click", () => editCoupon(items.find(coupon => coupon.id === button.dataset.editCoupon))));
-      document.querySelectorAll("[data-toggle-coupon]").forEach(button => button.addEventListener("click", async () => {
-        const coupon = items.find(item => item.id === button.dataset.toggleCoupon);
-        try { await callAdmin("saveCoupon", {
-          couponId:coupon.id, code:coupon.code, discountPercent:coupon.discount_percent,
-          startsAt:normalizeDate(coupon.starts_at), expiresAt:normalizeDate(coupon.expires_at), active:!coupon.active,
-        }); await loadView("coupons"); }
-        catch (error) { alert(error.message); }
-      }));
-      document.querySelectorAll("[data-delete-coupon]").forEach(button => button.addEventListener("click", async () => {
-        const coupon = items.find(item => item.id === button.dataset.deleteCoupon);
-        if (!confirm(`¿Eliminar definitivamente el cupón “${coupon?.code || ""}”?`)) return;
-        try { await callAdmin("deleteCoupon", { couponId:button.dataset.deleteCoupon }); await loadView("coupons"); }
-        catch (error) { alert(error.message); }
-      }));
-    }
-
-    async function renderAccount() {
-      const { data: { session } } = await supabase.auth.getSession();
-      const user = session?.user;
-      const meta = user?.user_metadata || {};
-      let recentOrders = [];
-      try { recentOrders = (await callAdmin("orders") || []).slice(0,3); } catch (_error) {}
-      const initials = String(meta.full_name || user?.email || "IH").split(/\s+|@/).filter(Boolean).slice(0,2).map(part=>part[0]).join("").toUpperCase();
-      content.innerHTML = `${viewHead("MI CUENTA","Datos de la cuenta","Perfil, seguridad y actividad.")}
-        <section class="account-grid">
-          <article class="account-card"><div style="display:flex;align-items:center;gap:14px"><span style="display:grid;place-items:center;width:72px;height:72px;border-radius:22px;background:linear-gradient(145deg,#d889a7,#a70d4c);color:#fff;font:600 23px 'Playfair Display',serif">${escapeHtml(initials)}</span><div><h3>${escapeHtml(meta.full_name || "Ithiel")}</h3><p>Cuenta administradora.</p></div></div><form id="accountProfileForm" class="account-fields"><label>Nombre visible<input id="accountName" value="${escapeHtml(meta.full_name || "")}" placeholder="Ithiel"></label><label>Email<input value="${escapeHtml(user?.email || "")}" readonly></label><label>Teléfono<input id="accountPhone" value="${escapeHtml(meta.phone || "")}" placeholder="+54 9 341..."></label><label>Rol<input value="Admin" readonly></label><div class="wide actions"><button class="primary" type="submit">Guardar perfil</button></div></form><p id="profileMessage" class="notice"></p></article>
-          <article class="account-card"><h3>Seguridad</h3><p>Ingreso y contraseña.</p><table><tbody><tr><td><strong>Contraseña</strong><br><small>Recibí un enlace seguro por email.</small></td><td><button id="sendPasswordReset" class="soft-action" type="button">Cambiar</button></td></tr><tr><td><strong>Google</strong><br><small>${user?.app_metadata?.provider === "google" ? "Conectado" : "Disponible para iniciar sesión"}</small></td><td><span class="pill">${user?.app_metadata?.provider === "google" ? "Activo" : "Opcional"}</span></td></tr><tr><td><strong>Sesión actual</strong><br><small>${user?.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString("es-AR") : "Activa"}</small></td><td><span class="pill">Activa</span></td></tr></tbody></table><p id="adminAccountMessage" class="notice"></p></article>
-          <article class="account-card"><h3>Preferencias</h3><p>Avisos del negocio.</p><div class="account-fields"><label>Pedidos<select id="prefOrders"><option>Email y WhatsApp</option><option>Solo email</option><option>Solo WhatsApp</option></select></label><label>Productos consultados<select id="prefStock"><option>Activado</option><option>Desactivado</option></select></label><label class="wide">Firma del panel<input value="ITHIEL Bazar y Makeup" readonly></label></div></article>
-          <article class="account-card"><h3>Actividad reciente</h3><p>Movimientos de la cuenta.</p><table><tbody><tr><td>Ingreso al panel</td><td><span class="pill">Correcto</span></td></tr><tr><td>Cuenta</td><td>${escapeHtml(user?.email || "")}</td></tr></tbody></table></article>
-          <article class="account-card" style="grid-column:1/-1"><h3>Últimos pedidos</h3><p>Seguimiento rápido.</p>${recentOrders.length?`<table><thead><tr><th>Pedido</th><th>Clienta</th><th>Total</th><th>Estado</th></tr></thead><tbody>${recentOrders.map(order=>`<tr><td>#${escapeHtml(order.order_number)}</td><td>${escapeHtml(order.customers?.full_name||"Sin registro")}</td><td>${money(order.total)}</td><td>${statusLabel(order.status)}</td></tr>`).join("")}</tbody></table>`:'<p class="empty">Todavía no hay pedidos registrados.</p>'}</article>
-        </section>`;
-      document.querySelector("#accountProfileForm").addEventListener("submit",async(event)=>{event.preventDefault();const message=document.querySelector("#profileMessage");message.className="notice is-muted";message.textContent="Guardando…";const {error}=await supabase.auth.updateUser({data:{full_name:document.querySelector("#accountName").value.trim(),phone:document.querySelector("#accountPhone").value.trim()}});if(error){message.className="notice is-error";message.textContent=error.message;return}message.className="notice is-success";message.textContent="Perfil actualizado."});
-      document.querySelector("#sendPasswordReset").addEventListener("click",async()=>{const message=document.querySelector("#adminAccountMessage");message.className="notice is-muted";message.textContent="Enviando email…";const {error}=await supabase.auth.resetPasswordForEmail(user.email,{redirectTo:`${window.location.origin}/cuenta`});if(error){message.className="notice is-error";message.textContent=error.message;return}message.className="notice is-success";message.textContent="Te enviamos un email para cambiar tu contraseña."});
-    }
-
-    async function loadView(view) {
-      currentView = view;
-      document.querySelectorAll(".nav button").forEach(button => button.classList.toggle("active", button.dataset.view === view));
-      setLoading();
-      try {
-        if (view === "account") { await renderAccount(); return; }
-        if (view === "experiences") { await renderExperiences(); return; }
-        const data = await callAdmin(view === "catalog" ? "catalogManagement" : view);
-        if (view === "dashboard") renderDashboard(data);
-        if (view === "products") renderProducts(data);
-        if (view === "orders") renderOrders(data);
-        if (view === "customers") renderCustomers(data);
-        if (view === "admins") renderAdmins(data);
-        if (view === "catalog") renderCatalog(data);
-        if (view === "coupons") renderCoupons(data);
-      } catch (error) {
-        content.innerHTML = `<p class="empty">${escapeHtml(error.message)}</p>`;
-      }
-    }
-
-    async function showApp(session) {
-      document.querySelector("#accountEmail").textContent = session.user.email || "Cuenta administradora";
-      loginView.classList.add("hidden");
-      appView.classList.remove("hidden");
-      await loadView(currentView);
-    }
-
-    function setup() {
-      if (SUPABASE_ANON_KEY.startsWith("PEGAR_AQUI")) {
-        setNotice("Falta configurar la clave pública de Supabase.");
-        return;
-      }
-      supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      supabase.auth.getSession().then(({ data: { session } }) => { if (session) showApp(session); });
-      supabase.auth.onAuthStateChange((_event, session) => { if (session) showApp(session); });
-    }
-
-    document.querySelector("#loginForm").addEventListener("submit", async (event) => {
-      event.preventDefault(); setNotice("");
-      const email = document.querySelector("#email").value.trim();
-      const password = document.querySelector("#password").value;
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setNotice("No se pudo ingresar. Revisá email y contraseña.");
-    });
-    document.querySelector("#googleLogin").addEventListener("click", async () => {
-      setNotice("");
-      const { error } = await supabase.auth.signInWithOAuth({ provider:"google", options:{ redirectTo:`${window.location.origin}/admin.html` } });
-      if (error) setNotice("No se pudo iniciar con Google.");
-    });
-    document.querySelector("#logout").addEventListener("click", () => supabase.auth.signOut().then(() => location.reload()));
-    document.querySelectorAll(".nav button").forEach(button => button.addEventListener("click", () => loadView(button.dataset.view)));
-    setup();
-  </script>
-</body>
-</html>
-
-
+    return reply(request, { error: "No se pudo cargar el panel." }, 500);
+  }
+});
