@@ -107,8 +107,8 @@ begin
     v_discount_percent := greatest(0, least(100, coalesce(v_coupon.discount_percent, 0)));
   end if;
 
-  insert into public.orders (order_number, customer_id, status, purchase_type, fulfillment_type, subtotal, total, item_count, coupon_id, coupon_code, shipping_address, customer_note)
-  values ('ITH-' || to_char(now(), 'YYYYMMDD') || '-' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 8)), v_customer.id, 'pending', p_purchase_type, p_fulfillment_type, 0, 0, 0, v_coupon.id, nullif(upper(trim(coalesce(p_coupon_code, ''))), ''), nullif(trim(coalesce(p_shipping_address, '')), ''), nullif(left(trim(coalesce(p_customer_note, '')), 1000), ''))
+  insert into public.orders (customer_id, status, purchase_type, fulfillment_type, subtotal, total, item_count, coupon_id, coupon_code, shipping_address, customer_note)
+  values (v_customer.id, 'pending', p_purchase_type, p_fulfillment_type, 0, 0, jsonb_array_length(p_items), v_coupon.id, nullif(upper(trim(coalesce(p_coupon_code, ''))), ''), nullif(trim(coalesce(p_shipping_address, '')), ''), nullif(left(trim(coalesce(p_customer_note, '')), 1000), ''))
   returning * into v_order;
 
   for v_item in select value from jsonb_array_elements(p_items)
