@@ -84,9 +84,10 @@ Deno.serve(async (request) => {
 
     const lines = (data.items ?? []).map((item: Record<string, unknown>) => {
       const variant = item.variant ? ` (${item.variant})` : "";
-      return `• ${item.quantity} x ${item.name}${variant} - ${money(item.unitPrice)}`;
+      return `📦 ${item.quantity} x ${item.name}${variant}`;
     }).join("\n");
-    const message = `Hola! Registré el pedido #${data.orderNumber}:\n\n${lines}\n\nTotal: ${money(data.total)}\nTipo: ${body.purchaseType === "wholesale" ? "Mayorista" : "Minorista"}.`;
+    const priceType = body.purchaseType === "wholesale" ? "Mayorista" : "Minorista";
+    const message = `🛍️ ¡Nuevo pedido recibido!\n\nGracias por comprar en Ithiel Bazar y Makeup 💖\nPedido #${data.orderNumber}\n\n${lines}\n💰 Total: ${money(data.total)}\n🏷️ ${priceType}\n\n💬 En breve te contactamos para continuar con tu compra.`;
     return json(request, { ok: true, orderId: data.id, orderNumber: data.orderNumber, total: data.total, whatsappUrl: `https://wa.me/${whatsapp}?text=${encodeURIComponent(message)}` }, 201);
   } catch (error) {
     console.error(error);

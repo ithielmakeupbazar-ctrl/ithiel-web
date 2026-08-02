@@ -207,6 +207,7 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
 
     function money(value) { return value === null || value === undefined || value === "" ? "—" : `$${Number(value).toLocaleString("es-AR")}`; }
     function escapeHtml(value) { return String(value ?? "").replace(/[&<>'\"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c])); }
+    function byName(a, b) { return String(a?.name ?? a).localeCompare(String(b?.name ?? b), "es-AR", { sensitivity:"base" }); }
     function statusLabel(status) {
       const label = ({ published:"Publicado", draft:"Borrador", archived:"Archivado", pending:"Pendiente", processing:"En proceso", completed:"Completado", cancelled:"Cancelado" })[status] || escapeHtml(status);
       return `<span class="status-pill" data-status="${escapeHtml(status)}"><span class="status-dot" aria-hidden="true"></span><span>${label}</span></span>`;
@@ -299,7 +300,7 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
       const photoSelection = document.querySelector("#photoSelection");
       const photoPreview = document.querySelector("#photoPreview");
       const calculatePrices = () => { const cost=Number(supplier.value)||0; const retailValue=cost?Math.ceil((cost*1.8)/500)*500:0; retail.value=retailValue||""; wholesale.value=retailValue?Math.round(retailValue*.8):""; };
-      const fillSubcategories = () => { const selected=category.value; subcategory.innerHTML='<option value="">Sin subcategoría</option>'+options.subcategories.filter(s=>s.category_id===selected).map(s=>`<option value="${s.id}" ${product?.subcategory_id===s.id?"selected":""}>${escapeHtml(s.name)}</option>`).join(""); };
+      const fillSubcategories = () => { const selected=category.value; subcategory.innerHTML='<option value="">Sin subcategoría</option>'+options.subcategories.filter(s=>s.category_id===selected).sort(byName).map(s=>`<option value="${s.id}" ${product?.subcategory_id===s.id?"selected":""}>${escapeHtml(s.name)}</option>`).join(""); };
       supplier.addEventListener("input", calculatePrices);
       const variantRows = document.querySelector("#variantRows");
       const updateVariantEmpty = () => { document.querySelector("#noVariants").hidden = Boolean(variantRows.children.length); };
@@ -327,7 +328,7 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
     function renderProducts(products) {
       const productList = Array.isArray(products) ? products : products?.products || [];
       const categoryList = Array.isArray(products?.categories) ? products.categories : [];
-      const subcategoryList = Array.isArray(products?.subcategories) ? products.subcategories : [];
+      const subcategoryList = Array.isArray(products?.subcategories) ? [...products.subcategories].sort(byName) : [];
       const selectedProductIds = new Set();
       const subcategoryOptions = p => `<option value="">Sin subcategoría</option>${subcategoryList.filter(item => item.category_id === p.category_id).map(item => `<option value="${item.id}" ${item.id === p.subcategory_id ? "selected" : ""}>${escapeHtml(item.name)}</option>`).join("")}`;
       const productRow = p => `<tr>
@@ -389,7 +390,7 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
 
     function renderCatalog(data) {
       const categories = Array.isArray(data?.categories) ? data.categories : [];
-      const subcategories = Array.isArray(data?.subcategories) ? data.subcategories : [];
+      const subcategories = Array.isArray(data?.subcategories) ? [...data.subcategories].sort(byName) : [];
       const categoryOptions = (selected = "") => categories.map(category => `<option value="${category.id}" ${category.id === selected ? "selected" : ""}>${escapeHtml(category.name)}</option>`).join("");
       content.innerHTML = `${viewHead("CATÁLOGO", "Categorías y subcategorías", "Organizá el catálogo y revisá cuántos productos contiene cada sección.")}
         <section class="catalog-create-grid">
