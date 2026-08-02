@@ -135,7 +135,7 @@ textarea{min-height:70px!important}
       <button id="edit-profile" class="secondary" type="button">Editar datos de compra</button>
       <form id="profile-form" hidden>
         <label>Nombre y apellido<input id="full-name" maxlength="100" autocomplete="name" required></label>
-        <label>WhatsApp <small>(opcional)</small><div class="phone"><span>+54 9</span><input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="341 123 4567"></div></label>
+        <label>WhatsApp<div class="phone"><span>+54 9</span><input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="341 123 4567" required></div></label>
         <label>Dirección <small>(opcional)</small><textarea id="address" autocomplete="street-address" maxlength="250" placeholder="Calle, número, piso/depto y localidad"></textarea></label>
         <label class="consent"><input id="optin" type="checkbox"> Quiero recibir novedades y ofertas por WhatsApp.</label>
         <button type="submit">Guardar cambios</button>
@@ -146,6 +146,10 @@ textarea{min-height:70px!important}
         <label>Nueva contraseña<input id="new-password" type="password" autocomplete="new-password" minlength="6" required></label>
         <button type="submit">Guardar nueva contraseña</button>
       </form>
+      <section class="account-orders" aria-labelledby="orders-title">
+        <h2 id="orders-title">MIS PEDIDOS</h2>
+        <div id="orders-list"><p class="message">Cargando pedidos…</p></div>
+      </section>
       <button id="logout" class="logout" type="button">Cerrar sesión</button>
       <p id="profile-message" class="message" aria-live="polite"></p>
     </section>
@@ -158,10 +162,14 @@ textarea{min-height:70px!important}
     const supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
     const accessView=document.querySelector("#access-view"),profileView=document.querySelector("#profile-view"),accessMessage=document.querySelector("#access-message"),profileMessage=document.querySelector("#profile-message");
     const message=(node,text,color="#765763")=>{node.textContent=text;node.classList.remove("is-muted","is-error","is-success");node.classList.add(color==="#16804b"?"is-success":color==="#a25119"?"is-error":"is-muted")};
-    async function profileRequest(body){const {data:{session}}=await supabase.auth.getSession();if(!session)throw new Error("Tu sesión venció.");const res=await fetch(REGISTER_URL,{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${session.access_token}`},body:JSON.stringify(body)});const data=await res.json();if(!res.ok)throw new Error(data.error||"No se pudieron guardar los datos.");return data;}
+    async function profileRequest(body){const {data:{session}}=await supabase.auth.getSession();if(!session)throw new Error("Tu sesión venció.");let res;try{res=await fetch(REGISTER_URL,{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${session.access_token}`},body:JSON.stringify(body)})}catch(_error){throw new Error("No pudimos conectar con tu perfil. Probá nuevamente en unos minutos.")}const data=await res.json();if(!res.ok)throw new Error(data.error||"No se pudieron guardar los datos.");return data;}
     function localPhone(value){let n=String(value||"").replace(/\D/g,"");if(n.startsWith("549"))n=n.slice(3);else if(n.startsWith("54"))n=n.slice(2);if(n.startsWith("9"))n=n.slice(1);return n;}
     function applyProfile(session,profile){const fallback=session.user.user_metadata?.full_name||session.user.user_metadata?.name||"";document.querySelector("#full-name").value=profile?.full_name||fallback;document.querySelector("#phone").value=localPhone(profile?.phone);document.querySelector("#address").value=profile?.default_address||"";document.querySelector("#optin").checked=Boolean(profile?.whatsapp_opt_in);}
-    async function showProfile(session){accessView.hidden=true;profileView.hidden=false;document.querySelector("#account-email").textContent=`✓ ${session.user.email||"Cuenta conectada"}`;applyProfile(session,null);}
+    const orderStatus={pending:"Pendiente",processing:"En proceso",completed:"Completado",cancelled:"Cancelado"};
+    const orderMoney=value=>`$${Math.round(Number(value)||0).toLocaleString("es-AR")}`;
+    const accountEscape=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+    async function loadOrders(){const list=document.querySelector("#orders-list");try{const result=await profileRequest({action:"getOrders"});const orders=result.data||[];list.innerHTML=orders.length?orders.map(order=>`<article class="account-order"><div><strong>#${accountEscape(order.order_number)}</strong><span>${new Date(order.created_at).toLocaleDateString("es-AR")}</span></div><div><b>${orderMoney(order.total)}</b><span>${accountEscape(orderStatus[order.status]||order.status)}</span></div><small>${(order.order_items||[]).map(item=>`${Number(item.quantity)||0} x ${accountEscape(item.product_name)}${item.variant_name?` (${accountEscape(item.variant_name)})`:""}`).join(" · ")}</small></article>`).join(""):"<p class=\"message\">Todavía no tenés pedidos registrados.</p>"}catch(error){list.innerHTML=`<p class="message is-error">${accountEscape(error.message)}</p>`}}
+    async function showProfile(session){accessView.hidden=true;profileView.hidden=false;document.querySelector("#account-email").textContent=`✓ ${session.user.email||"Cuenta conectada"}`;applyProfile(session,null);await loadOrders();}
     document.querySelector("#google-login").addEventListener("click",async()=>{message(accessMessage,"Abriendo Google…");const {data,error}=await supabase.auth.signInWithOAuth({provider:"google",options:{redirectTo:`${location.origin}/cuenta`}});if(error)return message(accessMessage,"No se pudo iniciar con Google.","#a25119");if(data?.url)location.assign(data.url);});
     document.querySelector("#email-form").addEventListener("submit",async(e)=>{e.preventDefault();message(accessMessage,"Ingresando…");const {error}=await supabase.auth.signInWithPassword({email:document.querySelector("#email").value.trim(),password:document.querySelector("#password").value});if(error)message(accessMessage,"Email o contraseña incorrectos.","#a25119");});
     document.querySelector("#signup").addEventListener("click",async()=>{const email=document.querySelector("#email").value.trim(),password=document.querySelector("#password").value;if(!email||password.length<6)return message(accessMessage,"Ingresá email y una contraseña de al menos 6 caracteres.","#a25119");message(accessMessage,"Creando cuenta…");const {data,error}=await supabase.auth.signUp({email,password,options:{emailRedirectTo:`${location.origin}/cuenta`}});if(error)return message(accessMessage,error.message,"#a25119");message(accessMessage,data.session?"Cuenta creada. Completá tu perfil.":"Cuenta creada. Revisá tu email para confirmarla.","#16804b");});

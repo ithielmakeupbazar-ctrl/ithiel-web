@@ -258,7 +258,9 @@ main{border-radius:24px!important;box-shadow:0 22px 58px rgba(50,21,34,.18)!impo
         message.textContent = "Registro listo.";
       } catch (error) {
         message.className = "message is-error";
-        message.textContent = error.message;
+        message.textContent = error instanceof TypeError
+          ? "No pudimos conectar con el registro. Probá nuevamente o escribinos por WhatsApp."
+          : error.message;
       }
     });
 

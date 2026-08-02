@@ -25,3 +25,16 @@ Es importante usar un servidor local y no abrir los archivos con doble clic, por
 - `styles/registro.css`: registro.
 - `styles/cuenta.css`: acceso y perfil.
 - `styles/admin.css`: panel de administración.
+
+## Publicación
+
+Los cambios del sitio se publican subiendo este repo a la rama que usa el hosting.
+Antes de confirmar producción:
+
+1. Probar catálogo, detalle, carrito, registro y cuenta en escritorio y móvil.
+2. Subir el commit a GitHub.
+3. Verificar que `https://ithielbazarymakeup.site` use ese commit.
+4. Aplicar por separado el ajuste de CORS indicado en `supabase/README.md`.
+
+No se deben copiar claves privadas de Supabase al frontend. La clave pública
+incluida en el sitio es la clave publicable para navegador.

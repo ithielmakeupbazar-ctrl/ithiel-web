@@ -119,16 +119,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
     .edit { border:1px solid #d4bec9; color:var(--wine); background:white; border-radius:7px; padding:6px 8px; font-weight:600; font-size:12px; }
     .delete { color:#a12835; border-color:#e9c2c7; margin-left:5px; }
     .delete:hover { color:#fff; background:#a12835; border-color:#a12835; }
-    .catalog-tools { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:20px; }
-    .catalog-tools form { display:flex; gap:8px; align-items:end; }
-    .catalog-tools label { flex:1; margin:0; }
     .coupon-form { display:grid; grid-template-columns:repeat(4,minmax(140px,1fr)); gap:12px; align-items:end; margin:0 0 8px; padding:18px; border:1px solid var(--line); border-radius:14px; background:var(--paper); }
     .coupon-form label { margin:0; }
     .coupon-form .coupon-active { align-self:center; padding:12px 0 0; }
     .coupon-form-actions { display:flex; gap:8px; grid-column:1 / -1; }
     .coupon-form-actions .primary { width:auto; margin:0; }
     .coupon-table { margin-top:22px; }
-    @media (max-width:820px) { .customer-form,.product-form,.catalog-tools,.coupon-form { grid-template-columns:1fr; } .catalog-tools form { display:grid; grid-template-columns:1fr; } .check { padding:0; } }
+    @media (max-width:820px) { .customer-form,.product-form,.coupon-form { grid-template-columns:1fr; } .check { padding:0; } }
     @media (max-width:820px) { .cards { grid-template-columns:repeat(2,1fr); } .account span { display:none; } }
     .login-card { animation:page-in .6s var(--ease-out) both; box-shadow:var(--shadow-md); }
     header { position:sticky; top:0; z-index:5; backdrop-filter:blur(14px); background:rgba(255,255,255,.92); }
@@ -205,7 +202,8 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
     const notice = document.querySelector("#loginNotice");
     const content = document.querySelector("#content");
     let supabase;
-    let currentView = "dashboard";
+    let currentView = sessionStorage.getItem("ithiel-admin-view") || "dashboard";
+    let appReady = false;
 
     function money(value) { return value === null || value === undefined || value === "" ? "—" : `$${Number(value).toLocaleString("es-AR")}`; }
     function escapeHtml(value) { return String(value ?? "").replace(/[&<>'\"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c])); }
@@ -256,39 +254,72 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
     async function renderProductForm(product = null) {
       const options = await callAdmin("catalogOptions");
       const categoryOptions = ['<option value="">Elegir categoría</option>', ...options.categories.map(c => `<option value="${c.id}" ${product?.category_id === c.id ? "selected" : ""}>${escapeHtml(c.name)}</option>`)].join("");
-      const inferredSupplier = product?.retail_price ? Math.round(Number(product.retail_price) / 1.8) : "";
+      const inferredSupplier = product?.supplier_price ?? (product?.retail_price ? Math.round(Number(product.retail_price) / 1.8) : "");
+      const variantRow = (variant = {}) => `<div class="variant-row" data-variant-row>
+        <input type="hidden" data-variant-id value="${escapeHtml(variant.id || "")}">
+        <label>Color<input data-variant-color maxlength="80" value="${escapeHtml(variant.color || "")}" placeholder="Ej.: Rosa"></label>
+        <label>Talle<input data-variant-size maxlength="40" value="${escapeHtml(variant.size || "")}" placeholder="Ej.: M"></label>
+        <label>SKU<input data-variant-sku maxlength="80" value="${escapeHtml(variant.sku || "")}" placeholder="Opcional"></label>
+        <label>Stock<input data-variant-stock type="number" min="0" value="${Number(variant.stock ?? 0)}"></label>
+        <label class="check variant-active"><input data-variant-active type="checkbox" ${variant.active === false ? "" : "checked"}> Disponible</label>
+        <button class="icon-action delete" type="button" data-remove-variant aria-label="Quitar variante">${icons.trash}</button>
+      </div>`;
+      const existingVariants = product?.product_variants || [];
       content.innerHTML = `<div class="product-form-modal"><section class="product-form-card">
         <header class="form-top"><div><span class="eyebrow">${product ? "EDITAR PRODUCTO" : "NUEVO PRODUCTO"}</span><h2>${product ? "Editar producto" : "Agregar producto"}</h2></div><button id="backProducts" class="icon-action" type="button" aria-label="Cerrar">×</button></header>
         <form id="productForm" class="product-form">
+          <label class="wide upload-field">Imágenes del producto<input id="productPhoto" type="file" accept="image/jpeg,image/png,image/webp" multiple><small>Hasta 8 archivos JPG, PNG o WEBP de 4 MB cada uno.</small><span id="photoSelection" class="photo-selection" aria-live="polite"></span><span id="photoPreview" class="photo-preview"></span></label>
           <label class="wide">Nombre del producto<input id="productName" required maxlength="180" value="${escapeHtml(product?.name || "")}"></label>
           <label class="wide">Descripción<textarea id="productDescription" rows="3" maxlength="1500">${escapeHtml(product?.description || "")}</textarea></label>
           <label>Categoría<select id="productCategory" required>${categoryOptions}</select></label>
           <label>Subcategoría<select id="productSubcategory"><option value="">Sin subcategoría</option></select></label>
           <label>Código / SKU<input value="${escapeHtml(product?.sku || "Se genera automáticamente")}" readonly></label>
-          <label>Precio proveedor · interno<input id="productSupplier" type="number" min="1" value="${inferredSupplier}"><small>No se muestra en la tienda.</small></label>
-          <label>Precio minorista<input id="productRetail" type="number" min="1" value="${product?.retail_price || ""}" readonly><small>Proveedor + 80%</small></label>
-          <label>Precio mayorista<input id="productWholesale" type="number" min="1" value="${product?.wholesale_price || ""}" readonly><small>Minorista - 20%</small></label>
-          <label>Referencia de pedidos<input id="productStock" type="number" min="0" required value="${product?.stock ?? 30}"></label>
+          <label>Precio proveedor · interno<input id="productSupplier" type="number" min="1" value="${inferredSupplier}"><small>Completarlo calcula los otros dos.</small></label>
+          <label>Precio minorista<input id="productRetail" type="number" min="1" value="${product?.retail_price || ""}"><small>Editable · sugerido: proveedor + 80%</small></label>
+          <label>Precio mayorista<input id="productWholesale" type="number" min="1" value="${product?.wholesale_price || ""}"><small>Editable · sugerido: minorista - 20%</small></label>
+          <label>Stock<input id="productStock" type="number" min="0" required value="${product?.stock ?? 30}"><small>Si agregás variantes, se calcula con la suma de sus stocks.</small></label>
           <label>Estado<select id="productStatus"><option value="published" ${product?.status === "published" ? "selected" : ""}>Publicado</option><option value="draft" ${product?.status === "draft" ? "selected" : ""}>Borrador</option><option value="archived" ${product?.status === "archived" ? "selected" : ""}>Oculto</option></select></label>
+          <section class="wide variant-editor">
+            <div class="variant-editor-head"><div><h3>Variantes</h3><p>Agregalas solo si el producto tiene colores o talles.</p></div><button id="addVariant" class="outline" type="button">+ Agregar variante</button></div>
+            <div id="variantRows" class="variant-rows">${existingVariants.map(variantRow).join("")}</div>
+            <p id="noVariants" class="empty compact-empty" ${existingVariants.length ? "hidden" : ""}>Este producto no tiene variantes.</p>
+          </section>
           ${product?.product_images?.length ? `<div class="wide"><label>Fotos actuales</label><div class="product-photos">${product.product_images.map(image => `<div class="product-photo"><img src="${escapeHtml(image.image_url)}" alt=""><button class="edit" type="button" data-delete-image="${image.id}">Quitar</button></div>`).join("")}</div></div>` : ""}
-          <label class="wide upload-field">Imagen del producto<input id="productPhoto" type="file" accept="image/jpeg,image/png,image/webp"><small>JPG, PNG o WEBP hasta 4 MB.</small></label>
           <footer class="wide form-footer"><button id="cancelProduct" class="outline" type="button">Cancelar</button><button class="primary" type="submit">${product ? "Guardar cambios" : "Crear producto"}</button></footer>
-        </form><p id="productMessage" class="notice"></p>
+        </form><p id="productMessage" class="notice" aria-live="polite"></p>
       </section></div>`;
       const category = document.querySelector("#productCategory");
       const subcategory = document.querySelector("#productSubcategory");
       const supplier = document.querySelector("#productSupplier");
       const retail = document.querySelector("#productRetail");
       const wholesale = document.querySelector("#productWholesale");
-      const calculatePrices = () => { const cost=Number(supplier.value)||0; const retailValue=Math.round(cost*1.8); retail.value=retailValue||""; wholesale.value=retailValue?Math.round(retailValue*.8):""; };
+      const photoInput = document.querySelector("#productPhoto");
+      const photoSelection = document.querySelector("#photoSelection");
+      const photoPreview = document.querySelector("#photoPreview");
+      const calculatePrices = () => { const cost=Number(supplier.value)||0; const retailValue=cost?Math.ceil((cost*1.8)/500)*500:0; retail.value=retailValue||""; wholesale.value=retailValue?Math.round(retailValue*.8):""; };
       const fillSubcategories = () => { const selected=category.value; subcategory.innerHTML='<option value="">Sin subcategoría</option>'+options.subcategories.filter(s=>s.category_id===selected).map(s=>`<option value="${s.id}" ${product?.subcategory_id===s.id?"selected":""}>${escapeHtml(s.name)}</option>`).join(""); };
       supplier.addEventListener("input", calculatePrices);
+      const variantRows = document.querySelector("#variantRows");
+      const updateVariantEmpty = () => { document.querySelector("#noVariants").hidden = Boolean(variantRows.children.length); };
+      document.querySelector("#addVariant").addEventListener("click", () => { variantRows.insertAdjacentHTML("beforeend", variantRow()); updateVariantEmpty(); });
+      variantRows.addEventListener("click", (event) => { const button=event.target.closest("[data-remove-variant]"); if (!button) return; button.closest("[data-variant-row]").remove(); updateVariantEmpty(); });
+      photoInput.addEventListener("change", () => {
+        const files = [...photoInput.files];
+        photoSelection.textContent = files.length ? `${files.length} imagen${files.length === 1 ? "" : "es"} seleccionada${files.length === 1 ? "" : "s"}.` : "";
+        photoPreview.replaceChildren(...files.map((file) => {
+          const image = document.createElement("img");
+          image.src = URL.createObjectURL(file);
+          image.alt = `Vista previa de ${file.name}`;
+          image.onload = () => URL.revokeObjectURL(image.src);
+          return image;
+        }));
+      });
       category.addEventListener("change", () => { product={...product,subcategory_id:""}; fillSubcategories(); });
       fillSubcategories();
       document.querySelector("#backProducts").addEventListener("click",()=>loadView("products"));
       document.querySelector("#cancelProduct").addEventListener("click",()=>loadView("products"));
       document.querySelectorAll("[data-delete-image]").forEach(button=>button.addEventListener("click",async()=>{if(!confirm("¿Quitar esta foto del producto?"))return;try{await callAdmin("deleteProductImage",{imageId:button.dataset.deleteImage});const products=await callAdmin("products");await renderProductForm(products.find(item=>item.id===product.id))}catch(error){alert(error.message)}}));
-      document.querySelector("#productForm").addEventListener("submit",async(event)=>{event.preventDefault();const message=document.querySelector("#productMessage");message.className="notice is-muted";message.textContent="Guardando…";try{const result=await callAdmin("saveProduct",{id:product?.id||"",name:document.querySelector("#productName").value,description:document.querySelector("#productDescription").value,categoryId:category.value,subcategoryId:subcategory.value,retailPrice:retail.value,wholesalePrice:wholesale.value,stock:document.querySelector("#productStock").value,status:document.querySelector("#productStatus").value});const photo=document.querySelector("#productPhoto").files[0];if(photo){const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(photo)});await callAdmin("uploadProductImage",{productId:result.id,dataUrl})}message.className="notice is-success";message.textContent=result.created?"Producto creado.":"Producto actualizado.";setTimeout(()=>loadView("products"),550)}catch(error){message.className="notice is-error";message.textContent=error.message}});
+      document.querySelector("#productForm").addEventListener("submit",async(event)=>{event.preventDefault();const message=document.querySelector("#productMessage");message.className="notice is-muted";message.textContent="Guardando…";try{const photos=[...photoInput.files];if(photos.length>8)throw new Error("Podés subir hasta 8 imágenes por vez.");const oversized=photos.find(file=>file.size>4*1024*1024);if(oversized)throw new Error(`La imagen ${oversized.name} supera los 4 MB.`);const variants=[...document.querySelectorAll("[data-variant-row]")].map(row=>({id:row.querySelector("[data-variant-id]").value,color:row.querySelector("[data-variant-color]").value.trim(),size:row.querySelector("[data-variant-size]").value.trim(),sku:row.querySelector("[data-variant-sku]").value.trim(),stock:row.querySelector("[data-variant-stock]").value,active:row.querySelector("[data-variant-active]").checked}));if(variants.some(item=>!item.color&&!item.size))throw new Error("Cada variante debe tener color, talle o ambos.");const result=await callAdmin("saveProduct",{id:product?.id||"",name:document.querySelector("#productName").value,description:document.querySelector("#productDescription").value,categoryId:category.value,subcategoryId:subcategory.value,supplierPrice:supplier.value,retailPrice:retail.value,wholesalePrice:wholesale.value,stock:document.querySelector("#productStock").value,status:document.querySelector("#productStatus").value,variants});for(const photo of photos){const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(photo)});await callAdmin("uploadProductImage",{productId:result.id,dataUrl})}message.className="notice is-success";message.textContent=result.created?"Producto creado.":"Producto actualizado.";setTimeout(()=>loadView("products"),550)}catch(error){message.className="notice is-error";message.textContent=error.message}});
     }
 
     function renderProducts(products) {
@@ -296,7 +327,7 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
       const rows = items => items.length?`<table><thead><tr><th>Foto</th><th>Producto</th><th>Categoría</th><th>Minorista</th><th>Mayorista</th><th>Referencia</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${items.map(productRow).join("")}</tbody></table>`:'<p class="empty">No encontramos productos.</p>';
       content.innerHTML = `${viewHead("PRODUCTOS","Administrar productos","Agregá, editá precios y organizá productos.",'<button id="newProduct" class="primary" type="button">+ Agregar producto</button>')}<section class="panel"><input id="productSearch" class="product-search" type="search" placeholder="Buscar por nombre, SKU, categoría o estado…"><div id="productRows">${rows(products)}</div></section>`;
       document.querySelector("#newProduct").addEventListener("click",()=>renderProductForm().catch(showProductError));
-      const wireRows=()=>{document.querySelectorAll("[data-edit-product]").forEach(button=>button.addEventListener("click",()=>renderProductForm(products.find(p=>p.id===button.dataset.editProduct)).catch(showProductError)));document.querySelectorAll("[data-toggle-product]").forEach(button=>button.addEventListener("click",async()=>{const p=products.find(item=>item.id===button.dataset.toggleProduct);try{await callAdmin("saveProduct",{id:p.id,name:p.name,description:p.description||"",categoryId:p.category_id,subcategoryId:p.subcategory_id||"",retailPrice:p.retail_price,wholesalePrice:p.wholesale_price,stock:p.stock,status:p.status==="published"?"archived":"published"});await loadView("products")}catch(error){alert(error.message)}}));document.querySelectorAll("[data-delete-product]").forEach(button=>button.addEventListener("click",async()=>{const product=products.find(p=>p.id===button.dataset.deleteProduct);if(!confirm(`¿Eliminar definitivamente “${product?.name||"este producto"}”?`))return;try{await callAdmin("deleteProduct",{productId:button.dataset.deleteProduct});await loadView("products")}catch(error){alert(error.message)}}))};
+      const wireRows=()=>{document.querySelectorAll("[data-edit-product]").forEach(button=>button.addEventListener("click",()=>renderProductForm(products.find(p=>p.id===button.dataset.editProduct)).catch(showProductError)));document.querySelectorAll("[data-toggle-product]").forEach(button=>button.addEventListener("click",async()=>{const p=products.find(item=>item.id===button.dataset.toggleProduct);try{await callAdmin("saveProduct",{id:p.id,name:p.name,description:p.description||"",categoryId:p.category_id,subcategoryId:p.subcategory_id||"",supplierPrice:p.supplier_price,retailPrice:p.retail_price,wholesalePrice:p.wholesale_price,stock:p.stock,status:p.status==="published"?"archived":"published"});await loadView("products")}catch(error){alert(error.message)}}));document.querySelectorAll("[data-delete-product]").forEach(button=>button.addEventListener("click",async()=>{const product=products.find(p=>p.id===button.dataset.deleteProduct);if(!confirm(`¿Eliminar definitivamente “${product?.name||"este producto"}”?`))return;try{await callAdmin("deleteProduct",{productId:button.dataset.deleteProduct});await loadView("products")}catch(error){alert(error.message)}}))};
       wireRows();
       document.querySelector("#productSearch").addEventListener("input",event=>{const term=event.target.value.trim().toLocaleLowerCase("es-AR");const filtered=products.filter(p=>`${p.name} ${p.sku} ${p.status} ${p.categories?.name||""} ${p.subcategories?.name||""}`.toLocaleLowerCase("es-AR").includes(term));document.querySelector("#productRows").innerHTML=rows(filtered);wireRows()});
     }
@@ -334,7 +365,7 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
           <button class="primary" type="submit">Guardar cliente</button>
         </form>
         <div id="customerMessage" class="notice"></div>
-        ${customers.length ? `<table><thead><tr><th>Cliente</th><th>WhatsApp</th><th>Novedades</th><th>Alta</th><th>Acción</th></tr></thead><tbody>${customers.map(c => `<tr><td>${escapeHtml(c.full_name)}</td><td>+${escapeHtml(c.phone)}</td><td>${c.whatsapp_opt_in ? '<span class="pill">Sí</span>' : 'No'}</td><td>${new Date(c.created_at).toLocaleDateString("es-AR")}</td><td><button class="edit delete" type="button" data-delete-customer="${c.id}" aria-label="Eliminar ${escapeHtml(c.full_name)}" title="Eliminar cliente">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">Todavía no hay clientes registrados.</p>'}
+        ${customers.length ? `<div class="table-scroll"><table><thead><tr><th>Cliente</th><th>Email</th><th>WhatsApp</th><th>Perfil</th><th>Novedades</th><th>Alta</th><th>Acción</th></tr></thead><tbody>${customers.map(c => `<tr><td>${escapeHtml(c.full_name || "Cuenta registrada")}</td><td>${escapeHtml(c.email || "—")}</td><td>${c.phone ? `+${escapeHtml(c.phone)}` : "—"}</td><td><span class="pill ${c.profile_complete ? "" : "low"}">${c.profile_complete ? "Completo" : "Pendiente"}</span></td><td>${c.whatsapp_opt_in ? '<span class="pill">Sí</span>' : 'No'}</td><td>${c.created_at ? new Date(c.created_at).toLocaleDateString("es-AR") : "—"}</td><td>${c.id ? `<button class="edit delete" type="button" data-delete-customer="${c.id}" aria-label="Eliminar perfil de ${escapeHtml(c.full_name || c.email || "cliente")}" title="Eliminar perfil">Eliminar perfil</button>` : "—"}</td></tr>`).join("")}</tbody></table></div>` : '<p class="empty">Todavía no hay clientes registrados.</p>'}
       </section>`;
       document.querySelector("#customerForm").addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -409,25 +440,27 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
       const categoryName = (id) => categories.find(c => c.id === id)?.name || "Sin categoría";
       const categoryOptions = categories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
       content.innerHTML = `${viewHead("CATEGORÍAS","Categorías y subcategorías","Organizá los productos de la tienda.")}<section class="panel"><h2>Categorías y subcategorías</h2>
-        <p class="lead">Podés renombrar, desactivar o eliminar. Para eliminar, no debe tener productos asociados.</p>
+        <p class="lead">Editá directamente cada nombre. Para eliminar, no debe tener productos asociados.</p>
         <div class="catalog-tools">
           <form id="newCategoryForm"><label>Nueva categoría<input id="newCategoryName" maxlength="100" required placeholder="Ej.: Makeup"></label><button class="primary" type="submit">Agregar</button></form>
-          <form id="newSubcategoryForm"><label>Subcategoría<input id="newSubcategoryName" maxlength="100" required placeholder="Ej.: Labiales"></label><label>Categoría<select id="newSubcategoryCategory" required>${categoryOptions}</select></label><button class="primary" type="submit">Agregar</button></form>
+          <form id="newSubcategoryForm"><label>Subcategoría<input id="newSubcategoryName" maxlength="100" required placeholder="Ej.: Labiales"></label><label>Categoría<select id="newSubcategoryCategory" required><option value="">Elegir categoría</option>${categoryOptions}</select></label><button class="primary" type="submit">Agregar</button></form>
         </div>
+        <p id="catalogMessage" class="notice" aria-live="polite"></p>
         <h2>Categorías</h2>
-        ${categories.length ? `<table><thead><tr><th>Nombre</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${categories.map(c => `<tr><td>${escapeHtml(c.name)}</td><td><span class="pill">${c.active ? "Activa" : "Inactiva"}</span></td><td><button class="edit" data-edit-category="${c.id}">Editar</button><button class="edit" data-toggle-category="${c.id}">${c.active ? "Desactivar" : "Activar"}</button><button class="edit delete" data-delete-category="${c.id}" title="Eliminar categoría">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay categorías.</p>'}
+        ${categories.length ? `<div class="table-scroll"><table class="catalog-table"><thead><tr><th>Nombre</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${categories.map(c => `<tr><td><input data-category-name="${c.id}" maxlength="100" value="${escapeHtml(c.name)}"></td><td><span class="pill">${c.active ? "Activa" : "Pausada"}</span></td><td><div class="catalog-actions"><button class="edit" type="button" data-save-category="${c.id}">Guardar</button><button class="edit" type="button" data-toggle-category="${c.id}">${c.active ? "Pausar" : "Activar"}</button><button class="edit delete" type="button" data-delete-category="${c.id}" title="Eliminar categoría">Eliminar</button></div></td></tr>`).join("")}</tbody></table></div>` : '<p class="empty">No hay categorías.</p>'}
         <h2 class="section-spaced">Subcategorías</h2>
-        ${subcategories.length ? `<table><thead><tr><th>Subcategoría</th><th>Categoría</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${subcategories.map(s => `<tr><td>${escapeHtml(s.name)}</td><td>${escapeHtml(categoryName(s.category_id))}</td><td><span class="pill">${s.active ? "Activa" : "Inactiva"}</span></td><td><button class="edit" data-edit-subcategory="${s.id}">Editar</button><button class="edit" data-toggle-subcategory="${s.id}">${s.active ? "Desactivar" : "Activar"}</button><button class="edit delete" data-delete-subcategory="${s.id}" title="Eliminar subcategoría">🗑</button></td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay subcategorías.</p>'}
+        ${subcategories.length ? `<div class="table-scroll"><table class="catalog-table"><thead><tr><th>Subcategoría</th><th>Categoría</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${subcategories.map(s => `<tr><td><input data-subcategory-name="${s.id}" maxlength="100" value="${escapeHtml(s.name)}"></td><td><select data-subcategory-category="${s.id}">${categories.map(c=>`<option value="${c.id}" ${c.id===s.category_id?"selected":""}>${escapeHtml(c.name)}</option>`).join("")}</select></td><td><span class="pill">${s.active ? "Activa" : "Pausada"}</span></td><td><div class="catalog-actions"><button class="edit" type="button" data-save-subcategory="${s.id}">Guardar</button><button class="edit" type="button" data-toggle-subcategory="${s.id}">${s.active ? "Pausar" : "Activar"}</button><button class="edit delete" type="button" data-delete-subcategory="${s.id}">Eliminar</button></div></td></tr>`).join("")}</tbody></table></div>` : '<p class="empty">No hay subcategorías.</p>'}
       </section>`;
-      const refresh = () => loadView("catalog");
-      document.querySelector("#newCategoryForm").addEventListener("submit", async (event) => { event.preventDefault(); try { await callAdmin("saveCategory", { name: document.querySelector("#newCategoryName").value }); refresh(); } catch (error) { alert(error.message); } });
-      document.querySelector("#newSubcategoryForm").addEventListener("submit", async (event) => { event.preventDefault(); try { await callAdmin("saveSubcategory", { name: document.querySelector("#newSubcategoryName").value, categoryId: document.querySelector("#newSubcategoryCategory").value }); refresh(); } catch (error) { alert(error.message); } });
-      document.querySelectorAll("[data-edit-category]").forEach(button => button.addEventListener("click", async () => { const item = categories.find(c => c.id === button.dataset.editCategory); const name = prompt("Nombre de la categoría:", item.name); if (name === null) return; try { await callAdmin("saveCategory", { categoryId:item.id, name, active:item.active }); refresh(); } catch (error) { alert(error.message); } }));
-      document.querySelectorAll("[data-toggle-category]").forEach(button => button.addEventListener("click", async () => { const item = categories.find(c => c.id === button.dataset.toggleCategory); try { await callAdmin("saveCategory", { categoryId:item.id, name:item.name, active:!item.active }); refresh(); } catch (error) { alert(error.message); } }));
-      document.querySelectorAll("[data-delete-category]").forEach(button => button.addEventListener("click", async () => { const item = categories.find(c => c.id === button.dataset.deleteCategory); if (!confirm(`¿Eliminar la categoría “${item.name}”? Primero debe estar sin productos ni subcategorías.`)) return; try { await callAdmin("deleteCategory", { categoryId:item.id }); refresh(); } catch (error) { alert(error.message); } }));
-      document.querySelectorAll("[data-edit-subcategory]").forEach(button => button.addEventListener("click", async () => { const item = subcategories.find(s => s.id === button.dataset.editSubcategory); const name = prompt("Nombre de la subcategoría:", item.name); if (name === null) return; const category = prompt(`Categoría (${categories.map(c => c.name).join(", ")}):`, categoryName(item.category_id)); if (category === null) return; const match = categories.find(c => c.name.toLocaleLowerCase("es-AR") === category.trim().toLocaleLowerCase("es-AR")); if (!match) return alert("Elegí una categoría existente."); try { await callAdmin("saveSubcategory", { subcategoryId:item.id, name, categoryId:match.id, active:item.active }); refresh(); } catch (error) { alert(error.message); } }));
-      document.querySelectorAll("[data-toggle-subcategory]").forEach(button => button.addEventListener("click", async () => { const item = subcategories.find(s => s.id === button.dataset.toggleSubcategory); try { await callAdmin("saveSubcategory", { subcategoryId:item.id, name:item.name, categoryId:item.category_id, active:!item.active }); refresh(); } catch (error) { alert(error.message); } }));
-      document.querySelectorAll("[data-delete-subcategory]").forEach(button => button.addEventListener("click", async () => { const item = subcategories.find(s => s.id === button.dataset.deleteSubcategory); if (!confirm(`¿Eliminar la subcategoría “${item.name}”? No debe tener productos asociados.`)) return; try { await callAdmin("deleteSubcategory", { subcategoryId:item.id }); refresh(); } catch (error) { alert(error.message); } }));
+      const catalogMessage = document.querySelector("#catalogMessage");
+      const runAction = async (button, action) => { if(button) button.disabled=true; catalogMessage.className="notice is-muted"; catalogMessage.textContent="Guardando…"; try { await action(); await loadView("catalog"); } catch(error) { if(button) button.disabled=false; catalogMessage.className="notice is-error"; catalogMessage.textContent=error.message; } };
+      document.querySelector("#newCategoryForm").addEventListener("submit", async (event) => { event.preventDefault(); await runAction(event.submitter,()=>callAdmin("saveCategory", { name: document.querySelector("#newCategoryName").value })); });
+      document.querySelector("#newSubcategoryForm").addEventListener("submit", async (event) => { event.preventDefault(); await runAction(event.submitter,()=>callAdmin("saveSubcategory", { name: document.querySelector("#newSubcategoryName").value, categoryId: document.querySelector("#newSubcategoryCategory").value })); });
+      document.querySelectorAll("[data-save-category]").forEach(button => button.addEventListener("click", () => { const item=categories.find(c=>c.id===button.dataset.saveCategory); runAction(button,()=>callAdmin("saveCategory",{categoryId:item.id,name:document.querySelector(`[data-category-name="${item.id}"]`).value,active:item.active})); }));
+      document.querySelectorAll("[data-toggle-category]").forEach(button => button.addEventListener("click", () => { const item=categories.find(c=>c.id===button.dataset.toggleCategory); runAction(button,()=>callAdmin("saveCategory",{categoryId:item.id,name:document.querySelector(`[data-category-name="${item.id}"]`).value,active:!item.active})); }));
+      document.querySelectorAll("[data-delete-category]").forEach(button => button.addEventListener("click", () => { const item=categories.find(c=>c.id===button.dataset.deleteCategory); if(confirm(`¿Eliminar la categoría “${item.name}”?`))runAction(button,()=>callAdmin("deleteCategory",{categoryId:item.id})); }));
+      document.querySelectorAll("[data-save-subcategory]").forEach(button => button.addEventListener("click", () => { const item=subcategories.find(s=>s.id===button.dataset.saveSubcategory); runAction(button,()=>callAdmin("saveSubcategory",{subcategoryId:item.id,name:document.querySelector(`[data-subcategory-name="${item.id}"]`).value,categoryId:document.querySelector(`[data-subcategory-category="${item.id}"]`).value,active:item.active})); }));
+      document.querySelectorAll("[data-toggle-subcategory]").forEach(button => button.addEventListener("click", () => { const item=subcategories.find(s=>s.id===button.dataset.toggleSubcategory); runAction(button,()=>callAdmin("saveSubcategory",{subcategoryId:item.id,name:document.querySelector(`[data-subcategory-name="${item.id}"]`).value,categoryId:document.querySelector(`[data-subcategory-category="${item.id}"]`).value,active:!item.active})); }));
+      document.querySelectorAll("[data-delete-subcategory]").forEach(button => button.addEventListener("click", () => { const item=subcategories.find(s=>s.id===button.dataset.deleteSubcategory); if(confirm(`¿Eliminar la subcategoría “${item.name}”?`))runAction(button,()=>callAdmin("deleteSubcategory",{subcategoryId:item.id})); }));
     }
 
     function renderCoupons(coupons) {
@@ -542,6 +575,7 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
 
     async function loadView(view) {
       currentView = view;
+      sessionStorage.setItem("ithiel-admin-view", view);
       document.querySelectorAll(".nav button").forEach(button => button.classList.toggle("active", button.dataset.view === view));
       setLoading();
       try {
@@ -564,6 +598,8 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
       document.querySelector("#accountEmail").textContent = session.user.email || "Cuenta administradora";
       loginView.classList.add("hidden");
       appView.classList.remove("hidden");
+      if (appReady) return;
+      appReady = true;
       await loadView(currentView);
     }
 
@@ -574,7 +610,10 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
       }
       supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       supabase.auth.getSession().then(({ data: { session } }) => { if (session) showApp(session); });
-      supabase.auth.onAuthStateChange((_event, session) => { if (session) showApp(session); });
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (event === "SIGNED_OUT") { appReady = false; return; }
+        if (session && !appReady) showApp(session);
+      });
     }
 
     document.querySelector("#loginForm").addEventListener("submit", async (event) => {

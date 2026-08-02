@@ -1,9 +1,4 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-
-const supabase = createClient(
-  "https://bfuexiblfuqwykktltrp.supabase.co",
-  "sb_publishable_8-do7RGW8-li-7d1BnAsXQ_RYsks6iy",
-);
+import { supabase } from "./supabase-client.js";
 
 const form = document.querySelector("#register-modal form");
 const submit = form?.querySelector(".auth-action");
