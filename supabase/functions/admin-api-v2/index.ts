@@ -297,7 +297,8 @@ function variantValues(value: unknown, productId: string, index: number, prices:
   const color = String(variant.color ?? "").trim().slice(0, 80) || null;
   const size = String(variant.size ?? "").trim().slice(0, 40) || null;
   const stock = Number(variant.stock ?? 0);
-  const sku = String(variant.sku ?? "").trim().slice(0, 80) || `ITH-V-${Date.now().toString().slice(-7)}-${index + 1}`;
+  const sku = String(variant.sku ?? "").trim().slice(0, 80) || `ITH-V-${productId.replaceAll("-", "").slice(0, 12)}-${String(index + 1).padStart(2, "0")}`;
+  const imageUrl = String(variant.imageUrl ?? variant.image_url ?? "").trim().slice(0, 2000) || null;
   if (!color && !size) throw new ClientError("Cada variante debe tener color, talle o ambos.");
   if (!Number.isInteger(stock) || stock < 0 || stock > 99999) throw new ClientError("El stock de una variante no es válido.");
   return {
@@ -311,6 +312,7 @@ function variantValues(value: unknown, productId: string, index: number, prices:
       retail_price: prices.retail_price,
       wholesale_price: prices.wholesale_price,
       active: variant.active !== false,
+      image_url: imageUrl,
     },
   };
 }

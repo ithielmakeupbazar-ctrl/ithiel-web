@@ -260,9 +260,10 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
       const inferredSupplier = product?.supplier_price ?? (product?.retail_price ? Math.round(Number(product.retail_price) / 1.8) : "");
       const variantRow = (variant = {}) => `<div class="variant-row" data-variant-row>
         <input type="hidden" data-variant-id value="${escapeHtml(variant.id || "")}">
-        <label>Color<input data-variant-color maxlength="80" value="${escapeHtml(variant.color || "")}" placeholder="Ej.: Rosa"></label>
+        <input type="hidden" data-variant-sku value="${escapeHtml(variant.sku || "")}">
+        <input type="hidden" data-variant-image value="${escapeHtml(variant.image_url || variant.imageUrl || "")}">
+        <label>Color / opción<input data-variant-color maxlength="80" value="${escapeHtml(variant.color || "")}" placeholder="Ej.: Rosa"></label>
         <label>Talle<input data-variant-size maxlength="40" value="${escapeHtml(variant.size || "")}" placeholder="Ej.: M"></label>
-        <label>SKU<input data-variant-sku maxlength="80" value="${escapeHtml(variant.sku || "")}" placeholder="Opcional"></label>
         <label>Stock<input data-variant-stock type="number" min="0" value="${Number(variant.stock ?? 0)}"></label>
         <label class="check variant-active"><input data-variant-active type="checkbox" ${variant.active === false ? "" : "checked"}> Disponible</label>
         <button class="icon-action delete" type="button" data-remove-variant aria-label="Quitar variante">${icons.trash}</button>
@@ -283,7 +284,7 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
           <label>Precio mayorista<input id="productWholesale" type="number" min="1" value="${product?.wholesale_price || ""}"><small>Editable · sugerido: minorista - 20%</small></label>
           <label>Estado<select id="productStatus"><option value="published" ${product?.status === "published" ? "selected" : ""}>Publicado</option><option value="draft" ${product?.status === "draft" ? "selected" : ""}>Borrador</option><option value="archived" ${product?.status === "archived" ? "selected" : ""}>Oculto</option></select></label>
           <section class="wide variant-editor">
-            <div class="variant-editor-head"><div><h3>Variantes</h3><p>Agregalas solo si el producto tiene colores o talles.</p></div><button id="addVariant" class="outline" type="button">+ Agregar variante</button></div>
+            <div class="variant-editor-head"><div><h3>Variantes</h3><p>Con varias fotos se crean automáticamente. Solo completá el color, opción o talle.</p></div><button id="addVariant" class="outline" type="button">+ Agregar variante</button></div>
             <div id="variantRows" class="variant-rows">${existingVariants.map(variantRow).join("")}</div>
             <p id="noVariants" class="empty compact-empty" ${existingVariants.length ? "hidden" : ""}>Este producto no tiene variantes.</p>
           </section>
@@ -306,6 +307,17 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
       const updateVariantEmpty = () => { document.querySelector("#noVariants").hidden = Boolean(variantRows.children.length); };
       document.querySelector("#addVariant").addEventListener("click", () => { variantRows.insertAdjacentHTML("beforeend", variantRow()); updateVariantEmpty(); });
       variantRows.addEventListener("click", (event) => { const button=event.target.closest("[data-remove-variant]"); if (!button) return; button.closest("[data-variant-row]").remove(); updateVariantEmpty(); });
+      const existingImages = [...(product?.product_images || [])].sort((a,b) => Number(a.position) - Number(b.position));
+      const ensurePhotoVariants = (newPhotoCount) => {
+        const totalPhotos = existingImages.length + newPhotoCount;
+        if (totalPhotos < 2 || variantRows.children.length) return;
+        const totalStock = Math.max(0, Number(document.querySelector("#productStock").value) || 0);
+        for (let index = 0; index < totalPhotos; index += 1) {
+          const stock = Math.floor(totalStock / totalPhotos) + (index < totalStock % totalPhotos ? 1 : 0);
+          variantRows.insertAdjacentHTML("beforeend", variantRow({ color:`Opción ${index + 1}`, stock, image_url:existingImages[index]?.image_url || "" }));
+        }
+        updateVariantEmpty();
+      };
       photoInput.addEventListener("change", () => {
         const files = [...photoInput.files];
         photoSelection.textContent = files.length ? `${files.length} imagen${files.length === 1 ? "" : "es"} seleccionada${files.length === 1 ? "" : "s"}.` : "";
@@ -316,13 +328,45 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
           image.onload = () => URL.revokeObjectURL(image.src);
           return image;
         }));
+        ensurePhotoVariants(files.length);
       });
       category.addEventListener("change", () => { product={...product,subcategory_id:""}; fillSubcategories(); });
       fillSubcategories();
       document.querySelector("#backProducts").addEventListener("click",()=>loadView("products"));
       document.querySelector("#cancelProduct").addEventListener("click",()=>loadView("products"));
-      document.querySelectorAll("[data-delete-image]").forEach(button=>button.addEventListener("click",async()=>{if(!confirm("¿Quitar esta foto del producto?"))return;try{await callAdmin("deleteProductImage",{imageId:button.dataset.deleteImage});const products=await callAdmin("products");await renderProductForm(products.find(item=>item.id===product.id))}catch(error){alert(error.message)}}));
-      document.querySelector("#productForm").addEventListener("submit",async(event)=>{event.preventDefault();const message=document.querySelector("#productMessage");message.className="notice is-muted";message.textContent="Guardando…";try{const photos=[...photoInput.files];if(photos.length>8)throw new Error("Podés subir hasta 8 imágenes por vez.");const oversized=photos.find(file=>file.size>4*1024*1024);if(oversized)throw new Error(`La imagen ${oversized.name} supera los 4 MB.`);const variants=[...document.querySelectorAll("[data-variant-row]")].map(row=>({id:row.querySelector("[data-variant-id]").value,color:row.querySelector("[data-variant-color]").value.trim(),size:row.querySelector("[data-variant-size]").value.trim(),sku:row.querySelector("[data-variant-sku]").value.trim(),stock:row.querySelector("[data-variant-stock]").value,active:row.querySelector("[data-variant-active]").checked}));if(variants.some(item=>!item.color&&!item.size))throw new Error("Cada variante debe tener color, talle o ambos.");const result=await callAdmin("saveProduct",{id:product?.id||"",name:document.querySelector("#productName").value,description:document.querySelector("#productDescription").value,categoryId:category.value,subcategoryId:subcategory.value,supplierPrice:supplier.value,retailPrice:retail.value,wholesalePrice:wholesale.value,stock:document.querySelector("#productStock").value,status:document.querySelector("#productStatus").value,variants});for(const photo of photos){const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(photo)});await callAdmin("uploadProductImage",{productId:result.id,dataUrl})}message.className="notice is-success";message.textContent=result.created?"Producto creado.":"Producto actualizado.";setTimeout(()=>loadView("products"),550)}catch(error){message.className="notice is-error";message.textContent=error.message}});
+      document.querySelectorAll("[data-delete-image]").forEach(button=>button.addEventListener("click",async()=>{if(!confirm("¿Quitar esta foto del producto?"))return;try{await callAdmin("deleteProductImage",{imageId:button.dataset.deleteImage});const response=await callAdmin("products");const productList=Array.isArray(response)?response:response?.products||[];await renderProductForm(productList.find(item=>item.id===product.id)||null)}catch(error){alert(error.message)}}));
+      document.querySelector("#productForm").addEventListener("submit",async event=>{
+        event.preventDefault();
+        const message=document.querySelector("#productMessage");
+        message.className="notice is-muted";
+        message.textContent="Guardando…";
+        try {
+          const photos=[...photoInput.files];
+          if(photos.length>8)throw new Error("Podés subir hasta 8 imágenes por vez.");
+          const oversized=photos.find(file=>file.size>4*1024*1024);
+          if(oversized)throw new Error(`La imagen ${oversized.name} supera los 4 MB.`);
+          ensurePhotoVariants(photos.length);
+          const readVariants=()=>[...document.querySelectorAll("[data-variant-row]")].map(row=>({id:row.querySelector("[data-variant-id]").value,color:row.querySelector("[data-variant-color]").value.trim(),size:row.querySelector("[data-variant-size]").value.trim(),sku:row.querySelector("[data-variant-sku]").value.trim(),imageUrl:row.querySelector("[data-variant-image]").value,stock:row.querySelector("[data-variant-stock]").value,active:row.querySelector("[data-variant-active]").checked}));
+          let variants=readVariants();
+          if(variants.some(item=>!item.color&&!item.size))throw new Error("Cada variante debe tener color, opción, talle o una combinación.");
+          const productPayload={id:product?.id||"",name:document.querySelector("#productName").value,description:document.querySelector("#productDescription").value,categoryId:category.value,subcategoryId:subcategory.value,supplierPrice:supplier.value,retailPrice:retail.value,wholesalePrice:wholesale.value,stock:document.querySelector("#productStock").value,status:document.querySelector("#productStatus").value,variants};
+          const result=await callAdmin("saveProduct",productPayload);
+          const uploadedUrls=[];
+          for(const photo of photos){
+            const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(photo)});
+            const uploaded=await callAdmin("uploadProductImage",{productId:result.id,dataUrl});
+            uploadedUrls.push(uploaded.url);
+          }
+          if(uploadedUrls.length&&variants.length){
+            let uploadIndex=0;
+            variants=variants.map(variant=>variant.imageUrl?variant:{...variant,imageUrl:uploadedUrls[uploadIndex++]||""});
+            await callAdmin("saveProduct",{...productPayload,id:result.id,variants});
+          }
+          message.className="notice is-success";
+          message.textContent=result.created?"Producto creado.":"Producto actualizado.";
+          setTimeout(()=>loadView("products"),550);
+        } catch(error){message.className="notice is-error";message.textContent=error.message}
+      });
     }
 
     function renderProducts(products) {
