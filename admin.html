@@ -372,13 +372,17 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
           <div class="order-meta"><span><b>Tipo</b>${order.purchase_type === "wholesale" ? "Mayorista" : "Minorista"}</span><span><b>Entrega</b>${order.fulfillment_type === "shipping" ? "Envío" : "Retiro"}</span><span><b>Productos</b>${Number(order.item_count || 0)}</span><span><b>Total</b>${money(order.total)}</span></div>
           <div class="order-contact"><p><b>Contacto:</b> ${escapeHtml(customer.phone || customer.email || "No solicitado")}</p>${order.shipping_address ? `<p><b>Dirección:</b> ${escapeHtml(order.shipping_address)}</p>` : ""}${order.customer_note ? `<p><b>Nota:</b> ${escapeHtml(order.customer_note)}</p>` : ""}${order.coupon_code ? `<p><b>Cupón:</b> ${escapeHtml(order.coupon_code)} · Descuento ${money(order.discount_amount)}</p>` : ""}</div>
           <div class="order-products"><table><thead><tr><th>Producto</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr></thead><tbody>${productRows || '<tr><td colspan="4">Sin detalle disponible.</td></tr>'}</tbody></table></div>
-          <footer><label>Estado<select data-order-status="${order.id}">${statusOptions.map(([value,label]) => `<option value="${value}" ${order.status === value ? "selected" : ""}>${label}</option>`).join("")}</select></label></footer>
+          <footer><label>Estado<select data-order-status="${order.id}" ${["completed","cancelled"].includes(order.status) ? "disabled" : ""}>${statusOptions.map(([value,label]) => `<option value="${value}" ${order.status === value ? "selected" : ""}>${label}</option>`).join("")}</select></label>${["completed","cancelled"].includes(order.status) ? '<span class="pill">Pedido cerrado</span>' : `<button class="edit" type="button" data-save-order-status="${order.id}" data-current-status="${order.status}">Guardar estado</button>`}</footer>
         </article>`;
       }).join("");
       content.innerHTML = `${viewHead("PEDIDOS", "Pedidos", "Compras registradas, productos y seguimiento.")}<section class="orders-grid">${cards || '<p class="empty">Todavía no hay pedidos registrados.</p>'}</section>`;
-      document.querySelectorAll("[data-order-status]").forEach(select => select.addEventListener("change", async () => {
-        select.disabled = true;
-        try { await callAdmin("updateOrderStatus", { orderId:select.dataset.orderStatus, status:select.value }); await loadView("orders"); }
+      document.querySelectorAll("[data-save-order-status]").forEach(button => button.addEventListener("click", async () => {
+        const select = document.querySelector(`[data-order-status="${button.dataset.saveOrderStatus}"]`);
+        if (!select || select.value === button.dataset.currentStatus) return;
+        const warnings = { completed:"¿Marcar este pedido como completado?", cancelled:"¿Cancelar el pedido y devolver su stock?" };
+        if (warnings[select.value] && !confirm(warnings[select.value])) return;
+        select.disabled = true; button.disabled = true; button.textContent = "Guardando…";
+        try { await callAdmin("updateOrderStatus", { orderId:button.dataset.saveOrderStatus, status:select.value }); await loadView("orders"); }
         catch (error) { alert(error.message); await loadView("orders"); }
       }));
     }

@@ -499,7 +499,7 @@ async function updateOrderStatus(body: Record<string, unknown>) {
     p_order_id: orderId,
     p_status: status,
   });
-  if (error) throw error;
+  if (error) throw new ClientError(error.message);
   return data;
 }
 
