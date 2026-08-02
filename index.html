@@ -188,7 +188,7 @@ document.addEventListener("click",event=>{const image=event.target.closest(".ima
 document.querySelectorAll("[data-close-image-zoom]").forEach(item=>item.addEventListener("click",closeImageZoom));
 document.addEventListener("keydown",event=>{if(event.key==="Escape")closeImageZoom()});
 </script><script type="module" id="popup-google-auth">
-import { supabase } from "./scripts/supabase-client.js";
+import { supabase } from "./scripts/supabase-client.js?v=20260802-authfix";
 async function googleLogin(target, redirectPage){
   if(!target) return;
   const label = target.querySelector("span") || target;
@@ -230,7 +230,7 @@ async function renderAccessNav(session){
   else nav.innerHTML='<a class="pill" href="/cuenta">Mi cuenta</a>';
 }
 supabase.auth.getSession().then(({data:{session}})=>renderAccessNav(session));
-supabase.auth.onAuthStateChange((_event,session)=>renderAccessNav(session));</script><script id="catalog-offset-fix">document.querySelector('a[href="#bazar"]')?.addEventListener("click",event=>{event.preventDefault();window.setTimeout(()=>{const target=document.querySelector("#bazar .catalogs");if(!target)return;if(window.innerWidth<760)window.scrollTo({top:Math.max(0,target.offsetTop-18),behavior:"smooth"});else target.scrollIntoView({behavior:"smooth",block:"center"})},700)});</script><script type="module" src="scripts/popup-register.js"></script><script type="module" src="scripts/popup-login.js"></script></body></html>
+supabase.auth.onAuthStateChange((_event,session)=>renderAccessNav(session));</script><script id="catalog-offset-fix">document.querySelector('a[href="#bazar"]')?.addEventListener("click",event=>{event.preventDefault();window.setTimeout(()=>{const target=document.querySelector("#bazar .catalogs");if(!target)return;if(window.innerWidth<760)window.scrollTo({top:Math.max(0,target.offsetTop-18),behavior:"smooth"});else target.scrollIntoView({behavior:"smooth",block:"center"})},700)});</script><script type="module" src="scripts/popup-register.js?v=20260802-authfix"></script><script type="module" src="scripts/popup-login.js?v=20260802-authfix"></script></body></html>
 
 
 

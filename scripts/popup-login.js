@@ -1,4 +1,4 @@
-import { supabase } from "./supabase-client.js";
+import { supabase } from "./supabase-client.js?v=20260802-authfix";
 
 const form = document.querySelector("#account-modal form");
 const submit = form?.querySelector(".auth-action");
