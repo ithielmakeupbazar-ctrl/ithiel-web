@@ -513,6 +513,37 @@ async function listOrders() {
   return data ?? [];
 }
 
+async function moveProducts(body: Record<string, unknown>) {
+  const productIds = Array.isArray(body.productIds)
+    ? [...new Set(body.productIds.map((id) => String(id)).filter(Boolean))]
+    : [];
+  const categoryId = String(body.categoryId ?? "");
+  const subcategoryId = String(body.subcategoryId ?? "") || null;
+  if (!productIds.length) throw new ClientError("Seleccioná al menos un producto.");
+  if (productIds.length > 500) throw new ClientError("Podés mover hasta 500 productos por vez.");
+  if (!categoryId) throw new ClientError("Elegí la categoría de destino.");
+
+  const { data: category, error: categoryError } = await adminDb
+    .from("categories").select("id").eq("id", categoryId).eq("active", true).maybeSingle();
+  if (categoryError) throw categoryError;
+  if (!category) throw new ClientError("La categoría elegida no está disponible.");
+
+  if (subcategoryId) {
+    const { data: subcategory, error: subcategoryError } = await adminDb
+      .from("subcategories").select("id").eq("id", subcategoryId).eq("category_id", categoryId).eq("active", true).maybeSingle();
+    if (subcategoryError) throw subcategoryError;
+    if (!subcategory) throw new ClientError("La subcategoría no pertenece a la categoría elegida.");
+  }
+
+  const { data, error } = await adminDb
+    .from("products")
+    .update({ category_id: categoryId, subcategory_id: subcategoryId, updated_at: new Date().toISOString() })
+    .in("id", productIds)
+    .select("id");
+  if (error) throw error;
+  return { updated: data?.length ?? 0 };
+}
+
 async function listExperiences() {
   const { data, error } = await adminDb
     .from("experiences")
@@ -692,6 +723,7 @@ Deno.serve(async (request) => {
     if (action === "deleteCategory") return reply(request, { ok: true, data: await deleteCategory(body) });
     if (action === "deleteSubcategory") return reply(request, { ok: true, data: await deleteSubcategory(body) });
     if (action === "saveProduct") return reply(request, { ok: true, data: await saveProduct(body) });
+    if (action === "moveProducts") return reply(request, { ok: true, data: await moveProducts(body) });
     if (action === "uploadProductImage") return reply(request, { ok: true, data: await uploadProductImage(body) }, 201);
     if (action === "deleteProductImage") return reply(request, { ok: true, data: await deleteProductImage(body) });
     if (action === "deleteProduct") return reply(request, { ok: true, data: await deleteProduct(body) });
