@@ -506,11 +506,42 @@ async function updateOrderStatus(body: Record<string, unknown>) {
 async function listOrders() {
   const { data, error } = await adminDb
     .from("orders")
-    .select("id,order_number,status,purchase_type,fulfillment_type,total,item_count,created_at,customers(full_name,phone)")
+    .select("id,order_number,status,purchase_type,fulfillment_type,subtotal,discount_amount,total,item_count,coupon_code,shipping_address,customer_note,created_at,customers(full_name,phone,email),order_items(id,product_name,variant_name,quantity,unit_price,line_total)")
     .order("created_at", { ascending: false })
     .limit(100);
   if (error) throw error;
   return data ?? [];
+}
+
+async function listExperiences() {
+  const { data, error } = await adminDb
+    .from("experiences")
+    .select("id,display_name,rating,comment,approved,created_at")
+    .order("created_at", { ascending: false })
+    .limit(500);
+  if (error) throw error;
+  return data ?? [];
+}
+
+async function updateExperience(body: Record<string, unknown>) {
+  const experienceId = String(body.experienceId ?? "");
+  if (!experienceId) throw new ClientError("Experiencia no válida.");
+  const { data, error } = await adminDb
+    .from("experiences")
+    .update({ approved: body.approved === true })
+    .eq("id", experienceId)
+    .select("id,approved")
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+async function deleteExperience(body: Record<string, unknown>) {
+  const experienceId = String(body.experienceId ?? "");
+  if (!experienceId) throw new ClientError("Experiencia no válida.");
+  const { error } = await adminDb.from("experiences").delete().eq("id", experienceId);
+  if (error) throw error;
+  return { deleted: true };
 }
 
 async function listCustomers() {
@@ -669,6 +700,9 @@ Deno.serve(async (request) => {
     if (action === "deleteCoupon") return reply(request, { ok: true, data: await deleteCoupon(body) });
     if (action === "orders") return reply(request, { ok: true, data: await listOrders() });
     if (action === "updateOrderStatus") return reply(request, { ok: true, data: await updateOrderStatus(body) });
+    if (action === "experiences") return reply(request, { ok: true, data: await listExperiences() });
+    if (action === "updateExperience") return reply(request, { ok: true, data: await updateExperience(body) });
+    if (action === "deleteExperience") return reply(request, { ok: true, data: await deleteExperience(body) });
     if (action === "customers") return reply(request, { ok: true, data: await listCustomers() });
     if (action === "createCustomer") return reply(request, { ok: true, data: await createCustomer(body) }, 201);
     if (action === "deleteCustomer") return reply(request, { ok: true, data: await deleteCustomer(body) });
