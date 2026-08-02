@@ -158,3 +158,17 @@ $$;
 
 revoke all on function public.create_web_order(uuid,text,text,text,boolean,text,text,jsonb,text,text,text,boolean) from public, anon, authenticated;
 grant execute on function public.create_web_order(uuid,text,text,text,boolean,text,text,jsonb,text,text,text,boolean) to service_role;
+
+revoke all on function public.disable_coupon(text) from public, anon, authenticated;
+revoke all on function public.get_wholesale_rule(text) from public, anon, authenticated;
+revoke all on function public.is_admin() from public, anon, authenticated;
+revoke all on function public.save_coupon(text,numeric,timestamp with time zone,timestamp with time zone) from public, anon, authenticated;
+revoke all on function public.set_order_status(uuid,text) from public, anon, authenticated;
+revoke all on function public.set_whatsapp_consent(text,boolean) from public, anon, authenticated;
+
+grant execute on function public.disable_coupon(text) to service_role;
+grant execute on function public.get_wholesale_rule(text) to service_role;
+grant execute on function public.is_admin() to authenticated, service_role;
+grant execute on function public.save_coupon(text,numeric,timestamp with time zone,timestamp with time zone) to service_role;
+grant execute on function public.set_order_status(uuid,text) to service_role;
+grant execute on function public.set_whatsapp_consent(text,boolean) to service_role;

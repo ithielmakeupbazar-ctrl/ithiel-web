@@ -90,6 +90,12 @@ async function dashboard() {
 async function listProducts() {
   const pageSize = 500;
   const products = [];
+  const [{ data: categories, error: categoryError }, { data: subcategories, error: subcategoryError }] = await Promise.all([
+    adminDb.from("categories").select("id,name").eq("active", true).order("name"),
+    adminDb.from("subcategories").select("id,category_id,name").eq("active", true).order("name"),
+  ]);
+  if (categoryError) throw categoryError;
+  if (subcategoryError) throw subcategoryError;
 
   for (let from = 0; ; from += pageSize) {
     const to = from + pageSize - 1;
@@ -108,7 +114,7 @@ async function listProducts() {
     if (batch.length < pageSize) break;
   }
 
-  return products;
+  return { products, categories: categories ?? [], subcategories: subcategories ?? [] };
 }
 
 async function catalogOptions() {
@@ -122,13 +128,37 @@ async function catalogOptions() {
 }
 
 async function catalogManagement() {
-  const [{ data: categories, error: categoryError }, { data: subcategories, error: subcategoryError }] = await Promise.all([
+  const [{ data: categories, error: categoryError }, { data: subcategories, error: subcategoryError }, { data: products, error: productError }] = await Promise.all([
     adminDb.from("categories").select("id,name,active").order("name"),
     adminDb.from("subcategories").select("id,category_id,name,active").order("name"),
+    adminDb.from("products").select("id,category_id,subcategory_id"),
   ]);
   if (categoryError) throw categoryError;
   if (subcategoryError) throw subcategoryError;
-  return { categories: categories ?? [], subcategories: subcategories ?? [] };
+  if (productError) throw productError;
+
+  const productRows = products ?? [];
+  const categoryCounts = new Map<string, number>();
+  const subcategoryCounts = new Map<string, number>();
+  for (const product of productRows) {
+    if (product.category_id) {
+      categoryCounts.set(product.category_id, (categoryCounts.get(product.category_id) ?? 0) + 1);
+    }
+    if (product.subcategory_id) {
+      subcategoryCounts.set(product.subcategory_id, (subcategoryCounts.get(product.subcategory_id) ?? 0) + 1);
+    }
+  }
+
+  return {
+    categories: (categories ?? []).map((category) => ({
+      ...category,
+      product_count: categoryCounts.get(category.id) ?? 0,
+    })),
+    subcategories: (subcategories ?? []).map((subcategory) => ({
+      ...subcategory,
+      product_count: subcategoryCounts.get(subcategory.id) ?? 0,
+    })),
+  };
 }
 
 function catalogName(value: unknown, label: string) {

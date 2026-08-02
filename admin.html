@@ -323,144 +323,24 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
     }
 
     function renderProducts(products) {
-      const productRow = p => `<tr><td>${p.product_images?.[0]?.image_url?`<img class="photo-thumb" src="${escapeHtml(p.product_images[0].image_url)}" alt="">`:"—"}</td><td><strong>${escapeHtml(p.name)}</strong><br><small>${escapeHtml(p.sku)}</small></td><td>${escapeHtml(p.categories?.name||"Sin categoría")}</td><td>${money(p.retail_price)}</td><td>${money(p.wholesale_price)}</td><td><span class="pill ${Number(p.stock)<=5?"low":""}">${p.stock}</span></td><td>${statusLabel(p.status)}</td><td><div class="actions"><button class="icon-action" data-edit-product="${p.id}" title="Editar">${icons.edit}</button><button class="icon-action" data-toggle-product="${p.id}" title="${p.status==="published"?"Ocultar":"Publicar"}">${p.status==="published"?icons.pause:icons.play}</button><button class="icon-action delete" data-delete-product="${p.id}" title="Eliminar">${icons.trash}</button></div></td></tr>`;
-      const rows = items => items.length?`<table><thead><tr><th>Foto</th><th>Producto</th><th>Categoría</th><th>Minorista</th><th>Mayorista</th><th>Referencia</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${items.map(productRow).join("")}</tbody></table>`:'<p class="empty">No encontramos productos.</p>';
-      content.innerHTML = `${viewHead("PRODUCTOS","Administrar productos","Agregá, editá precios y organizá productos.",'<button id="newProduct" class="primary" type="button">+ Agregar producto</button>')}<section class="panel"><input id="productSearch" class="product-search" type="search" placeholder="Buscar por nombre, SKU, categoría o estado…"><div id="productRows">${rows(products)}</div></section>`;
+      const productList = Array.isArray(products) ? products : products?.products || [];
+      const categoryList = Array.isArray(products?.categories) ? products.categories : [];
+      const productRow = p => `<tr>
+        <td>${p.product_images?.[0]?.image_url ? `<img class="photo-thumb" src="${escapeHtml(p.product_images[0].image_url)}" alt="">` : "—"}</td>
+        <td><strong>${escapeHtml(p.name)}</strong><br><small>${escapeHtml(p.sku)}</small></td>
+        <td><select class="row-select" data-product-category="${p.id}">${categoryList.map(c => `<option value="${c.id}" ${c.id === p.category_id ? "selected" : ""}>${escapeHtml(c.name)}</option>`).join("")}</select></td>
+        <td>${money(p.retail_price)}</td>
+        <td>${money(p.wholesale_price)}</td>
+        <td><span class="pill ${Number(p.stock) <= 5 ? "low" : ""}">${p.stock}</span></td>
+        <td>${statusLabel(p.status)}</td>
+        <td><div class="actions actions-stack"><button class="icon-action" data-edit-product="${p.id}" title="Editar">${icons.edit}</button><button class="icon-action" data-toggle-product="${p.id}" title="${p.status === "published" ? "Ocultar" : "Publicar"}">${p.status === "published" ? icons.pause : icons.play}</button><button class="icon-action delete" data-delete-product="${p.id}" title="Eliminar">${icons.trash}</button></div></td>
+      </tr>`;
+      const rows = items => items.length ? `<table><thead><tr><th>Foto</th><th>Producto</th><th>Categoría</th><th>Minorista</th><th>Mayorista</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${items.map(productRow).join("")}</tbody></table>` : '<p class="empty">No encontramos productos.</p>';
+      content.innerHTML = `${viewHead("PRODUCTOS","Administrar productos","Agregá, editá precios y organizá productos.",'<button id="newProduct" class="primary" type="button">+ Agregar producto</button>')}<section class="panel"><input id="productSearch" class="product-search" type="search" placeholder="Buscar por nombre, SKU, categoría o estado…"><div id="productRows">${rows(productList)}</div></section>`;
       document.querySelector("#newProduct").addEventListener("click",()=>renderProductForm().catch(showProductError));
-      const wireRows=()=>{document.querySelectorAll("[data-edit-product]").forEach(button=>button.addEventListener("click",()=>renderProductForm(products.find(p=>p.id===button.dataset.editProduct)).catch(showProductError)));document.querySelectorAll("[data-toggle-product]").forEach(button=>button.addEventListener("click",async()=>{const p=products.find(item=>item.id===button.dataset.toggleProduct);try{await callAdmin("saveProduct",{id:p.id,name:p.name,description:p.description||"",categoryId:p.category_id,subcategoryId:p.subcategory_id||"",supplierPrice:p.supplier_price,retailPrice:p.retail_price,wholesalePrice:p.wholesale_price,stock:p.stock,status:p.status==="published"?"archived":"published"});await loadView("products")}catch(error){alert(error.message)}}));document.querySelectorAll("[data-delete-product]").forEach(button=>button.addEventListener("click",async()=>{const product=products.find(p=>p.id===button.dataset.deleteProduct);if(!confirm(`¿Eliminar definitivamente “${product?.name||"este producto"}”?`))return;try{await callAdmin("deleteProduct",{productId:button.dataset.deleteProduct});await loadView("products")}catch(error){alert(error.message)}}))};
+      const wireRows=()=>{document.querySelectorAll("[data-edit-product]").forEach(button=>button.addEventListener("click",()=>renderProductForm(productList.find(p=>p.id===button.dataset.editProduct)).catch(showProductError)));document.querySelectorAll("[data-toggle-product]").forEach(button=>button.addEventListener("click",async()=>{const p=productList.find(item=>item.id===button.dataset.toggleProduct);try{await callAdmin("saveProduct",{id:p.id,name:p.name,description:p.description||"",categoryId:p.category_id,subcategoryId:p.subcategory_id||"",supplierPrice:p.supplier_price,retailPrice:p.retail_price,wholesalePrice:p.wholesale_price,stock:p.stock,status:p.status==="published"?"archived":"published"});await loadView("products")}catch(error){alert(error.message)}}));document.querySelectorAll("[data-delete-product]").forEach(button=>button.addEventListener("click",async()=>{const product=productList.find(p=>p.id===button.dataset.deleteProduct);if(!confirm(`¿Eliminar definitivamente “${product?.name||"este producto"}”?`))return;try{await callAdmin("deleteProduct",{productId:button.dataset.deleteProduct});await loadView("products")}catch(error){alert(error.message)}}));document.querySelectorAll("[data-product-category]").forEach(select=>select.addEventListener("change",async()=>{const product=productList.find(item=>item.id===select.dataset.productCategory);if(!product)return;try{await callAdmin("saveProduct",{id:product.id,name:product.name,description:product.description||"",categoryId:select.value,subcategoryId:product.subcategory_id||"",supplierPrice:product.supplier_price,retailPrice:product.retail_price,wholesalePrice:product.wholesale_price,stock:product.stock,status:product.status,variants:product.product_variants||[]});await loadView("products")}catch(error){alert(error.message);await loadView("products")}}))};
+      document.querySelector("#productSearch").addEventListener("input",event=>{const term=event.target.value.trim().toLocaleLowerCase("es-AR");const filtered=productList.filter(p=>`${p.name} ${p.sku} ${p.status} ${p.categories?.name||""} ${p.subcategories?.name||""}`.toLocaleLowerCase("es-AR").includes(term));document.querySelector("#productRows").innerHTML=rows(filtered);wireRows()});
       wireRows();
-      document.querySelector("#productSearch").addEventListener("input",event=>{const term=event.target.value.trim().toLocaleLowerCase("es-AR");const filtered=products.filter(p=>`${p.name} ${p.sku} ${p.status} ${p.categories?.name||""} ${p.subcategories?.name||""}`.toLocaleLowerCase("es-AR").includes(term));document.querySelector("#productRows").innerHTML=rows(filtered);wireRows()});
-    }
-
-    function showProductError(error) {
-      content.innerHTML = `<section class="panel"><h2>No se pudo abrir el editor</h2><p class="empty">${escapeHtml(error.message || "Actualizá la función admin-api y probá nuevamente.")}</p><button class="outline" id="backProductsError" type="button">← Volver a productos</button></section>`;
-      document.querySelector("#backProductsError").addEventListener("click", () => loadView("products"));
-    }
-
-    function orderActions(order) {
-      if (order.status === "pending") return `<button class="edit" data-order-status="processing" data-order-id="${order.id}">En proceso</button><button class="edit" data-order-status="cancelled" data-order-id="${order.id}">Cancelar</button>`;
-      if (order.status === "processing") return `<button class="edit" data-order-status="completed" data-order-id="${order.id}">Completar</button><button class="edit" data-order-status="cancelled" data-order-id="${order.id}">Cancelar</button>`;
-      return "—";
-    }
-
-    function renderOrders(orders) {
-      content.innerHTML = `${viewHead("PEDIDOS","Gestionar pedidos","Seguimiento de compras.")}<section class="panel"><h2>Últimos pedidos</h2>
-        ${orders.length ? `<table><thead><tr><th>N°</th><th>Cliente</th><th>Tipo</th><th>Entrega</th><th>Total</th><th>Estado</th><th>Fecha</th><th>Acción</th></tr></thead><tbody>${orders.map(o => `<tr><td>#${escapeHtml(o.order_number)}</td><td>${escapeHtml(o.customers?.full_name || "Sin registro")}<br><small>${escapeHtml(o.customers?.phone || "")}</small></td><td>${o.purchase_type === "wholesale" ? "Mayorista" : "Minorista"}</td><td>${o.fulfillment_type === "shipping" ? "Envío" : "Retiro"}</td><td>${money(o.total)}</td><td><span class="pill">${statusLabel(o.status)}</span></td><td>${new Date(o.created_at).toLocaleDateString("es-AR")}</td><td>${orderActions(o)}</td></tr>`).join("")}</tbody></table>` : '<p class="empty">Todavía no hay pedidos registrados.</p>'}
-      </section>`;
-      document.querySelectorAll("[data-order-status]").forEach(button => button.addEventListener("click", async () => {
-        const status = button.dataset.orderStatus;
-        const action = status === "completed" ? "completar" : status === "processing" ? "pasar a En proceso" : "cancelar";
-        if (!confirm(`¿Querés ${action} este pedido?`)) return;
-        try { await callAdmin("updateOrderStatus", { orderId: button.dataset.orderId, status }); await loadView("orders"); }
-        catch (error) { alert(error.message); }
-      }));
-    }
-
-    function renderCustomers(customers) {
-      content.innerHTML = `${viewHead("CLIENTES","Clientas","Datos y pedidos recientes.")}<section class="panel"><h2>Clientes</h2>
-        <form id="customerForm" class="customer-form">
-          <label>Nombre<input id="customerName" required maxlength="100" placeholder="Nombre y apellido"></label>
-          <label>WhatsApp<input id="customerPhone" required inputmode="numeric" placeholder="5493411234567"></label>
-          <label class="check"><input id="customerConsent" type="checkbox"> Acepta novedades</label>
-          <button class="primary" type="submit">Guardar cliente</button>
-        </form>
-        <div id="customerMessage" class="notice"></div>
-        ${customers.length ? `<div class="table-scroll"><table><thead><tr><th>Cliente</th><th>Email</th><th>WhatsApp</th><th>Perfil</th><th>Novedades</th><th>Alta</th><th>Acción</th></tr></thead><tbody>${customers.map(c => `<tr><td>${escapeHtml(c.full_name || "Cuenta registrada")}</td><td>${escapeHtml(c.email || "—")}</td><td>${c.phone ? `+${escapeHtml(c.phone)}` : "—"}</td><td><span class="pill ${c.profile_complete ? "" : "low"}">${c.profile_complete ? "Completo" : "Pendiente"}</span></td><td>${c.whatsapp_opt_in ? '<span class="pill">Sí</span>' : 'No'}</td><td>${c.created_at ? new Date(c.created_at).toLocaleDateString("es-AR") : "—"}</td><td>${c.id ? `<button class="edit delete" type="button" data-delete-customer="${c.id}" aria-label="Eliminar perfil de ${escapeHtml(c.full_name || c.email || "cliente")}" title="Eliminar perfil">Eliminar perfil</button>` : "—"}</td></tr>`).join("")}</tbody></table></div>` : '<p class="empty">Todavía no hay clientes registrados.</p>'}
-      </section>`;
-      document.querySelector("#customerForm").addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const message = document.querySelector("#customerMessage");
-        message.textContent = "Guardando…";
-        try {
-          const result = await callAdmin("createCustomer", {
-            fullName: document.querySelector("#customerName").value,
-            phone: document.querySelector("#customerPhone").value,
-            whatsappOptIn: document.querySelector("#customerConsent").checked,
-          });
-          message.className = "notice is-success";
-          message.textContent = result.created ? "Cliente registrado." : "Cliente actualizado.";
-          await loadView("customers");
-        } catch (error) {
-          message.className = "notice is-error";
-          message.textContent = error.message;
-        }
-      });
-      document.querySelectorAll("[data-delete-customer]").forEach(button => button.addEventListener("click", async () => {
-        const customer = customers.find(c => c.id === button.dataset.deleteCustomer);
-        if (!confirm(`¿Eliminar definitivamente a “${customer?.full_name || "esta cliente"}”? Esta acción no se puede deshacer.`)) return;
-        try { await callAdmin("deleteCustomer", { customerId: button.dataset.deleteCustomer }); await loadView("customers"); }
-        catch (error) { alert(error.message); }
-      }));
-    }
-
-    function renderAdmins(admins) {
-      content.innerHTML = `${viewHead("ADMINISTRADORES","Gestionar administradores","Accesos y permisos.")}<section class="panel"><h2>Administradores</h2>
-        <p class="empty">La persona debe haber iniciado sesión al menos una vez antes de poder agregarla.</p>
-        <form id="adminForm" class="customer-form">
-          <label>Email<input id="adminEmail" type="email" required autocomplete="email" placeholder="nombre@correo.com"></label>
-          <button class="primary" type="submit">Dar acceso</button>
-        </form>
-        <p id="adminMessage" class="notice"></p>
-        ${admins.length ? `<table><thead><tr><th>Email</th><th>Acción</th></tr></thead><tbody>${admins.map(admin => `<tr><td>${escapeHtml(admin.email || "Sin email")}</td><td>${admin.email === document.querySelector("#accountEmail")?.textContent ? '<span class="pill">Tu cuenta</span>' : `<button class="edit delete" type="button" data-revoke-admin="${escapeHtml(admin.user_id)}" data-admin-email="${escapeHtml(admin.email || "")}">Quitar acceso</button>`}</td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay administradores registrados.</p>'}
-      </section>`;
-      document.querySelector("#adminForm").addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const message = document.querySelector("#adminMessage");
-        message.className = "notice is-muted"; message.textContent = "Otorgando acceso…";
-        try {
-          const result = await callAdmin("grantAdmin", { email: document.querySelector("#adminEmail").value });
-          message.className = "notice is-success"; message.textContent = result.created ? "Acceso de administradora otorgado." : "Esta cuenta ya era administradora.";
-          await loadView("admins");
-        } catch (error) { message.className = "notice is-error"; message.textContent = error.message; }
-      });
-      document.querySelectorAll("[data-revoke-admin]").forEach(button => button.addEventListener("click", async () => {
-        if (!confirm(`¿Quitar acceso de administradora a “${button.dataset.adminEmail}”?`)) return;
-        try { await callAdmin("revokeAdmin", { userId: button.dataset.revokeAdmin }); await loadView("admins"); }
-        catch (error) { alert(error.message); }
-      }));
-    }
-
-    async function renderExperiences() {
-      const { data, error } = await supabase.from("experiences").select("id,display_name,rating,comment,approved,created_at").order("created_at", { ascending:false });
-      if (error) throw error;
-      const rows = (data || []).map(item => `<tr><td>${escapeHtml(item.display_name)}</td><td><span class="stars">${"★".repeat(item.rating)}${"☆".repeat(5 - item.rating)}</span></td><td>${escapeHtml(item.comment)}</td><td>${item.approved ? '<span class="pill">Publicada</span>' : '<span class="pill">Pendiente</span>'}</td><td><button class="edit" type="button" data-experience-approve="${item.id}">${item.approved ? "Ocultar" : "Publicar"}</button></td></tr>`).join("");
-      content.innerHTML = `${viewHead("EXPERIENCIAS", "Moderación", "Revisá los comentarios antes de publicarlos.")}<section class="panel experience-admin-panel"><h2>Comentarios de clientas</h2>${rows ? `<div class="table-scroll"><table><thead><tr><th>Clienta</th><th>Calificación</th><th>Comentario</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<p class="empty">Todavía no hay comentarios.</p>'}</section>`;
-      document.querySelectorAll("[data-experience-approve]").forEach(button => button.addEventListener("click", async () => {
-        const id = button.dataset.experienceApprove;
-        const current = data.find(item => item.id === id);
-        button.disabled = true;
-        const result = await supabase.from("experiences").update({ approved: !current.approved }).eq("id", id);
-        if (result.error) alert(result.error.message); else await loadView("experiences");
-        button.disabled = false;
-      }));
-    }
-    function renderCatalog(data) {
-      const categories = data.categories || [];
-      const subcategories = data.subcategories || [];
-      const categoryName = (id) => categories.find(c => c.id === id)?.name || "Sin categoría";
-      const categoryOptions = categories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
-      content.innerHTML = `${viewHead("CATEGORÍAS","Categorías y subcategorías","Organizá los productos de la tienda.")}<section class="panel"><h2>Categorías y subcategorías</h2>
-        <p class="lead">Editá directamente cada nombre. Para eliminar, no debe tener productos asociados.</p>
-        <div class="catalog-tools">
-          <form id="newCategoryForm"><label>Nueva categoría<input id="newCategoryName" maxlength="100" required placeholder="Ej.: Makeup"></label><button class="primary" type="submit">Agregar</button></form>
-          <form id="newSubcategoryForm"><label>Subcategoría<input id="newSubcategoryName" maxlength="100" required placeholder="Ej.: Labiales"></label><label>Categoría<select id="newSubcategoryCategory" required><option value="">Elegir categoría</option>${categoryOptions}</select></label><button class="primary" type="submit">Agregar</button></form>
-        </div>
-        <p id="catalogMessage" class="notice" aria-live="polite"></p>
-        <h2>Categorías</h2>
-        ${categories.length ? `<div class="table-scroll"><table class="catalog-table"><thead><tr><th>Nombre</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${categories.map(c => `<tr><td><input data-category-name="${c.id}" maxlength="100" value="${escapeHtml(c.name)}"></td><td><span class="pill">${c.active ? "Activa" : "Pausada"}</span></td><td><div class="catalog-actions"><button class="edit" type="button" data-save-category="${c.id}">Guardar</button><button class="edit" type="button" data-toggle-category="${c.id}">${c.active ? "Pausar" : "Activar"}</button><button class="edit delete" type="button" data-delete-category="${c.id}" title="Eliminar categoría">Eliminar</button></div></td></tr>`).join("")}</tbody></table></div>` : '<p class="empty">No hay categorías.</p>'}
-        <h2 class="section-spaced">Subcategorías</h2>
-        ${subcategories.length ? `<div class="table-scroll"><table class="catalog-table"><thead><tr><th>Subcategoría</th><th>Categoría</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${subcategories.map(s => `<tr><td><input data-subcategory-name="${s.id}" maxlength="100" value="${escapeHtml(s.name)}"></td><td><select data-subcategory-category="${s.id}">${categories.map(c=>`<option value="${c.id}" ${c.id===s.category_id?"selected":""}>${escapeHtml(c.name)}</option>`).join("")}</select></td><td><span class="pill">${s.active ? "Activa" : "Pausada"}</span></td><td><div class="catalog-actions"><button class="edit" type="button" data-save-subcategory="${s.id}">Guardar</button><button class="edit" type="button" data-toggle-subcategory="${s.id}">${s.active ? "Pausar" : "Activar"}</button><button class="edit delete" type="button" data-delete-subcategory="${s.id}">Eliminar</button></div></td></tr>`).join("")}</tbody></table></div>` : '<p class="empty">No hay subcategorías.</p>'}
-      </section>`;
-      const catalogMessage = document.querySelector("#catalogMessage");
-      const runAction = async (button, action) => { if(button) button.disabled=true; catalogMessage.className="notice is-muted"; catalogMessage.textContent="Guardando…"; try { await action(); await loadView("catalog"); } catch(error) { if(button) button.disabled=false; catalogMessage.className="notice is-error"; catalogMessage.textContent=error.message; } };
-      document.querySelector("#newCategoryForm").addEventListener("submit", async (event) => { event.preventDefault(); await runAction(event.submitter,()=>callAdmin("saveCategory", { name: document.querySelector("#newCategoryName").value })); });
-      document.querySelector("#newSubcategoryForm").addEventListener("submit", async (event) => { event.preventDefault(); await runAction(event.submitter,()=>callAdmin("saveSubcategory", { name: document.querySelector("#newSubcategoryName").value, categoryId: document.querySelector("#newSubcategoryCategory").value })); });
-      document.querySelectorAll("[data-save-category]").forEach(button => button.addEventListener("click", () => { const item=categories.find(c=>c.id===button.dataset.saveCategory); runAction(button,()=>callAdmin("saveCategory",{categoryId:item.id,name:document.querySelector(`[data-category-name="${item.id}"]`).value,active:item.active})); }));
-      document.querySelectorAll("[data-toggle-category]").forEach(button => button.addEventListener("click", () => { const item=categories.find(c=>c.id===button.dataset.toggleCategory); runAction(button,()=>callAdmin("saveCategory",{categoryId:item.id,name:document.querySelector(`[data-category-name="${item.id}"]`).value,active:!item.active})); }));
-      document.querySelectorAll("[data-delete-category]").forEach(button => button.addEventListener("click", () => { const item=categories.find(c=>c.id===button.dataset.deleteCategory); if(confirm(`¿Eliminar la categoría “${item.name}”?`))runAction(button,()=>callAdmin("deleteCategory",{categoryId:item.id})); }));
-      document.querySelectorAll("[data-save-subcategory]").forEach(button => button.addEventListener("click", () => { const item=subcategories.find(s=>s.id===button.dataset.saveSubcategory); runAction(button,()=>callAdmin("saveSubcategory",{subcategoryId:item.id,name:document.querySelector(`[data-subcategory-name="${item.id}"]`).value,categoryId:document.querySelector(`[data-subcategory-category="${item.id}"]`).value,active:item.active})); }));
-      document.querySelectorAll("[data-toggle-subcategory]").forEach(button => button.addEventListener("click", () => { const item=subcategories.find(s=>s.id===button.dataset.toggleSubcategory); runAction(button,()=>callAdmin("saveSubcategory",{subcategoryId:item.id,name:document.querySelector(`[data-subcategory-name="${item.id}"]`).value,categoryId:document.querySelector(`[data-subcategory-category="${item.id}"]`).value,active:!item.active})); }));
-      document.querySelectorAll("[data-delete-subcategory]").forEach(button => button.addEventListener("click", () => { const item=subcategories.find(s=>s.id===button.dataset.deleteSubcategory); if(confirm(`¿Eliminar la subcategoría “${item.name}”?`))runAction(button,()=>callAdmin("deleteSubcategory",{subcategoryId:item.id})); }));
     }
 
     function renderCoupons(coupons) {

@@ -4,6 +4,23 @@ import { corsHeaders } from "../_shared/cors.ts";
 
 const url = Deno.env.get("SUPABASE_URL") ?? "";
 const whatsapp = "5493413038668";
+const allowedOrigins = new Set([
+  "https://ithielbazarymakeup.site",
+  "https://www.ithielbazarymakeup.site",
+  "https://ithielbazar-makeup.netlify.app",
+  "http://localhost:8000",
+  "http://127.0.0.1:8000",
+]);
+const publishableKeys = new Set<string>();
+
+try {
+  const keys = JSON.parse(Deno.env.get("SUPABASE_PUBLISHABLE_KEYS") ?? "{}");
+  for (const key of Object.values(keys)) {
+    if (typeof key === "string" && key) publishableKeys.add(key);
+  }
+} catch (_) {
+  // A missing or invalid key package keeps public requests closed.
+}
 
 function serviceKey() {
   try {
@@ -21,6 +38,13 @@ function json(request: Request, body: unknown, status = 200) {
   return Response.json(body, { status, headers: corsHeaders(request) });
 }
 
+function requireTrustedClient(request: Request) {
+  const origin = request.headers.get("origin") ?? "";
+  if (!allowedOrigins.has(origin)) throw new Error("ORIGIN_NOT_ALLOWED");
+  const apiKey = request.headers.get("apikey") ?? "";
+  if (!apiKey || !publishableKeys.has(apiKey)) throw new Error("INVALID_API_KEY");
+}
+
 function money(value: unknown) {
   return `$${Math.round(Number(value) || 0).toLocaleString("es-AR")}`;
 }
@@ -30,6 +54,7 @@ Deno.serve(async (request) => {
   if (request.method !== "POST") return json(request, { error: "Método no permitido." }, 405);
 
   try {
+    requireTrustedClient(request);
     const body = await request.json();
     if (String(body.website ?? "").trim()) return json(request, { error: "Solicitud no válida." }, 400);
 
@@ -66,6 +91,8 @@ Deno.serve(async (request) => {
   } catch (error) {
     console.error(error);
     const message = error instanceof Error ? error.message : "No se pudo crear el pedido.";
+    if (message === "ORIGIN_NOT_ALLOWED") return json(request, { error: "Origen no permitido." }, 403);
+    if (message === "INVALID_API_KEY") return json(request, { error: "Cliente no autorizado." }, 401);
     return json(request, { error: message.replace(/^.*?:\s*/, "") }, 400);
   }
 });

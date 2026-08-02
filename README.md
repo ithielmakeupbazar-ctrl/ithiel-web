@@ -21,10 +21,12 @@ Es importante usar un servidor local y no abrir los archivos con doble clic, por
 ## Estilos
 
 - `styles/shared.css`: accesibilidad, estados de mensajes, animaciones base y preferencias de movimiento reducido.
-- `styles/index.css`: catálogo, tarjetas, filtros, buscador, carrito y modales.
-- `styles/registro.css`: registro.
-- `styles/cuenta.css`: acceso y perfil.
-- `styles/admin.css`: panel de administración.
+- `styles/cart-floating.css`: acceso flotante al pedido en páginas secundarias.
+- `styles/admin-v2.css`: ajustes visuales activos del panel de administración.
+
+Los estilos específicos de cada vista permanecen dentro de su HTML. Las hojas
+anteriores que ya no estaban enlazadas se retiraron para evitar mantener código
+duplicado o confundirlas con los estilos realmente publicados.
 
 ## Publicación
 
