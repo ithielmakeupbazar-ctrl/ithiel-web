@@ -72,8 +72,10 @@ dialogSelectors.forEach((selector) => {
   const API = "https://bfuexiblfuqwykktltrp.supabase.co/functions/v1/";
   const CATALOG_URL = API + "web-catalog";
   const ORDER_URL = API + "create-order";
+  const COUPON_URL = API + "validate-coupon";
   const FALLBACK_API_KEY = "sb_publishable_8-do7RGW8-li-7d1BnAsXQ_RYsks6iy";
   const stockCache = new Map();
+  const couponState = { valid: false, code: "", discountPercent: 0 };
 
   const readCart = () => {
     try {
@@ -112,6 +114,12 @@ dialogSelectors.forEach((selector) => {
     };
   }
 
+  function discountedTotal(value) {
+    const amount = Number(value) || 0;
+    if (!couponState.valid || couponState.discountPercent <= 0) return amount;
+    return Math.round((amount * (1 - couponState.discountPercent / 100)) * 100) / 100;
+  }
+
   function patchCartSummary() {
     const modal = document.querySelector("#cart-modal");
     if (!modal) return;
@@ -130,7 +138,7 @@ dialogSelectors.forEach((selector) => {
         rule.className = "cart-rule ok";
         rule.textContent = "Precio mayorista aplicado.";
       }
-      if (total) total.textContent = money(state.wholesaleTotal);
+      if (total) total.textContent = money(discountedTotal(state.wholesaleTotal));
       return;
     }
 
@@ -138,7 +146,7 @@ dialogSelectors.forEach((selector) => {
       priceType.textContent = "Minorista";
       priceType.className = "cart-price-type is-retail";
     }
-    if (total) total.textContent = money(state.retailTotal);
+    if (total) total.textContent = money(discountedTotal(state.retailTotal));
 
     if (rule) {
       rule.className = "cart-rule warn";
@@ -229,6 +237,146 @@ dialogSelectors.forEach((selector) => {
     true,
   );
 
+
+  /* ITHIEL_COUPON_APPLY_PATCH */
+  function ensureCouponUi() {
+    const section = document.querySelector(".cart-coupon");
+    const input = document.querySelector("#cart-coupon");
+    if (!section || !input || section.querySelector("[data-apply-coupon]")) return;
+
+    const row = document.createElement("div");
+    row.className = "cart-coupon-row";
+    input.parentNode.insertBefore(row, input);
+    row.appendChild(input);
+
+    const apply = document.createElement("button");
+    apply.type = "button";
+    apply.className = "cart-coupon-apply";
+    apply.dataset.applyCoupon = "";
+    apply.textContent = "Aplicar";
+    row.appendChild(apply);
+
+    const status = document.createElement("p");
+    status.className = "cart-coupon-status";
+    status.dataset.couponStatus = "";
+    status.setAttribute("aria-live", "polite");
+    section.appendChild(status);
+
+    if (!document.querySelector("#ithiel-coupon-style")) {
+      const style = document.createElement("style");
+      style.id = "ithiel-coupon-style";
+      style.textContent = `
+        .cart-coupon-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+        .cart-coupon-apply{min-height:44px;padding:0 18px;border:0;border-radius:14px;background:var(--deep,#660c35);color:#fff;font:800 13px "DM Sans",sans-serif;cursor:pointer;transition:transform .2s ease,background .2s ease,opacity .2s ease}
+        .cart-coupon-apply:hover{background:var(--rose,#b91658);transform:translateY(-1px)}
+        .cart-coupon-apply:disabled{opacity:.65;cursor:wait;transform:none}
+        .cart-coupon-status{min-height:20px;margin:7px 2px 0;font-size:12px;line-height:1.4;color:#785865}
+        .cart-coupon-status.ok{color:#287746}
+        .cart-coupon-status.error{color:#a12f45}
+        @media(max-width:420px){.cart-coupon-row{grid-template-columns:1fr}.cart-coupon-apply{width:100%}}
+      `;
+      document.head.appendChild(style);
+    }
+  }
+
+  function resetAppliedCoupon(message = "") {
+    couponState.valid = false;
+    couponState.code = "";
+    couponState.discountPercent = 0;
+    const status = document.querySelector("[data-coupon-status]");
+    if (status) {
+      status.textContent = message;
+      status.className = "cart-coupon-status";
+    }
+    patchCartSummary();
+  }
+
+  async function applyCoupon() {
+    ensureCouponUi();
+    const input = document.querySelector("#cart-coupon");
+    const button = document.querySelector("[data-apply-coupon]");
+    const status = document.querySelector("[data-coupon-status]");
+    const code = String(input?.value || "").trim().toUpperCase().replace(/\s+/g, "");
+
+    if (!code) {
+      resetAppliedCoupon("Ingresá un código de cupón.");
+      if (status) status.className = "cart-coupon-status error";
+      return;
+    }
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Validando...";
+    }
+    if (status) {
+      status.textContent = "Validando cupón...";
+      status.className = "cart-coupon-status";
+    }
+
+    try {
+      const response = await fetch(COUPON_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: window.ithielSupabasePublishableKey || FALLBACK_API_KEY,
+        },
+        body: JSON.stringify({ code }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok || data.valid !== true) {
+        couponState.valid = false;
+        couponState.code = "";
+        couponState.discountPercent = 0;
+        if (status) {
+          status.textContent = data.error || "El cupón no es válido o está vencido.";
+          status.className = "cart-coupon-status error";
+        }
+        patchCartSummary();
+        return;
+      }
+
+      couponState.valid = true;
+      couponState.code = String(data.code || code).toUpperCase();
+      couponState.discountPercent = Math.max(0, Math.min(100, Number(data.discountPercent) || 0));
+      if (input) input.value = couponState.code;
+      if (status) {
+        status.textContent = `Cupón ${couponState.code} aplicado: ${couponState.discountPercent}% de descuento.`;
+        status.className = "cart-coupon-status ok";
+      }
+      patchCartSummary();
+    } catch (_) {
+      couponState.valid = false;
+      couponState.code = "";
+      couponState.discountPercent = 0;
+      if (status) {
+        status.textContent = "No se pudo validar el cupón. Probá nuevamente.";
+        status.className = "cart-coupon-status error";
+      }
+      patchCartSummary();
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = "Aplicar";
+      }
+    }
+  }
+
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest("[data-apply-coupon]")) return;
+    event.preventDefault();
+    applyCoupon();
+  });
+
+  document.addEventListener("input", (event) => {
+    const input = event.target.closest("#cart-coupon");
+    if (!input || !couponState.valid) return;
+    const current = String(input.value || "").trim().toUpperCase().replace(/\s+/g, "");
+    if (current !== couponState.code) {
+      resetAppliedCoupon("El código cambió. Presioná Aplicar nuevamente.");
+    }
+  });
+
   async function validateAllStock(items) {
     for (const item of items) {
       const stock = await fetchStock(item);
@@ -265,7 +413,7 @@ dialogSelectors.forEach((selector) => {
         phone,
         trackingRequested,
         purchaseType,
-        couponCode: document.querySelector("#cart-coupon")?.value.trim() || "",
+        couponCode: couponState.valid ? couponState.code : "",
         items: items.map((item) => ({
           productId: item.productId || String(item.id || "").split(":")[0],
           variantId: item.variantId || null,
@@ -343,11 +491,17 @@ dialogSelectors.forEach((selector) => {
     }
   });
 
-  window.addEventListener("DOMContentLoaded", patchCartSummary, { once: true });
+  window.addEventListener("DOMContentLoaded", () => {
+    ensureCouponUi();
+    patchCartSummary();
+  }, { once: true });
   const modal = document.querySelector("#cart-modal");
   if (modal) {
     new MutationObserver(() => {
-      if (modal.classList.contains("open")) setTimeout(patchCartSummary, 0);
+      if (modal.classList.contains("open")) setTimeout(() => {
+        ensureCouponUi();
+        patchCartSummary();
+      }, 0);
     }).observe(modal, { attributes: true, attributeFilter: ["class"] });
   }
 })();
