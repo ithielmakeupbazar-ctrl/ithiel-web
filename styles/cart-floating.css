@@ -1,0 +1,17 @@
+.ithiel-shared-cart{position:fixed;z-index:30;right:22px;bottom:22px;border:0;border-radius:999px;padding:13px 18px;color:#fff;background:#790638;box-shadow:0 14px 30px rgba(74,17,43,.22);font:600 14px "DM Sans",sans-serif;cursor:pointer}
+.ithiel-shared-cart:hover{background:#b92967;box-shadow:0 0 24px rgba(222,119,161,.65)}
+.ithiel-shared-cart span{display:inline-grid;place-items:center;min-width:22px;height:22px;margin-left:8px;border-radius:50%;color:#790638;background:#fff}
+.ithiel-shared-modal{position:fixed;z-index:40;inset:0;display:none;place-items:center;padding:16px}
+.ithiel-shared-modal.open{display:grid}
+.ithiel-shared-backdrop{position:absolute;inset:0;background:rgba(55,20,39,.42);backdrop-filter:blur(6px)}
+.ithiel-shared-panel{position:relative;width:min(430px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:24px;border-radius:24px;color:#442c3a;background:#fff9fb;box-shadow:0 24px 60px rgba(74,17,43,.25)}
+.ithiel-shared-panel h2{margin:0 0 14px;font:500 30px "Playfair Display",serif}
+.ithiel-shared-close{position:absolute;right:14px;top:12px;border:0;background:transparent;color:#790638;font-size:25px;cursor:pointer}
+.ithiel-shared-item{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #ead4de}
+.ithiel-shared-item small{display:block;color:#765767}
+.ithiel-shared-actions{display:flex;align-items:center;gap:6px}
+.ithiel-shared-actions button{width:27px;height:27px;border:1px solid #e7b9ca;border-radius:50%;color:#790638;background:#fff;cursor:pointer}
+.ithiel-shared-total{display:flex;justify-content:space-between;margin:15px 0;font-weight:700}
+.ithiel-shared-rule{margin:0 0 14px;color:#765767;font-size:13px}
+.ithiel-shared-send{width:100%;padding:12px;border:0;border-radius:999px;color:#fff;background:#790638;font-weight:700;cursor:pointer}
+@media(max-width:600px){.ithiel-shared-cart{right:14px;bottom:14px}.ithiel-shared-panel{padding:21px}}

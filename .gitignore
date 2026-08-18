@@ -1,0 +1,22 @@
+# Local / secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Dependencies / build artifacts
+node_modules/
+dist/
+build/
+
+# Archives / backups
+*.zip
+*.rar
+*.7z
+*.bak

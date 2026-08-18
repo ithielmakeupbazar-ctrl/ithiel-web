@@ -21,7 +21,26 @@ Es importante usar un servidor local y no abrir los archivos con doble clic, por
 ## Estilos
 
 - `styles/shared.css`: accesibilidad, estados de mensajes, animaciones base y preferencias de movimiento reducido.
-- `styles/index.css`: catálogo, tarjetas, filtros, buscador, carrito y modales.
-- `styles/registro.css`: registro.
-- `styles/cuenta.css`: acceso y perfil.
-- `styles/admin.css`: panel de administración.
+- `styles/cart-floating.css`: acceso flotante al pedido en páginas secundarias.
+- `styles/admin-v2.css`: ajustes visuales activos del panel de administración.
+
+Los estilos específicos de cada vista permanecen dentro de su HTML. Las hojas
+anteriores que ya no estaban enlazadas se retiraron para evitar mantener código
+duplicado o confundirlas con los estilos realmente publicados.
+
+## Publicación
+
+Los cambios del sitio se publican subiendo este repo a la rama que usa el hosting.
+Antes de confirmar producción:
+
+1. Probar catálogo, detalle, carrito, registro y cuenta en escritorio y móvil.
+2. Subir el commit a GitHub.
+3. Verificar que `https://ithielbazarymakeup.site` use ese commit.
+4. Aplicar por separado el ajuste de CORS indicado en `supabase/README.md`.
+
+No se deben copiar claves privadas de Supabase al frontend. La clave pública
+incluida en el sitio es la clave publicable para navegador.
+
+
+## Integración Telegram
+El bot de Telegram es parte del flujo operativo y se conserva como integración activa con Supabase.

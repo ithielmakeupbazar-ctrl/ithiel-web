@@ -5,15 +5,116 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Cuenta opcional y perfil simple de clientes de Ithiel Bazar y Makeup.">
   <title>Mi cuenta | Ithiel</title>
-  <link rel="stylesheet" href="/styles/shared.css">
-  <link rel="stylesheet" href="/styles/cuenta.css">
-</head>
+  <style>
+:root {
+  --focus: #ff9fc2;
+  --shadow-sm: 0 8px 24px rgba(74, 17, 43, .09);
+  --shadow-md: 0 18px 44px rgba(74, 17, 43, .16);
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+}
+
+html { color-scheme: light; }
+body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+button, a, input, textarea, select { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+[hidden] { display: none !important; }
+
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes item-in {
+  from { opacity: 0; transform: translateY(22px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes cart-pop {
+  0%, 100% { transform: scale(1); }
+  45% { transform: scale(1.22); }
+}
+.is-cart-pop { animation: cart-pop .38s var(--ease-out); }
+.message { font-weight: 650; }
+.message.is-error, .notice.is-error { color: #a25119 !important; }
+.message.is-success, .notice.is-success { color: #16804b !important; }
+.message.is-muted, .notice.is-muted { color: #765763 !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+</style>
+  <style>
+    :root{--rose:#b91658;--deep:#780a38;--ink:#321522;--green:#16804b;--line:#e4b5c8;}
+    *{box-sizing:border-box} body{min-height:100vh;margin:0;display:grid;place-items:center;padding:24px;color:var(--ink);font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at 14% 0%,#ffb2cb 0,transparent 27%),linear-gradient(125deg,#5e062d,#bd1659 55%,#f26b9d)}
+    main{width:min(100%,490px);padding:32px;border-radius:20px;background:#fff;box-shadow:0 20px 60px #3215224d} h1{margin:0;color:var(--deep);text-align:center;font-size:31px;letter-spacing:2px;font-weight:700} p{color:#765763;line-height:1.45;text-align:center}.back{display:inline-flex;align-items:center;margin-bottom:18px;padding:7px 10px;border:1px solid var(--line);border-radius:999px;color:var(--deep);background:#fff8fb;font-size:13px;font-weight:600;text-decoration:none}.back:hover{background:#f8e4ec}
+    label{display:grid;gap:6px;margin:15px 0;color:#765763;font-size:13px;font-weight:600}input,textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:12px;color:var(--ink);font:inherit;background:#fff}textarea{min-height:76px;resize:vertical}.phone{display:grid;grid-template-columns:auto 1fr;border:1px solid var(--line);border-radius:9px;overflow:hidden}.phone span{display:grid;place-items:center;padding:0 11px;color:var(--deep);background:#f8e4ec;font-size:14px;font-weight:600}.phone input{border:0;border-radius:0}
+    button{display:flex;width:100%;align-items:center;justify-content:center;gap:8px;border:0;border-radius:10px;padding:13px;color:#fff;background:var(--rose);cursor:pointer;font:inherit;font-size:14px;font-weight:600}button:hover{background:var(--deep)}.google,.secondary{margin:12px 0;color:#3b2a31;border:1px solid #d9c4ce;background:#fff}.secondary{color:var(--deep)}.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.row button{margin:0}.logout{margin-top:12px;background:#fff;color:var(--deep);border:1px solid var(--line)}.consent{display:flex;gap:8px;align-items:flex-start;font-weight:400;line-height:1.35}.consent input{width:auto;margin-top:2px}.message{min-height:20px;margin:13px 0 0;font-size:13px}.account-email{padding:10px 12px;border-radius:9px;color:var(--deep);background:#f8e4ec;text-align:center;font-size:14px;font-weight:600}[hidden]{display:none!important}.icon{width:19px;height:19px;flex:0 0 19px}
+    body{grid-template-columns:minmax(320px,1fr) minmax(420px,620px);gap:clamp(28px,6vw,90px);padding:clamp(24px,5vw,72px);background:linear-gradient(90deg,#85063e 0,#ad1253 42%,#f8edf2 42%,#fff9fb 100%)}
+    .auth-brand-panel{max-width:560px;justify-self:end;color:#fff;animation:page-in .65s var(--ease-out) both}
+    .auth-brand-panel strong{display:block;margin:14px 0;font-size:clamp(54px,8vw,100px);line-height:.9;letter-spacing:.11em;text-shadow:0 16px 45px rgba(44,3,21,.25)}
+    .auth-brand-panel p{max-width:390px;margin:0;color:rgba(255,255,255,.88);text-align:left;font-size:17px}
+    .auth-eyebrow{font-size:12px;font-weight:800;letter-spacing:.22em}
+    main{justify-self:start;animation:page-in .6s .08s var(--ease-out) both;box-shadow:var(--shadow-md);border:1px solid rgba(185,22,88,.1)}
+    button,.back,input,textarea{transition:transform .22s var(--ease-out),box-shadow .22s,border-color .22s,background-color .22s}
+    button:hover,.back:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm)}button:active{transform:scale(.97)}
+    input:focus,textarea:focus{outline:none;border-color:var(--rose);box-shadow:0 0 0 4px rgba(185,22,88,.1)}
+    @media(max-width:860px){body{display:grid;grid-template-columns:minmax(0,1fr);width:100%;padding:18px;background:linear-gradient(180deg,#8d073f 0,#c72b69 245px,#fff5f9 245px)}.auth-brand-panel{width:100%;min-width:0;justify-self:center;text-align:center;padding:26px 12px 18px}.auth-brand-panel strong{font-size:48px}.auth-brand-panel p{display:none}main{width:100%;max-width:520px;min-width:0;justify-self:center;margin:0;padding:28px}}
+    @media(max-width:520px){body{padding:10px;align-items:start}.auth-brand-panel{padding:20px 8px 8px}.auth-brand-panel strong{font-size:38px;margin:8px 0}.auth-eyebrow{font-size:10px}.row{grid-template-columns:1fr}main{padding:22px}h1{font-size:27px}}
+
+</style>
+<style>
+:root{--rose:#b91658;--deep:#780a38;--ink:#321522;--line:#e4b5c8;--ease-out:cubic-bezier(.22,1,.36,1)}
+body{background:linear-gradient(110deg,#82083d 0,#bd1659 43%,#fff7fa 43%,#fff9fb 100%);font-family:Georgia,"Times New Roman",serif}
+.auth-brand-panel{position:relative;isolation:isolate;padding:38px;border-radius:28px;background:linear-gradient(145deg,#8b0d45,#c62d70);box-shadow:0 24px 55px rgba(48,3,25,.25);overflow:hidden}.auth-brand-panel:after{content:"";position:absolute;z-index:-1;inset:-70px -40px auto auto;width:260px;height:260px;border:1px solid #ffffff55;border-radius:48%;transform:rotate(25deg)}.auth-brand-panel strong{font-family:Georgia,"Times New Roman",serif}.auth-brand-panel p{font-family:Arial,Helvetica,sans-serif}
+main{border-radius:24px!important;box-shadow:0 22px 58px rgba(50,21,34,.18)!important;animation:page-in .65s var(--ease-out) both}h1{font-family:Georgia,"Times New Roman",serif!important}.back{transition:transform .22s var(--ease-out),background-color .22s,box-shadow .22s}.back:hover{background:#f8e4ec!important;box-shadow:0 8px 20px rgba(120,10,56,.13)!important}button{transition:transform .22s var(--ease-out),box-shadow .22s,background-color .22s}button:hover{transform:translateY(-2px);box-shadow:0 9px 20px rgba(120,10,56,.2)}.google{border-radius:999px!important}.row button{border-radius:999px!important}.secondary{background:#fff8fb!important}.message{font-family:Arial,Helvetica,sans-serif}
+@media(max-width:860px){body{background:linear-gradient(180deg,#8d073f 0,#c72b69 245px,#fff5f9 245px)}}
+</style><style id="ithiel-account-final-theme">
+  :root{--ithiel-pink:#b01655;--ithiel-soft-pink:#f8dce8;--ithiel-ink:#402736;--ithiel-muted:#80606e;--ithiel-card:rgba(255,248,251,.94);--ithiel-line:rgba(176,22,85,.22);--ithiel-glow:0 0 0 5px rgba(248,220,232,.46),0 15px 34px rgba(176,22,85,.18)}
+  html,body{min-height:100%}
+  body{display:grid!important;grid-template-columns:minmax(280px,.9fr) minmax(340px,520px)!important;align-items:center!important;justify-content:center!important;gap:clamp(22px,5vw,76px)!important;margin:0!important;padding:clamp(18px,5vw,64px)!important;color:var(--ithiel-ink)!important;font-family:"Trebuchet MS","Segoe UI",sans-serif!important;background:radial-gradient(circle at 12% 14%,rgba(255,194,217,.78),transparent 26%),radial-gradient(circle at 86% 16%,rgba(255,151,191,.62),transparent 30%),linear-gradient(135deg,#8f0b45 0%,#c42065 45%,#fff5f9 45%,#fffafb 100%)!important;overflow-x:hidden}
+  .auth-brand-panel{justify-self:end!important;width:min(100%,520px)!important;padding:clamp(28px,5vw,48px)!important;border:1px solid rgba(255,255,255,.25)!important;border-radius:34px!important;color:#fff!important;background:linear-gradient(145deg,rgba(156,12,72,.94),rgba(207,45,113,.9))!important;box-shadow:0 26px 70px rgba(75,8,39,.28)!important}
+  .auth-brand-panel::before{content:"";position:absolute;inset:auto -52px -72px auto;width:230px;height:230px;border:1px solid rgba(255,255,255,.34);border-radius:50%;pointer-events:none}
+  .auth-brand-panel strong{margin:16px 0 12px!important;font-family:Georgia,"Times New Roman",serif!important;font-size:clamp(54px,8vw,92px)!important;font-weight:700!important;letter-spacing:.14em!important;line-height:.95!important}
+  .auth-brand-panel p{max-width:410px!important;margin:0!important;color:rgba(255,255,255,.9)!important;text-align:left!important;font-size:17px!important}
+  .auth-eyebrow{color:rgba(255,255,255,.88)!important;font-size:12px!important;font-weight:800!important;letter-spacing:.22em!important}
+  main{justify-self:start!important;width:min(100%,500px)!important;padding:clamp(24px,4vw,38px)!important;border:1px solid var(--ithiel-line)!important;border-radius:30px!important;background:var(--ithiel-card)!important;box-shadow:0 28px 70px rgba(70,18,43,.2)!important;backdrop-filter:blur(12px)}
+  h1{margin:8px 0 8px!important;color:var(--ithiel-pink)!important;font-family:Georgia,"Times New Roman",serif!important;font-size:clamp(32px,5vw,43px)!important;font-weight:700!important;letter-spacing:.06em!important;text-align:center!important}
+  p{color:var(--ithiel-muted)!important;font-size:15px!important;line-height:1.55!important;text-align:center!important}
+  .back,button{border-radius:999px!important;transition:transform .22s var(--ease-out),box-shadow .22s var(--ease-out),border-color .22s var(--ease-out),background-color .22s var(--ease-out)!important}
+  .back{display:inline-flex!important;width:auto!important;margin-bottom:18px!important;padding:9px 16px!important;border:1px solid rgba(176,22,85,.28)!important;color:var(--ithiel-pink)!important;background:rgba(248,220,232,.58)!important;font-weight:700!important;text-decoration:none!important}
+  label{gap:8px!important;margin:15px 0!important;color:var(--ithiel-ink)!important;font-size:14px!important;font-weight:700!important}
+  input,textarea{min-height:46px!important;border:1px solid rgba(176,22,85,.2)!important;border-radius:999px!important;padding:13px 16px!important;color:var(--ithiel-ink)!important;background:rgba(248,220,232,.58)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.72)!important}
+  textarea{border-radius:20px!important}
+  input:focus,textarea:focus{border-color:rgba(176,22,85,.52)!important;box-shadow:var(--ithiel-glow)!important}
+  button{min-height:46px!important;border:1px solid rgba(176,22,85,.22)!important;color:#fff!important;background:linear-gradient(135deg,var(--ithiel-pink),#c34f7b)!important;box-shadow:0 12px 26px rgba(176,22,85,.15)!important}
+  button:hover,.back:hover{transform:translateY(-2px)!important;box-shadow:var(--ithiel-glow)!important}
+  .google,.secondary,.logout{color:var(--ithiel-pink)!important;background:rgba(248,220,232,.64)!important}
+  .google{color:var(--ithiel-ink)!important;border-color:rgba(176,22,85,.2)!important}
+  .row{grid-template-columns:1fr 1fr!important;gap:10px!important}.account-email{color:var(--ithiel-pink)!important;background:rgba(248,220,232,.72)!important;border:1px solid rgba(176,22,85,.16)!important;border-radius:999px!important}
+  .phone{border:1px solid rgba(176,22,85,.2)!important;border-radius:999px!important;background:rgba(248,220,232,.58)!important}.phone span{color:var(--ithiel-pink)!important;background:transparent!important}.phone input{background:transparent!important;box-shadow:none!important}
+  .consent{color:var(--ithiel-muted)!important;font-weight:600!important}.consent input{min-height:auto!important}.message{color:var(--ithiel-muted)!important;font-size:13px!important;text-align:center!important}
+  @media(max-width:860px){body{grid-template-columns:minmax(0,1fr)!important;padding:14px!important;background:linear-gradient(180deg,#9a0d49 0,#d3427b 245px,#fff5f9 245px,#fffafb 100%)!important}.auth-brand-panel,main{justify-self:center!important}.auth-brand-panel{padding:22px!important;text-align:center!important}.auth-brand-panel strong{font-size:42px!important}.auth-brand-panel p{display:none!important}}
+  @media(max-width:520px){main{padding:22px!important}.row{grid-template-columns:1fr!important}}
+</style><style id="account-compact-fix">
+body{display:grid!important;place-items:center!important;min-height:100vh!important;padding:76px 18px 28px!important;background:linear-gradient(145deg,#b91658 0 28%,#fff8fb 28% 100%)!important}
+.account-brand{position:absolute;top:22px;left:5vw;color:#fff;font:600 26px "Playfair Display",serif;letter-spacing:.14em}
+main{width:min(560px,100%)!important;min-height:0!important;margin:auto!important;padding:30px!important;border-radius:24px!important;background:#fff9fb!important;box-shadow:0 24px 60px rgba(74,17,43,.18)!important}
+main h1{margin:10px 0!important;text-align:center!important;font-size:40px!important}
+main>section>p{text-align:center!important}
+form{gap:10px!important}.row{gap:10px!important}
+textarea{min-height:70px!important}
+@media(max-width:600px){body{padding:64px 12px 18px!important}.account-brand{top:16px}main{padding:22px!important;border-radius:20px!important}main h1{font-size:34px!important}}
+</style></head>
 <body>
-  <aside class="auth-brand-panel" aria-hidden="true">
-    <span class="auth-eyebrow">BAZAR · MAKEUP · LENCERÍA</span>
-    <strong>ITHIEL</strong>
-    <p>Tu espacio para descubrir productos, guardar tus datos y comprar más fácil.</p>
-  </aside>
+  <div class="account-brand">ITHIEL</div>
   <main>
     <a class="back" href="/">Catálogo</a>
     <section id="access-view">
@@ -34,7 +135,7 @@
       <button id="edit-profile" class="secondary" type="button">Editar datos de compra</button>
       <form id="profile-form" hidden>
         <label>Nombre y apellido<input id="full-name" maxlength="100" autocomplete="name" required></label>
-        <label>WhatsApp <small>(opcional)</small><div class="phone"><span>+54 9</span><input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="341 123 4567"></div></label>
+        <label>WhatsApp<div class="phone"><span>+54 9</span><input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="341 123 4567" required></div></label>
         <label>Dirección <small>(opcional)</small><textarea id="address" autocomplete="street-address" maxlength="250" placeholder="Calle, número, piso/depto y localidad"></textarea></label>
         <label class="consent"><input id="optin" type="checkbox"> Quiero recibir novedades y ofertas por WhatsApp.</label>
         <button type="submit">Guardar cambios</button>
@@ -45,6 +146,10 @@
         <label>Nueva contraseña<input id="new-password" type="password" autocomplete="new-password" minlength="6" required></label>
         <button type="submit">Guardar nueva contraseña</button>
       </form>
+      <section class="account-orders" aria-labelledby="orders-title">
+        <h2 id="orders-title">MIS PEDIDOS</h2>
+        <div id="orders-list"><p class="message">Cargando pedidos…</p></div>
+      </section>
       <button id="logout" class="logout" type="button">Cerrar sesión</button>
       <p id="profile-message" class="message" aria-live="polite"></p>
     </section>
@@ -57,17 +162,21 @@
     const supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
     const accessView=document.querySelector("#access-view"),profileView=document.querySelector("#profile-view"),accessMessage=document.querySelector("#access-message"),profileMessage=document.querySelector("#profile-message");
     const message=(node,text,color="#765763")=>{node.textContent=text;node.classList.remove("is-muted","is-error","is-success");node.classList.add(color==="#16804b"?"is-success":color==="#a25119"?"is-error":"is-muted")};
-    async function profileRequest(body){const {data:{session}}=await supabase.auth.getSession();if(!session)throw new Error("Tu sesión venció.");const res=await fetch(REGISTER_URL,{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${session.access_token}`},body:JSON.stringify(body)});const data=await res.json();if(!res.ok)throw new Error(data.error||"No se pudieron guardar los datos.");return data;}
+    async function profileRequest(body){const {data:{session}}=await supabase.auth.getSession();if(!session)throw new Error("Tu sesión venció.");let res;try{res=await fetch(REGISTER_URL,{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${session.access_token}`},body:JSON.stringify(body)})}catch(_error){throw new Error("No pudimos conectar con tu perfil. Probá nuevamente en unos minutos.")}const data=await res.json();if(!res.ok)throw new Error(data.error||"No se pudieron guardar los datos.");return data;}
     function localPhone(value){let n=String(value||"").replace(/\D/g,"");if(n.startsWith("549"))n=n.slice(3);else if(n.startsWith("54"))n=n.slice(2);if(n.startsWith("9"))n=n.slice(1);return n;}
     function applyProfile(session,profile){const fallback=session.user.user_metadata?.full_name||session.user.user_metadata?.name||"";document.querySelector("#full-name").value=profile?.full_name||fallback;document.querySelector("#phone").value=localPhone(profile?.phone);document.querySelector("#address").value=profile?.default_address||"";document.querySelector("#optin").checked=Boolean(profile?.whatsapp_opt_in);}
-    async function showProfile(session){accessView.hidden=true;profileView.hidden=false;document.querySelector("#account-email").textContent=`✓ ${session.user.email||"Cuenta conectada"}`;applyProfile(session,null);}
-    document.querySelector("#google-login").addEventListener("click",async()=>{message(accessMessage,"Abriendo Google…");const {data,error}=await supabase.auth.signInWithOAuth({provider:"google",options:{redirectTo:`${location.origin}/cuenta.html`}});if(error)return message(accessMessage,"No se pudo iniciar con Google.","#a25119");if(data?.url)location.assign(data.url);});
+    const orderStatus={pending:"Pendiente",processing:"En proceso",completed:"Completado",cancelled:"Cancelado"};
+    const orderMoney=value=>`$${Math.round(Number(value)||0).toLocaleString("es-AR")}`;
+    const accountEscape=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+    async function loadOrders(){const list=document.querySelector("#orders-list");try{const result=await profileRequest({action:"getOrders"});const orders=result.data||[];list.innerHTML=orders.length?orders.map(order=>`<article class="account-order"><div><strong>#${accountEscape(order.order_number)}</strong><span>${new Date(order.created_at).toLocaleDateString("es-AR")}</span></div><div><b>${orderMoney(order.total)}</b><span>${accountEscape(orderStatus[order.status]||order.status)}</span></div><small>${(order.order_items||[]).map(item=>`${Number(item.quantity)||0} x ${accountEscape(item.product_name)}${item.variant_name?` (${accountEscape(item.variant_name)})`:""}`).join(" · ")}</small></article>`).join(""):"<p class=\"message\">Todavía no tenés pedidos registrados.</p>"}catch(error){list.innerHTML=`<p class="message is-error">${accountEscape(error.message)}</p>`}}
+    async function showProfile(session){accessView.hidden=true;profileView.hidden=false;document.querySelector("#account-email").textContent=`✓ ${session.user.email||"Cuenta conectada"}`;applyProfile(session,null);await loadOrders();}
+    document.querySelector("#google-login").addEventListener("click",async()=>{message(accessMessage,"Abriendo Google…");const {data,error}=await supabase.auth.signInWithOAuth({provider:"google",options:{redirectTo:`${location.origin}/cuenta`}});if(error)return message(accessMessage,"No se pudo iniciar con Google.","#a25119");if(data?.url)location.assign(data.url);});
     document.querySelector("#email-form").addEventListener("submit",async(e)=>{e.preventDefault();message(accessMessage,"Ingresando…");const {error}=await supabase.auth.signInWithPassword({email:document.querySelector("#email").value.trim(),password:document.querySelector("#password").value});if(error)message(accessMessage,"Email o contraseña incorrectos.","#a25119");});
-    document.querySelector("#signup").addEventListener("click",async()=>{const email=document.querySelector("#email").value.trim(),password=document.querySelector("#password").value;if(!email||password.length<6)return message(accessMessage,"Ingresá email y una contraseña de al menos 6 caracteres.","#a25119");message(accessMessage,"Creando cuenta…");const {data,error}=await supabase.auth.signUp({email,password,options:{emailRedirectTo:`${location.origin}/cuenta.html`}});if(error)return message(accessMessage,error.message,"#a25119");message(accessMessage,data.session?"Cuenta creada. Completá tu perfil.":"Cuenta creada. Revisá tu email para confirmarla.","#16804b");});
+    document.querySelector("#signup").addEventListener("click",async()=>{const email=document.querySelector("#email").value.trim(),password=document.querySelector("#password").value;if(!email||password.length<6)return message(accessMessage,"Ingresá email y una contraseña de al menos 6 caracteres.","#a25119");message(accessMessage,"Creando cuenta…");const {data,error}=await supabase.auth.signUp({email,password,options:{emailRedirectTo:`${location.origin}/cuenta`}});if(error)return message(accessMessage,error.message,"#a25119");message(accessMessage,data.session?"Cuenta creada. Completá tu perfil.":"Cuenta creada. Revisá tu email para confirmarla.","#16804b");});
     document.querySelector("#edit-profile").addEventListener("click",async()=>{const button=document.querySelector("#edit-profile");button.hidden=true;document.querySelector("#profile-form").hidden=false;message(profileMessage,"Cargando datos…");try{const {data:{session}}=await supabase.auth.getSession();const result=await profileRequest({action:"getProfile"});applyProfile(session,result.data);message(profileMessage,"");}catch(error){message(profileMessage,"Podés completar tus datos y guardarlos.","#a25119");}});
     document.querySelector("#profile-form").addEventListener("submit",async(e)=>{e.preventDefault();message(profileMessage,"Guardando…");try{await profileRequest({fullName:document.querySelector("#full-name").value.trim(),phone:document.querySelector("#phone").value,address:document.querySelector("#address").value.trim(),whatsappOptIn:document.querySelector("#optin").checked,website:""});message(profileMessage,"Cambios guardados.","#16804b");}catch(error){message(profileMessage,error.message,"#a25119");}});
     document.querySelector("#back-profile").addEventListener("click",()=>{document.querySelector("#profile-form").hidden=true;document.querySelector("#edit-profile").hidden=false;message(profileMessage,"");});
-    document.querySelector("#change-password").addEventListener("click",async()=>{const {data:{session}}=await supabase.auth.getSession();const {error}=await supabase.auth.resetPasswordForEmail(session.user.email,{redirectTo:`${location.origin}/cuenta.html`});message(profileMessage,error?error.message:"Te enviamos un email para cambiar tu contraseña.",error?"#a25119":"#16804b");});
+    document.querySelector("#change-password").addEventListener("click",async()=>{const {data:{session}}=await supabase.auth.getSession();const {error}=await supabase.auth.resetPasswordForEmail(session.user.email,{redirectTo:`${location.origin}/cuenta`});message(profileMessage,error?error.message:"Te enviamos un email para cambiar tu contraseña.",error?"#a25119":"#16804b");});
     document.querySelector("#password-form").addEventListener("submit",async(e)=>{e.preventDefault();const password=document.querySelector("#new-password").value;const {error}=await supabase.auth.updateUser({password});message(profileMessage,error?error.message:"Contraseña actualizada.",error?"#a25119":"#16804b");if(!error){document.querySelector("#new-password").value="";document.querySelector("#password-form").hidden=true;}});
     document.querySelector("#logout").addEventListener("click",async()=>{await supabase.auth.signOut();location.reload();});
     supabase.auth.getSession().then(({data:{session}})=>{if(session)showProfile(session);});
@@ -75,3 +184,9 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
