@@ -71,36 +71,59 @@ Deno.serve(async (request) => {
       return json(request, { product: normalizeProduct(product, true) });
     }
 
-    const products = [];
-    for (let from = 0; ; from += 500) {
-      const { data, error } = await db.from("products")
-        .select("id,name,retail_price,wholesale_price,stock,status,created_at,categories(name),subcategories(name),product_images(image_url,position)")
-        .eq("status", "published")
-        .eq("product_images.position", 1)
-        .order("created_at", { ascending: false })
-        .range(from, from + 499);
-      if (error) throw error;
-      products.push(...(data ?? []));
-      if ((data ?? []).length < 500) break;
-    }
+    const params = new URL(request.url).searchParams;
+    const requestedCategory = params.get("category")?.trim() ?? "";
+    const requestedSubcategory = params.get("subcategory")?.trim() ?? "";
+    const search = (params.get("search") ?? "").trim().slice(0, 100);
+    const requestedLimit = Number(params.get("limit") ?? (params.get("view") === "home" ? 8 : 24));
+    const limit = Math.max(1, Math.min(48, Number.isFinite(requestedLimit) ? Math.floor(requestedLimit) : 24));
+    const requestedOffset = Number(params.get("offset") ?? 0);
+    const offset = Math.max(0, Number.isFinite(requestedOffset) ? Math.floor(requestedOffset) : 0);
 
-    const [{ data: categories, error: categoryError }, { data: subcategories, error: subcategoryError }, { data: variantProducts, error: variantsError }] = await Promise.all([
+    const [{ data: categories, error: categoryError }, { data: subcategories, error: subcategoryError }] = await Promise.all([
       db.from("categories").select("id,name,active").eq("active", true).order("name"),
       db.from("subcategories").select("id,category_id,name,active").eq("active", true).order("name"),
-      db.rpc("web_catalog_variant_product_ids"),
     ]);
     if (categoryError) throw categoryError;
     if (subcategoryError) throw subcategoryError;
+
+    const categoryId = requestedCategory
+      ? (categories ?? []).find((category) => category.name.toLocaleLowerCase("es-AR") === requestedCategory.toLocaleLowerCase("es-AR"))?.id
+      : "";
+    if (requestedCategory && !categoryId) return json(request, { products: [], categories: [], nextOffset: null });
+    const subcategoryId = requestedSubcategory
+      ? (subcategories ?? []).find((subcategory) => subcategory.category_id === categoryId && subcategory.name.toLocaleLowerCase("es-AR") === requestedSubcategory.toLocaleLowerCase("es-AR"))?.id
+      : "";
+    if (requestedSubcategory && !subcategoryId) return json(request, { products: [], categories: [], nextOffset: null });
+
+    let productsQuery = db.from("products")
+      .select("id,sku,name,description,retail_price,wholesale_price,stock,status,created_at,categories(name),subcategories(name),product_images(image_url,position)")
+      .eq("status", "published")
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
+    if (categoryId) productsQuery = productsQuery.eq("category_id", categoryId);
+    if (subcategoryId) productsQuery = productsQuery.eq("subcategory_id", subcategoryId);
+    if (search) {
+      const safeSearch = search.replace(/[,%()]/g, " ");
+      productsQuery = productsQuery.or(`name.ilike.%${safeSearch}%,sku.ilike.%${safeSearch}%,description.ilike.%${safeSearch}%`);
+    }
+    const { data: products, error: productsError } = await productsQuery;
+    if (productsError) throw productsError;
+
+    const productIds = (products ?? []).map((product) => product.id);
+    const { data: variantProducts, error: variantsError } = productIds.length
+      ? await db.from("product_variants").select("product_id").in("product_id", productIds).eq("active", true)
+      : { data: [], error: null };
     if (variantsError) throw variantsError;
 
     const productsWithVariants = new Set((variantProducts ?? []).map((item) => item.product_id));
-    const normalizedProducts = products.map((product) => normalizeProduct(product, false, productsWithVariants));
+    const normalizedProducts = (products ?? []).map((product) => normalizeProduct(product, false, productsWithVariants));
     const normalizedCategories = (categories ?? []).map((category) => ({
       id: category.id,
       name: category.name,
       subcategories: (subcategories ?? []).filter((subcategory) => subcategory.category_id === category.id).map((subcategory) => subcategory.name),
     }));
-    return json(request, { products: normalizedProducts, categories: normalizedCategories });
+    return json(request, { products: normalizedProducts, categories: normalizedCategories, nextOffset: normalizedProducts.length === limit ? offset + limit : null });
   } catch (error) {
     console.error(error);
     return json(request, { error: "No se pudo cargar el catálogo." }, 500);

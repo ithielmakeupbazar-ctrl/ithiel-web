@@ -20,11 +20,20 @@ const adminDb = createClient(SUPABASE_URL, SERVICE_KEY, {
 
 class ClientError extends Error {}
 
-function cors(_request: Request) {
+const ALLOWED_ORIGINS = new Set([
+  "https://ithielbazarymakeup.site",
+  "https://www.ithielbazarymakeup.site",
+  "https://ithielbazar-makeup.netlify.app",
+  "http://localhost:8000",
+  "http://127.0.0.1:8000",
+]);
+
+function cors(request: Request) {
+  const origin = request.headers.get("origin") ?? "";
   return {
-    // La seguridad sigue estando en requireAdmin (token + tabla admin_users).
-    // Así funciona desde Cloudflare, Netlify y el futuro dominio propio.
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": ALLOWED_ORIGINS.has(origin)
+      ? origin
+      : "https://ithielbazarymakeup.site",
     "Access-Control-Allow-Headers": "authorization, apikey, content-type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Vary": "Origin",
@@ -423,6 +432,40 @@ async function deleteProduct(body: Record<string, unknown>) {
   return { deleted: true };
 }
 
+async function deleteProducts(body: Record<string, unknown>) {
+  const productIds = [...new Set(Array.isArray(body.productIds) ? body.productIds.map(String).filter(Boolean) : [])];
+  if (!productIds.length || productIds.length > 100) throw new ClientError("Elegí entre 1 y 100 productos para eliminar.");
+
+  const { data: soldItems, error: salesError } = await adminDb
+    .from("order_items")
+    .select("product_id,products(name)")
+    .in("product_id", productIds)
+    .limit(10);
+  if (salesError) throw salesError;
+  if (soldItems?.length) {
+    const names = soldItems.map((item: any) => item.products?.name).filter(Boolean).slice(0, 3).join(", ");
+    throw new ClientError(`No se pueden eliminar productos relacionados con una venta${names ? `: ${names}` : ""}. Cambialos a Archivado.`);
+  }
+
+  const { data: images, error: imagesError } = await adminDb.from("product_images").select("image_url").in("product_id", productIds);
+  if (imagesError) throw imagesError;
+  const { error: variantsError } = await adminDb.from("product_variants").delete().in("product_id", productIds);
+  if (variantsError) throw variantsError;
+  const { error: imageRowsError } = await adminDb.from("product_images").delete().in("product_id", productIds);
+  if (imageRowsError) throw imageRowsError;
+  const { error: productsError } = await adminDb.from("products").delete().in("id", productIds);
+  if (productsError) throw productsError;
+
+  const paths = (images ?? []).map(({ image_url }) => {
+    try {
+      const path = new URL(String(image_url)).pathname.split("/product-images/")[1];
+      return path ? decodeURIComponent(path) : "";
+    } catch (_) { return ""; }
+  }).filter(Boolean);
+  if (paths.length) await adminDb.storage.from("product-images").remove(paths);
+  return { deleted: productIds.length };
+}
+
 async function listCoupons() {
   const { data, error } = await adminDb
     .from("coupons")
@@ -729,6 +772,7 @@ Deno.serve(async (request) => {
     if (action === "uploadProductImage") return reply(request, { ok: true, data: await uploadProductImage(body) }, 201);
     if (action === "deleteProductImage") return reply(request, { ok: true, data: await deleteProductImage(body) });
     if (action === "deleteProduct") return reply(request, { ok: true, data: await deleteProduct(body) });
+    if (action === "deleteProducts") return reply(request, { ok: true, data: await deleteProducts(body) });
     if (action === "coupons") return reply(request, { ok: true, data: await listCoupons() });
     if (action === "saveCoupon") return reply(request, { ok: true, data: await saveCoupon(body) });
     if (action === "deleteCoupon") return reply(request, { ok: true, data: await deleteCoupon(body) });
