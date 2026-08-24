@@ -150,9 +150,16 @@ async function audit(actorId: string, action: string, entityType: string, entity
 }
 
 async function listAuditLog() {
-  const { data, error } = await adminDb.from("admin_audit_log").select("id,action,entity_type,entity_id,summary,created_at,admin_users(email)").order("created_at", { ascending: false }).limit(100);
+  const { data, error } = await adminDb.from("admin_audit_log").select("id,actor_id,action,entity_type,entity_id,summary,created_at").order("created_at", { ascending: false }).limit(100);
   if (error) throw error;
-  return data ?? [];
+  const entries = data ?? [];
+  const actorIds = [...new Set(entries.map((entry: any) => entry.actor_id).filter(Boolean))];
+  const { data: admins, error: adminsError } = actorIds.length
+    ? await adminDb.from("admin_users").select("user_id,email").in("user_id", actorIds)
+    : { data: [], error: null };
+  if (adminsError) throw adminsError;
+  const emails = new Map((admins ?? []).map((admin: any) => [admin.user_id, admin.email]));
+  return entries.map((entry: any) => ({ ...entry, actor_email: emails.get(entry.actor_id) ?? "Administrador" }));
 }
 
 async function catalogOptions() {
@@ -658,12 +665,23 @@ async function deleteExperience(body: Record<string, unknown>) {
 }
 
 async function listCustomers() {
-  const { data: profiles, error } = await adminDb
+  const [{ data: profiles, error }, { data: orders, error: ordersError }] = await Promise.all([
+    adminDb
     .from("customers")
     .select("id,auth_user_id,email,full_name,phone,whatsapp_opt_in,whatsapp_opted_in_at,created_at,updated_at")
     .order("created_at", { ascending: false })
-    .limit(1000);
+    .limit(1000),
+    adminDb.from("orders").select("customer_id,total,created_at").not("customer_id", "is", null).neq("status", "cancelled"),
+  ]);
   if (error) throw error;
+  if (ordersError) throw ordersError;
+  const customerMetrics = new Map<string, { order_count: number; total_spent: number; last_order_at: string }>();
+  for (const order of orders ?? []) {
+    const current = customerMetrics.get(order.customer_id) ?? { order_count: 0, total_spent: 0, last_order_at: "" };
+    current.order_count += 1; current.total_spent += Number(order.total ?? 0);
+    if (String(order.created_at) > current.last_order_at) current.last_order_at = String(order.created_at);
+    customerMetrics.set(order.customer_id, current);
+  }
 
   const users = [];
   for (let page = 1; ; page += 1) {
@@ -691,7 +709,7 @@ async function listCustomers() {
     };
   });
   const guests = (profiles ?? []).filter((profile) => !linkedProfileIds.has(profile.id)).map((profile) => ({ ...profile, profile_complete: Boolean(profile.full_name && profile.phone) }));
-  return [...registered, ...guests].sort((a, b) => String(b.created_at ?? "").localeCompare(String(a.created_at ?? "")));
+  return [...registered, ...guests].map((customer: any) => ({ ...customer, ...(customerMetrics.get(customer.id) ?? { order_count: 0, total_spent: 0, last_order_at: "" }) })).sort((a, b) => String(b.created_at ?? "").localeCompare(String(a.created_at ?? "")));
 }
 
 async function createCustomer(body: Record<string, unknown>) {
