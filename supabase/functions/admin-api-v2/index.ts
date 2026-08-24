@@ -111,6 +111,7 @@ async function listProducts(body: Record<string, unknown>) {
   const search = String(body.search ?? "").trim().slice(0, 120).replace(/[,.()]/g, " ");
   const status = String(body.status ?? "");
   const stockFilter = String(body.stockFilter ?? "");
+  const imageFilter = String(body.imageFilter ?? "");
   const categoryId = String(body.categoryId ?? "");
   const [{ data: categories, error: categoryError }, { data: subcategories, error: subcategoryError }] = await Promise.all([
     adminDb.from("categories").select("id,name").eq("active", true).order("name"),
@@ -128,6 +129,7 @@ async function listProducts(body: Record<string, unknown>) {
   if (categoryId) query = query.eq("category_id", categoryId);
   if (stockFilter === "out") query = query.eq("stock", 0);
   if (stockFilter === "low") query = query.gt("stock", 0).lte("stock", 5);
+  if (imageFilter === "missing") query = query.is("product_images", null);
   const { data: products, error, count } = await query.range((page - 1) * pageSize, page * pageSize - 1);
   if (error) throw error;
   return { products: products ?? [], categories: categories ?? [], subcategories: subcategories ?? [], page, pageSize, total: count ?? 0 };
@@ -582,17 +584,30 @@ async function updateOrderStatus(body: Record<string, unknown>) {
   return data;
 }
 
+async function updateOrderPaymentStatus(body: Record<string, unknown>, actorId: string) {
+  const orderId = String(body.orderId ?? "");
+  const paymentStatus = String(body.paymentStatus ?? "");
+  if (!orderId || !["pending", "paid"].includes(paymentStatus)) throw new ClientError("Estado de pago no válido.");
+  const { data, error } = await adminDb.from("orders").update({ payment_status: paymentStatus }).eq("id", orderId).select("id,order_number,payment_status").maybeSingle();
+  if (error) throw error;
+  if (!data) throw new ClientError("Pedido no encontrado.");
+  await audit(actorId, "order_payment_updated", "order", orderId, { order_number: data.order_number, payment_status: paymentStatus });
+  return data;
+}
+
 async function listOrders(body: Record<string, unknown>) {
   const search = String(body.search ?? "").trim().slice(0, 100);
   const status = String(body.status ?? "");
+  const paymentStatus = String(body.paymentStatus ?? "");
   const dateFrom = String(body.dateFrom ?? "");
   const dateTo = String(body.dateTo ?? "");
   let query = adminDb
     .from("orders")
-    .select("id,order_number,status,purchase_type,fulfillment_type,subtotal,discount_amount,total,item_count,coupon_code,shipping_address,customer_note,created_at,customers(full_name,phone,email),order_items(id,product_name,variant_name,quantity,unit_price,line_total)")
+    .select("id,order_number,status,payment_status,purchase_type,fulfillment_type,subtotal,discount_amount,total,item_count,coupon_code,shipping_address,customer_note,created_at,customers(full_name,phone,email),order_items(id,product_name,variant_name,quantity,unit_price,line_total)")
     .order("created_at", { ascending: false })
     .limit(100);
   if (["pending", "processing", "completed", "cancelled"].includes(status)) query = query.eq("status", status);
+  if (["pending", "paid"].includes(paymentStatus)) query = query.eq("payment_status", paymentStatus);
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateFrom)) query = query.gte("created_at", `${dateFrom}T00:00:00-03:00`);
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateTo)) query = query.lte("created_at", `${dateTo}T23:59:59-03:00`);
   if (search) query = query.or(`order_number.eq.${Number(search) || -1}`);
@@ -838,6 +853,7 @@ Deno.serve(async (request) => {
     if (action === "deleteCoupon") return reply(request, { ok: true, data: await deleteCoupon(body) });
     if (action === "orders") return reply(request, { ok: true, data: await listOrders(body) });
     if (action === "updateOrderStatus") return reply(request, { ok: true, data: await updateOrderStatus(body) });
+    if (action === "updateOrderPaymentStatus") return reply(request, { ok: true, data: await updateOrderPaymentStatus(body, caller.id) });
     if (action === "experiences") return reply(request, { ok: true, data: await listExperiences() });
     if (action === "updateExperience") return reply(request, { ok: true, data: await updateExperience(body) });
     if (action === "deleteExperience") return reply(request, { ok: true, data: await deleteExperience(body) });
