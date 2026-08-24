@@ -64,15 +64,17 @@ async function requireAdmin(request: Request) {
 }
 
 async function dashboard() {
-  const [products, lowStock, pendingOrders, processingOrders, coupons] = await Promise.all([
+  const [products, lowStock, pendingOrders, processingOrders, coupons, expiringCoupons, productImageCheck] = await Promise.all([
     adminDb.from("products").select("id", { count: "exact", head: true }),
     adminDb.from("low_stock_products").select("id", { count: "exact", head: true }),
     adminDb.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending"),
     adminDb.from("orders").select("id", { count: "exact", head: true }).eq("status", "processing"),
     adminDb.from("coupons").select("id", { count: "exact", head: true }).eq("active", true),
+    adminDb.from("coupons").select("id", { count: "exact", head: true }).eq("active", true).gte("expires_at", new Date().toISOString()).lte("expires_at", new Date(Date.now() + 7 * 86400000).toISOString()),
+    adminDb.from("products").select("id,product_images(id)").is("deleted_at", null),
   ]);
 
-  const errors = [products, lowStock, pendingOrders, processingOrders, coupons]
+  const errors = [products, lowStock, pendingOrders, processingOrders, coupons, expiringCoupons, productImageCheck]
     .map((entry) => entry.error)
     .filter(Boolean);
   if (errors.length) throw errors[0];
@@ -91,14 +93,25 @@ async function dashboard() {
       pendingOrders: pendingOrders.count ?? 0,
       processingOrders: processingOrders.count ?? 0,
       activeCoupons: coupons.count ?? 0,
+      expiringCoupons: expiringCoupons.count ?? 0,
+      productsWithoutImages: (productImageCheck.data ?? []).filter((product: any) => !product.product_images?.length).length,
     },
     alerts: alerts ?? [],
   };
 }
 
-async function listProducts() {
-  const pageSize = 500;
-  const products = [];
+function adminPage(value: unknown, fallback = 1) {
+  const page = Number(value);
+  return Number.isInteger(page) && page > 0 ? Math.min(page, 10_000) : fallback;
+}
+
+async function listProducts(body: Record<string, unknown>) {
+  const page = adminPage(body.page);
+  const pageSize = Math.min(Math.max(Number(body.pageSize) || 50, 10), 100);
+  const search = String(body.search ?? "").trim().slice(0, 120).replace(/[,.()]/g, " ");
+  const status = String(body.status ?? "");
+  const stockFilter = String(body.stockFilter ?? "");
+  const categoryId = String(body.categoryId ?? "");
   const [{ data: categories, error: categoryError }, { data: subcategories, error: subcategoryError }] = await Promise.all([
     adminDb.from("categories").select("id,name").eq("active", true).order("name"),
     adminDb.from("subcategories").select("id,category_id,name").eq("active", true).order("name"),
@@ -106,24 +119,40 @@ async function listProducts() {
   if (categoryError) throw categoryError;
   if (subcategoryError) throw subcategoryError;
 
-  for (let from = 0; ; from += pageSize) {
-    const to = from + pageSize - 1;
+  let query = adminDb.from("products")
+    .select("id,sku,name,description,category_id,subcategory_id,supplier_price,retail_price,wholesale_price,stock,status,created_at,categories(name),subcategories(name),product_images(id,image_url,position),product_variants(id,color,size,sku,stock,retail_price,wholesale_price,active,image_url,created_at)", { count: "exact" })
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
+  if (search) query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%`);
+  if (["published", "draft", "archived"].includes(status)) query = query.eq("status", status);
+  if (categoryId) query = query.eq("category_id", categoryId);
+  if (stockFilter === "out") query = query.eq("stock", 0);
+  if (stockFilter === "low") query = query.gt("stock", 0).lte("stock", 5);
+  const { data: products, error, count } = await query.range((page - 1) * pageSize, page * pageSize - 1);
+  if (error) throw error;
+  return { products: products ?? [], categories: categories ?? [], subcategories: subcategories ?? [], page, pageSize, total: count ?? 0 };
+}
 
-    const { data, error } = await adminDb
-      .from("products")
-      .select("id,sku,name,description,category_id,subcategory_id,supplier_price,retail_price,wholesale_price,stock,status,created_at,categories(name),subcategories(name),product_images(id,image_url,position),product_variants(id,color,size,sku,stock,retail_price,wholesale_price,active,image_url,created_at)")
-      .order("created_at", { ascending: false })
-      .range(from, to);
+async function listTrashedProducts(body: Record<string, unknown>) {
+  const page = adminPage(body.page);
+  const pageSize = Math.min(Math.max(Number(body.pageSize) || 25, 10), 100);
+  const { data, error, count } = await adminDb.from("products")
+    .select("id,sku,name,status,stock,deleted_at,product_images(id,image_url,position)", { count: "exact" })
+    .not("deleted_at", "is", null).order("deleted_at", { ascending: false })
+    .range((page - 1) * pageSize, page * pageSize - 1);
+  if (error) throw error;
+  return { products: data ?? [], page, pageSize, total: count ?? 0 };
+}
 
-    if (error) throw error;
+async function audit(actorId: string, action: string, entityType: string, entityId: string | null, summary: Record<string, unknown> = {}) {
+  const { error } = await adminDb.from("admin_audit_log").insert({ actor_id: actorId, action, entity_type: entityType, entity_id: entityId, summary });
+  if (error) console.error("No se pudo guardar auditoría", error.message);
+}
 
-    const batch = data ?? [];
-    products.push(...batch);
-
-    if (batch.length < pageSize) break;
-  }
-
-  return { products, categories: categories ?? [], subcategories: subcategories ?? [] };
+async function listAuditLog() {
+  const { data, error } = await adminDb.from("admin_audit_log").select("id,action,entity_type,entity_id,summary,created_at,admin_users(email)").order("created_at", { ascending: false }).limit(100);
+  if (error) throw error;
+  return data ?? [];
 }
 
 async function catalogOptions() {
@@ -393,77 +422,75 @@ async function deleteProductImage(body: Record<string, unknown>) {
   return { deleted: true };
 }
 
-async function deleteProduct(body: Record<string, unknown>) {
+async function deleteProduct(body: Record<string, unknown>, actorId: string) {
   const productId = String(body.productId ?? "");
   if (!productId) throw new Error("Producto no válido.");
 
-  const { count: saleCount, error: salesError } = await adminDb
-    .from("order_items")
-    .select("id", { count: "exact", head: true })
-    .eq("product_id", productId);
-  if (salesError) throw salesError;
-  if (Number(saleCount ?? 0) > 0) {
-    throw new Error("No se puede eliminar este producto porque ya está relacionado con una venta. Cambiá su estado a Archivado.");
-  }
-
-  // Se eliminan primero las relaciones que no deben quedar huérfanas.
-  const { data: images, error: imagesError } = await adminDb
-    .from("product_images")
-    .select("image_url")
-    .eq("product_id", productId);
-  if (imagesError) throw imagesError;
-
-  const { error: variantsError } = await adminDb.from("product_variants").delete().eq("product_id", productId);
-  if (variantsError) throw variantsError;
-  const { error: imageRowsError } = await adminDb.from("product_images").delete().eq("product_id", productId);
-  if (imageRowsError) throw imageRowsError;
-
-  const { error } = await adminDb.from("products").delete().eq("id", productId);
+  const { data, error } = await adminDb.from("products").update({ status: "archived", deleted_at: new Date().toISOString(), deleted_by: actorId, updated_at: new Date().toISOString() }).eq("id", productId).is("deleted_at", null).select("id,name").maybeSingle();
   if (error) throw error;
-
-  const paths = (images ?? []).map(({ image_url }) => {
-    try {
-      const marker = "/product-images/";
-      const path = new URL(String(image_url)).pathname.split(marker)[1];
-      return path ? decodeURIComponent(path) : "";
-    } catch (_) { return ""; }
-  }).filter(Boolean);
-  if (paths.length) await adminDb.storage.from("product-images").remove(paths);
-  return { deleted: true };
+  if (!data) throw new ClientError("El producto no existe o ya está en la papelera.");
+  await audit(actorId, "product_trashed", "product", productId, { name: data.name });
+  return { deleted: true, recoverableUntil: new Date(Date.now() + 30 * 86400000).toISOString() };
 }
 
-async function deleteProducts(body: Record<string, unknown>) {
+async function reorderProductImages(body: Record<string, unknown>, actorId: string) {
+  const productId = String(body.productId ?? "");
+  const imageIds = Array.isArray(body.imageIds) ? body.imageIds.map(String).filter(Boolean).slice(0, 20) : [];
+  if (!productId || !imageIds.length) throw new ClientError("Fotos inválidas.");
+  const { data: images, error: readError } = await adminDb.from("product_images").select("id").eq("product_id", productId).in("id", imageIds);
+  if (readError) throw readError;
+  if ((images ?? []).length !== imageIds.length) throw new ClientError("Una de las fotos no pertenece a este producto.");
+  for (let index = 0; index < imageIds.length; index += 1) {
+    const { error } = await adminDb.from("product_images").update({ position: index + 1 }).eq("id", imageIds[index]).eq("product_id", productId);
+    if (error) throw error;
+  }
+  await audit(actorId, "product_images_reordered", "product", productId, { count: imageIds.length });
+  return { updated: imageIds.length };
+}
+
+async function deleteProducts(body: Record<string, unknown>, actorId: string) {
   const productIds = [...new Set(Array.isArray(body.productIds) ? body.productIds.map(String).filter(Boolean) : [])];
   if (!productIds.length || productIds.length > 100) throw new ClientError("Elegí entre 1 y 100 productos para eliminar.");
 
-  const { data: soldItems, error: salesError } = await adminDb
-    .from("order_items")
-    .select("product_id,products(name)")
-    .in("product_id", productIds)
-    .limit(10);
-  if (salesError) throw salesError;
-  if (soldItems?.length) {
-    const names = soldItems.map((item: any) => item.products?.name).filter(Boolean).slice(0, 3).join(", ");
-    throw new ClientError(`No se pueden eliminar productos relacionados con una venta${names ? `: ${names}` : ""}. Cambialos a Archivado.`);
+  const { data, error } = await adminDb.from("products").update({ status: "archived", deleted_at: new Date().toISOString(), deleted_by: actorId, updated_at: new Date().toISOString() }).in("id", productIds).is("deleted_at", null).select("id");
+  if (error) throw error;
+  await audit(actorId, "products_trashed", "product", null, { count: data?.length ?? 0 });
+  return { deleted: data?.length ?? 0, recoverableUntil: new Date(Date.now() + 30 * 86400000).toISOString() };
+}
+
+async function restoreProduct(body: Record<string, unknown>, actorId: string) {
+  const productId = String(body.productId ?? "");
+  if (!productId) throw new ClientError("Producto no válido.");
+  const { data, error } = await adminDb.from("products").update({ deleted_at: null, deleted_by: null, updated_at: new Date().toISOString() }).eq("id", productId).not("deleted_at", "is", null).select("id,name").maybeSingle();
+  if (error) throw error;
+  if (!data) throw new ClientError("El producto no está en la papelera.");
+  await audit(actorId, "product_restored", "product", productId, { name: data.name });
+  return { restored: true };
+}
+
+async function bulkUpdateProducts(body: Record<string, unknown>, actorId: string) {
+  const productIds = [...new Set(Array.isArray(body.productIds) ? body.productIds.map(String).filter(Boolean) : [])];
+  if (!productIds.length || productIds.length > 100) throw new ClientError("Elegí entre 1 y 100 productos.");
+  const status = String(body.status ?? "");
+  const discountPercent = Number(body.discountPercent);
+  if (["published", "draft", "archived"].includes(status)) {
+    const { data, error } = await adminDb.from("products").update({ status, updated_at: new Date().toISOString() }).in("id", productIds).is("deleted_at", null).select("id");
+    if (error) throw error;
+    await audit(actorId, "products_status_changed", "product", null, { count: data?.length ?? 0, status });
+    return { updated: data?.length ?? 0 };
   }
-
-  const { data: images, error: imagesError } = await adminDb.from("product_images").select("image_url").in("product_id", productIds);
-  if (imagesError) throw imagesError;
-  const { error: variantsError } = await adminDb.from("product_variants").delete().in("product_id", productIds);
-  if (variantsError) throw variantsError;
-  const { error: imageRowsError } = await adminDb.from("product_images").delete().in("product_id", productIds);
-  if (imageRowsError) throw imageRowsError;
-  const { error: productsError } = await adminDb.from("products").delete().in("id", productIds);
-  if (productsError) throw productsError;
-
-  const paths = (images ?? []).map(({ image_url }) => {
-    try {
-      const path = new URL(String(image_url)).pathname.split("/product-images/")[1];
-      return path ? decodeURIComponent(path) : "";
-    } catch (_) { return ""; }
-  }).filter(Boolean);
-  if (paths.length) await adminDb.storage.from("product-images").remove(paths);
-  return { deleted: productIds.length };
+  if (Number.isFinite(discountPercent) && discountPercent > 0 && discountPercent < 100) {
+    const factor = 1 - discountPercent / 100;
+    const { data: products, error: readError } = await adminDb.from("products").select("id,retail_price,wholesale_price").in("id", productIds).is("deleted_at", null);
+    if (readError) throw readError;
+    for (const product of products ?? []) {
+      const { error } = await adminDb.from("products").update({ retail_price: Math.max(1, Math.round(Number(product.retail_price) * factor)), wholesale_price: Math.max(1, Math.round(Number(product.wholesale_price) * factor)), updated_at: new Date().toISOString() }).eq("id", product.id);
+      if (error) throw error;
+    }
+    await audit(actorId, "products_price_discount", "product", null, { count: products?.length ?? 0, discountPercent });
+    return { updated: products?.length ?? 0 };
+  }
+  throw new ClientError("Elegí un estado o un descuento válido.");
 }
 
 async function listCoupons() {
@@ -548,14 +575,24 @@ async function updateOrderStatus(body: Record<string, unknown>) {
   return data;
 }
 
-async function listOrders() {
-  const { data, error } = await adminDb
+async function listOrders(body: Record<string, unknown>) {
+  const search = String(body.search ?? "").trim().slice(0, 100);
+  const status = String(body.status ?? "");
+  const dateFrom = String(body.dateFrom ?? "");
+  const dateTo = String(body.dateTo ?? "");
+  let query = adminDb
     .from("orders")
     .select("id,order_number,status,purchase_type,fulfillment_type,subtotal,discount_amount,total,item_count,coupon_code,shipping_address,customer_note,created_at,customers(full_name,phone,email),order_items(id,product_name,variant_name,quantity,unit_price,line_total)")
     .order("created_at", { ascending: false })
     .limit(100);
+  if (["pending", "processing", "completed", "cancelled"].includes(status)) query = query.eq("status", status);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateFrom)) query = query.gte("created_at", `${dateFrom}T00:00:00-03:00`);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateTo)) query = query.lte("created_at", `${dateTo}T23:59:59-03:00`);
+  if (search) query = query.or(`order_number.eq.${Number(search) || -1}`);
+  const { data, error } = await query;
   if (error) throw error;
-  return data ?? [];
+  const normalizedSearch = search.toLocaleLowerCase("es-AR");
+  return (data ?? []).filter((order: any) => !normalizedSearch || `${order.order_number} ${order.customers?.full_name ?? ""} ${order.customers?.phone ?? ""}`.toLocaleLowerCase("es-AR").includes(normalizedSearch));
 }
 
 async function moveProducts(body: Record<string, unknown>) {
@@ -760,7 +797,9 @@ Deno.serve(async (request) => {
     const action = String(body?.action ?? "dashboard");
 
     if (action === "dashboard") return reply(request, { ok: true, data: await dashboard() });
-    if (action === "products") return reply(request, { ok: true, data: await listProducts() });
+    if (action === "products") return reply(request, { ok: true, data: await listProducts(body) });
+    if (action === "trashProducts") return reply(request, { ok: true, data: await listTrashedProducts(body) });
+    if (action === "auditLog") return reply(request, { ok: true, data: await listAuditLog() });
     if (action === "catalogOptions") return reply(request, { ok: true, data: await catalogOptions() });
     if (action === "catalogManagement") return reply(request, { ok: true, data: await catalogManagement() });
     if (action === "saveCategory") return reply(request, { ok: true, data: await saveCategory(body) });
@@ -771,12 +810,15 @@ Deno.serve(async (request) => {
     if (action === "moveProducts") return reply(request, { ok: true, data: await moveProducts(body) });
     if (action === "uploadProductImage") return reply(request, { ok: true, data: await uploadProductImage(body) }, 201);
     if (action === "deleteProductImage") return reply(request, { ok: true, data: await deleteProductImage(body) });
-    if (action === "deleteProduct") return reply(request, { ok: true, data: await deleteProduct(body) });
-    if (action === "deleteProducts") return reply(request, { ok: true, data: await deleteProducts(body) });
+    if (action === "reorderProductImages") return reply(request, { ok: true, data: await reorderProductImages(body, caller.id) });
+    if (action === "deleteProduct") return reply(request, { ok: true, data: await deleteProduct(body, caller.id) });
+    if (action === "deleteProducts") return reply(request, { ok: true, data: await deleteProducts(body, caller.id) });
+    if (action === "restoreProduct") return reply(request, { ok: true, data: await restoreProduct(body, caller.id) });
+    if (action === "bulkUpdateProducts") return reply(request, { ok: true, data: await bulkUpdateProducts(body, caller.id) });
     if (action === "coupons") return reply(request, { ok: true, data: await listCoupons() });
     if (action === "saveCoupon") return reply(request, { ok: true, data: await saveCoupon(body) });
     if (action === "deleteCoupon") return reply(request, { ok: true, data: await deleteCoupon(body) });
-    if (action === "orders") return reply(request, { ok: true, data: await listOrders() });
+    if (action === "orders") return reply(request, { ok: true, data: await listOrders(body) });
     if (action === "updateOrderStatus") return reply(request, { ok: true, data: await updateOrderStatus(body) });
     if (action === "experiences") return reply(request, { ok: true, data: await listExperiences() });
     if (action === "updateExperience") return reply(request, { ok: true, data: await updateExperience(body) });

@@ -187,7 +187,7 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
       <h1>Administración</h1>
       <p class="lead">Productos, pedidos y comunidad.</p>
       </section><div class="admin-nav-strip"><nav class="nav" aria-label="Secciones del panel">
-        <button data-view="dashboard" class="active">Resumen</button><button data-view="orders">Pedidos</button><button data-view="products">Administrar productos</button><button data-view="catalog">Categorías</button><button data-view="customers">Clientes</button><button data-view="coupons">Cupones</button><button data-view="experiences">Experiencias</button><button data-view="admins">Administradores</button><button data-view="account">Mi cuenta</button>
+        <button data-view="dashboard" class="active">Resumen</button><button data-view="orders">Pedidos</button><button data-view="products">Administrar productos</button><button data-view="catalog">Categorías</button><button data-view="customers">Clientes</button><button data-view="coupons">Cupones</button><button data-view="experiences">Experiencias</button><button data-view="history">Historial</button><button data-view="admins">Administradores</button><button data-view="account">Mi cuenta</button>
       </nav></div><main class="admin-shell"><div id="content"><p class="empty">Cargando…</p></div></main>
     <footer class="admin-footer">ITHIEL Bazar y Makeup · Derechos reservados 2015 - 2026 · Rosario, Santa Fe</footer>
   </section>
@@ -242,6 +242,7 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
         <div class="cards">
           <button class="card dashboard-link" type="button" data-go-view="products"><small>Productos</small><strong>${t.products}</strong></button>
           <button class="card dashboard-link" type="button" data-go-view="products"><small>Stock para revisar</small><strong>${t.lowStock}</strong></button>
+          <button class="card dashboard-link" type="button" data-go-view="products"><small>Productos sin foto</small><strong>${t.productsWithoutImages || 0}</strong></button>
           <button class="card dashboard-link" type="button" data-go-view="orders"><small>Pedidos pendientes</small><strong>${t.pendingOrders}</strong></button>
           <button class="card dashboard-link" type="button" data-go-view="coupons"><small>Cupones activos</small><strong>${t.activeCoupons}</strong></button>
         </div>
@@ -249,7 +250,7 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
           <section class="panel"><h2>Productos para revisar</h2>
             ${data.alerts.length ? `<table><thead><tr><th>Producto</th><th>SKU</th><th>Referencia</th><th>Estado</th></tr></thead><tbody>${data.alerts.slice(0,6).map(p => `<tr><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sku)}</td><td><span class="pill low">${p.stock}</span></td><td>${statusLabel(p.status)}</td></tr>`).join("")}</tbody></table>` : '<p class="empty">No hay productos para revisar.</p>'}
           </section>
-          <section class="panel"><h2>Actividad de pedidos</h2><table><tbody><tr><td>Pendientes</td><td><span class="pill">${t.pendingOrders}</span></td></tr><tr><td>En proceso</td><td><span class="pill">${t.processingOrders}</span></td></tr><tr><td>Cupones activos</td><td><span class="pill">${t.activeCoupons}</span></td></tr></tbody></table></section>
+          <section class="panel"><h2>Actividad de pedidos</h2><table><tbody><tr><td>Pendientes</td><td><span class="pill">${t.pendingOrders}</span></td></tr><tr><td>En proceso</td><td><span class="pill">${t.processingOrders}</span></td></tr><tr><td>Cupones activos</td><td><span class="pill">${t.activeCoupons}</span></td></tr><tr><td>Vencen en 7 días</td><td><span class="pill ${t.expiringCoupons ? "low" : ""}">${t.expiringCoupons || 0}</span></td></tr></tbody></table></section>
         </div>`;
       document.querySelectorAll("[data-go-view]").forEach(button => button.addEventListener("click", () => loadView(button.dataset.goView)));
     }
@@ -288,7 +289,7 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
             <div id="variantRows" class="variant-rows">${existingVariants.map(variantRow).join("")}</div>
             <p id="noVariants" class="empty compact-empty" ${existingVariants.length ? "hidden" : ""}>Este producto no tiene variantes.</p>
           </section>
-          ${product?.product_images?.length ? `<div class="wide"><label>Fotos actuales</label><div class="product-photos">${product.product_images.map(image => `<div class="product-photo"><img src="${escapeHtml(image.image_url)}" alt=""><button class="edit" type="button" data-delete-image="${image.id}">Quitar</button></div>`).join("")}</div></div>` : ""}
+          ${product?.product_images?.length ? `<div class="wide"><label>Fotos actuales</label><small>Usá las flechas para elegir el orden de publicación.</small><div class="product-photos">${[...product.product_images].sort((a,b)=>Number(a.position)-Number(b.position)).map((image,index,all) => `<div class="product-photo"><img src="${escapeHtml(image.image_url)}" alt="Vista previa del producto"><div class="actions"><button class="edit" type="button" data-move-image="${image.id}" data-direction="-1" ${index===0?"disabled":""}>←</button><button class="edit" type="button" data-move-image="${image.id}" data-direction="1" ${index===all.length-1?"disabled":""}>→</button><button class="edit delete" type="button" data-delete-image="${image.id}">Quitar</button></div></div>`).join("")}</div></div>` : ""}
           <footer class="wide form-footer"><button id="cancelProduct" class="outline" type="button">Cancelar</button><button class="primary" type="submit">${product ? "Guardar cambios" : "Crear producto"}</button></footer>
         </form><p id="productMessage" class="notice" aria-live="polite"></p>
       </section></div>`;
@@ -334,7 +335,8 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
       fillSubcategories();
       document.querySelector("#backProducts").addEventListener("click",()=>loadView("products"));
       document.querySelector("#cancelProduct").addEventListener("click",()=>loadView("products"));
-      document.querySelectorAll("[data-delete-image]").forEach(button=>button.addEventListener("click",async()=>{if(!confirm("¿Quitar esta foto del producto?"))return;try{await callAdmin("deleteProductImage",{imageId:button.dataset.deleteImage});const response=await callAdmin("products");const productList=Array.isArray(response)?response:response?.products||[];await renderProductForm(productList.find(item=>item.id===product.id)||null)}catch(error){alert(error.message)}}));
+      document.querySelectorAll("[data-delete-image]").forEach(button=>button.addEventListener("click",async()=>{if(!confirm("¿Quitar esta foto del producto?"))return;try{await callAdmin("deleteProductImage",{imageId:button.dataset.deleteImage});product.product_images=(product.product_images||[]).filter(image=>image.id!==button.dataset.deleteImage);await renderProductForm(product)}catch(error){alert(error.message)}}));
+      document.querySelectorAll("[data-move-image]").forEach(button=>button.addEventListener("click",async()=>{const images=[...(product?.product_images||[])].sort((a,b)=>Number(a.position)-Number(b.position));const index=images.findIndex(image=>image.id===button.dataset.moveImage);const target=index+Number(button.dataset.direction);if(index<0||target<0||target>=images.length)return;[images[index],images[target]]=[images[target],images[index]];try{await callAdmin("reorderProductImages",{productId:product.id,imageIds:images.map(image=>image.id)});product.product_images=images.map((image,position)=>({...image,position:position+1}));await renderProductForm(product)}catch(error){alert(error.message)}}));
       document.querySelector("#productForm").addEventListener("submit",async event=>{
         event.preventDefault();
         const message=document.querySelector("#productMessage");
@@ -402,6 +404,43 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
       wireRows();
     }
 
+    function renderProductsV2(data, state = {}) {
+      const products = Array.isArray(data?.products) ? data.products : [];
+      const categories = Array.isArray(data?.categories) ? data.categories : [];
+      const selected = new Set();
+      const page = Number(data?.page || state.page || 1);
+      const pageSize = Number(data?.pageSize || state.pageSize || 50);
+      const total = Number(data?.total || 0);
+      const pages = Math.max(1, Math.ceil(total / pageSize));
+      const load = async (next = {}) => {
+        const query = { page, pageSize, search:"", status:"", stockFilter:"", categoryId:"", ...state, ...next };
+        content.innerHTML = '<p class="empty">Cargando productos…</p>';
+        renderProductsV2(await callAdmin("products", query), query);
+      };
+      const productRow = product => `<tr><td><input class="row-check" type="checkbox" data-select-product="${product.id}" aria-label="Seleccionar ${escapeHtml(product.name)}"></td><td>${product.product_images?.[0]?.image_url ? `<img class="photo-thumb" src="${escapeHtml(product.product_images[0].image_url)}" alt="">` : "—"}</td><td><strong>${escapeHtml(product.name)}</strong><br><small>${escapeHtml(product.sku)}</small></td><td>${escapeHtml(product.categories?.name || "—")}</td><td>${money(product.retail_price)}</td><td>${money(product.wholesale_price)}</td><td><span class="pill ${Number(product.stock) <= 5 ? "low" : ""}">${product.stock}</span></td><td>${statusLabel(product.status)}</td><td><div class="actions actions-stack"><button class="icon-action" data-edit-product="${product.id}" title="Editar">${icons.edit}</button><button class="icon-action delete" data-delete-product="${product.id}" title="Enviar a papelera">${icons.trash}</button></div></td></tr>`;
+      content.innerHTML = `${viewHead("PRODUCTOS", "Administrar productos", `${total.toLocaleString("es-AR")} productos · la búsqueda y los filtros se aplican sin cargar todo el catálogo.`, '<button id="newProduct" class="primary" type="button">+ Agregar producto</button>')}<section class="panel"><div class="product-tools"><input id="productSearch" class="product-search" type="search" value="${escapeHtml(state.search || "")}" placeholder="Buscar por nombre o SKU"><select id="productStatusFilter"><option value="">Todos los estados</option><option value="published" ${state.status === "published" ? "selected" : ""}>Publicados</option><option value="draft" ${state.status === "draft" ? "selected" : ""}>Borradores</option><option value="archived" ${state.status === "archived" ? "selected" : ""}>Ocultos</option></select><select id="productStockFilter"><option value="">Todo el stock</option><option value="out" ${state.stockFilter === "out" ? "selected" : ""}>Sin stock</option><option value="low" ${state.stockFilter === "low" ? "selected" : ""}>Stock bajo</option></select><select id="productCategoryFilter"><option value="">Todas las categorías</option>${categories.map(c=>`<option value="${c.id}" ${state.categoryId===c.id?"selected":""}>${escapeHtml(c.name)}</option>`).join("")}</select><button id="openTrash" class="outline" type="button">Papelera</button></div><div class="bulk-move"><strong><span id="selectedProductCount">0</span> seleccionados</strong><select id="bulkCategory"><option value="">Mover a categoría…</option>${categories.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("")}</select><select id="bulkStatus"><option value="">Cambiar estado…</option><option value="published">Publicar</option><option value="draft">Borrador</option><option value="archived">Ocultar</option></select><select id="bulkDiscount"><option value="">Aplicar descuento…</option><option value="5">5% menos</option><option value="10">10% menos</option><option value="15">15% menos</option><option value="20">20% menos</option></select><button id="bulkApply" class="edit" type="button" disabled>Aplicar</button><button id="bulkDeleteProducts" class="delete" type="button" disabled>Enviar a papelera</button></div><div id="productRows">${products.length ? `<table class="product-table"><thead><tr><th><input id="selectVisibleProducts" class="row-check" type="checkbox" aria-label="Seleccionar productos visibles"></th><th>Foto</th><th>Producto</th><th>Categoría</th><th>Minorista</th><th>Mayorista</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${products.map(productRow).join("")}</tbody></table>` : '<p class="empty">No encontramos productos con esos filtros.</p>'}</div><div class="actions" style="justify-content:space-between;margin-top:16px"><small>Página ${page} de ${pages}</small><div><button id="prevProductPage" class="outline" ${page <= 1 ? "disabled" : ""}>Anterior</button><button id="nextProductPage" class="outline" ${page >= pages ? "disabled" : ""}>Siguiente</button></div></div></section>`;
+      document.querySelector("#newProduct").addEventListener("click",()=>renderProductForm().catch(showProductError));
+      let timer; document.querySelector("#productSearch").addEventListener("input",event=>{clearTimeout(timer);timer=setTimeout(()=>load({page:1,search:event.target.value.trim()}),300)});
+      ["#productStatusFilter", "#productStockFilter", "#productCategoryFilter"].forEach(selector=>document.querySelector(selector).addEventListener("change",()=>load({page:1,status:document.querySelector("#productStatusFilter").value,stockFilter:document.querySelector("#productStockFilter").value,categoryId:document.querySelector("#productCategoryFilter").value})));
+      document.querySelector("#prevProductPage").addEventListener("click",()=>load({page:page-1})); document.querySelector("#nextProductPage").addEventListener("click",()=>load({page:page+1}));
+      const update = () => { document.querySelector("#selectedProductCount").textContent=selected.size; document.querySelector("#bulkDeleteProducts").disabled=!selected.size; document.querySelector("#bulkApply").disabled=!selected.size || !(document.querySelector("#bulkCategory").value || document.querySelector("#bulkStatus").value || document.querySelector("#bulkDiscount").value); };
+      document.querySelectorAll("[data-select-product]").forEach(box=>box.addEventListener("change",()=>{box.checked?selected.add(box.dataset.selectProduct):selected.delete(box.dataset.selectProduct);update()}));
+      document.querySelector("#selectVisibleProducts")?.addEventListener("change",event=>{document.querySelectorAll("[data-select-product]").forEach(box=>{box.checked=event.target.checked;box.checked?selected.add(box.dataset.selectProduct):selected.delete(box.dataset.selectProduct)});update()});
+      ["#bulkCategory", "#bulkStatus", "#bulkDiscount"].forEach(selector=>document.querySelector(selector).addEventListener("change",update));
+      const trash = async ids => { if(!ids.length || !confirm(`¿Enviar ${ids.length} producto${ids.length===1?"":"s"} a la papelera? Podrás restaurarlo durante 30 días.`))return; await callAdmin("deleteProducts",{productIds:ids}); await load(); };
+      document.querySelector("#bulkDeleteProducts").addEventListener("click",()=>trash([...selected]));
+      document.querySelectorAll("[data-delete-product]").forEach(button=>button.addEventListener("click",()=>trash([button.dataset.deleteProduct])));
+      document.querySelector("#bulkApply").addEventListener("click",async()=>{const ids=[...selected];const categoryId=document.querySelector("#bulkCategory").value;const status=document.querySelector("#bulkStatus").value;const discountPercent=document.querySelector("#bulkDiscount").value;if(!confirm(`¿Aplicar este cambio a ${ids.length} productos?`))return;if(categoryId)await callAdmin("moveProducts",{productIds:ids,categoryId}); if(status||discountPercent)await callAdmin("bulkUpdateProducts",{productIds:ids,status,discountPercent});await load();});
+      document.querySelectorAll("[data-edit-product]").forEach(button=>button.addEventListener("click",()=>renderProductForm(products.find(item=>item.id===button.dataset.editProduct)).catch(showProductError)));
+      document.querySelector("#openTrash").addEventListener("click",async()=>renderTrash(await callAdmin("trashProducts",{page:1,pageSize:25})));
+    }
+
+    function renderTrash(data) {
+      const products=Array.isArray(data?.products)?data.products:[];
+      content.innerHTML=`${viewHead("PAPELERA","Productos eliminados","Podés recuperar productos durante 30 días.",'<button id="backProducts" class="outline">Volver a productos</button>')}<section class="panel">${products.length?`<table><thead><tr><th>Foto</th><th>Producto</th><th>Eliminado</th><th>Acción</th></tr></thead><tbody>${products.map(p=>`<tr><td>${p.product_images?.[0]?.image_url ? `<img class="photo-thumb" src="${escapeHtml(p.product_images[0].image_url)}" alt="">` : "—"}</td><td><strong>${escapeHtml(p.name)}</strong><br><small>${escapeHtml(p.sku)}</small></td><td>${formatDate(p.deleted_at)}</td><td><button class="edit" data-restore-product="${p.id}">Restaurar</button></td></tr>`).join("")}</tbody></table>`:'<p class="empty">La papelera está vacía.</p>'}</section>`;
+      document.querySelector("#backProducts").addEventListener("click",()=>loadView("products")); document.querySelectorAll("[data-restore-product]").forEach(button=>button.addEventListener("click",async()=>{await callAdmin("restoreProduct",{productId:button.dataset.restoreProduct});renderTrash(await callAdmin("trashProducts",{page:1,pageSize:25}));}));
+    }
+
     function formatDate(value) {
       return value ? new Date(value).toLocaleString("es-AR", { dateStyle:"short", timeStyle:"short" }) : "—";
     }
@@ -434,6 +473,21 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
         try { await callAdmin("updateOrderStatus", { orderId:button.dataset.saveOrderStatus, status:select.value }); await loadView("orders"); }
         catch (error) { alert(error.message); await loadView("orders"); }
       }));
+    }
+
+    function renderOrdersV2(orders, state = {}) {
+      const items=Array.isArray(orders)?orders:[];
+      const load=async(next={})=>{const query={search:"",status:"",dateFrom:"",dateTo:"",...state,...next};content.innerHTML='<p class="empty">Buscando pedidos…</p>';renderOrdersV2(await callAdmin("orders",query),query)};
+      const cards=items.map(order=>{const customer=order.customers||{};const rows=(order.order_items||[]).map(item=>`<tr><td>${escapeHtml(item.product_name)}</td><td>${item.quantity}</td><td>${money(item.line_total)}</td></tr>`).join("");return `<article class="order-card"><header><div><span class="eyebrow">PEDIDO #${escapeHtml(order.order_number)}</span><h3>${escapeHtml(customer.full_name||"Compra sin seguimiento")}</h3><p>${formatDate(order.created_at)}</p></div>${statusLabel(order.status)}</header><div class="order-meta"><span><b>Tipo</b>${order.purchase_type==="wholesale"?"Mayorista":"Minorista"}</span><span><b>Entrega</b>${order.fulfillment_type==="shipping"?"Envío":"Retiro"}</span><span><b>Total</b>${money(order.total)}</span></div><div class="order-contact"><p><b>Contacto:</b> ${escapeHtml(customer.phone||customer.email||"No solicitado")}</p></div><table><thead><tr><th>Producto</th><th>Cant.</th><th>Subtotal</th></tr></thead><tbody>${rows}</tbody></table><footer><label>Estado<select data-order-status="${order.id}" ${["completed","cancelled"].includes(order.status)?"disabled":""}><option value="pending" ${order.status==="pending"?"selected":""}>Pendiente</option><option value="processing" ${order.status==="processing"?"selected":""}>En proceso</option><option value="completed" ${order.status==="completed"?"selected":""}>Completado</option><option value="cancelled" ${order.status==="cancelled"?"selected":""}>Cancelado</option></select></label>${!["completed","cancelled"].includes(order.status)?`<button class="edit" data-save-order-status="${order.id}" data-current-status="${order.status}">Guardar estado</button>`:"<span class=\"pill\">Pedido cerrado</span>"}</footer></article>`}).join("");
+      content.innerHTML=`${viewHead("PEDIDOS","Pedidos","Buscá por número, nombre o WhatsApp y filtrá por seguimiento.")}<section class="panel"><div class="product-tools"><input id="orderSearch" class="product-search" value="${escapeHtml(state.search||"")}" placeholder="Pedido, nombre o WhatsApp"><select id="orderStatusFilter"><option value="">Todos los estados</option><option value="pending" ${state.status==="pending"?"selected":""}>Pendientes</option><option value="processing" ${state.status==="processing"?"selected":""}>En proceso</option><option value="completed" ${state.status==="completed"?"selected":""}>Completados</option><option value="cancelled" ${state.status==="cancelled"?"selected":""}>Cancelados</option></select><input id="orderDateFrom" type="date" value="${escapeHtml(state.dateFrom||"")}" aria-label="Desde"><input id="orderDateTo" type="date" value="${escapeHtml(state.dateTo||"")}" aria-label="Hasta"></div></section><section class="orders-grid">${cards||'<p class="empty">No hay pedidos con esos filtros.</p>'}</section>`;
+      let timer;document.querySelector("#orderSearch").addEventListener("input",event=>{clearTimeout(timer);timer=setTimeout(()=>load({search:event.target.value.trim()}),300)});["#orderStatusFilter","#orderDateFrom","#orderDateTo"].forEach(selector=>document.querySelector(selector).addEventListener("change",()=>load({status:document.querySelector("#orderStatusFilter").value,dateFrom:document.querySelector("#orderDateFrom").value,dateTo:document.querySelector("#orderDateTo").value})));
+      document.querySelectorAll("[data-save-order-status]").forEach(button=>button.addEventListener("click",async()=>{const select=document.querySelector(`[data-order-status="${button.dataset.saveOrderStatus}"]`);if(select.value===button.dataset.currentStatus)return;if(!confirm(`¿Cambiar el estado a ${select.options[select.selectedIndex].text}?`))return;await callAdmin("updateOrderStatus",{orderId:button.dataset.saveOrderStatus,status:select.value});await load();}));
+    }
+
+    function renderHistory(entries) {
+      const items=Array.isArray(entries)?entries:[];
+      const labels={product_trashed:"Producto enviado a papelera",products_trashed:"Productos enviados a papelera",product_restored:"Producto restaurado",products_status_changed:"Estado masivo actualizado",products_price_discount:"Precios masivos actualizados",product_images_reordered:"Fotos reordenadas"};
+      content.innerHTML=`${viewHead("HISTORIAL","Acciones del panel","Últimos cambios registrados por administradores.")}<section class="panel">${items.length?`<table><thead><tr><th>Acción</th><th>Administrador</th><th>Fecha</th></tr></thead><tbody>${items.map(item=>`<tr><td>${escapeHtml(labels[item.action]||item.action)}</td><td>${escapeHtml(item.admin_users?.email||"Administrador")}</td><td>${formatDate(item.created_at)}</td></tr>`).join("")}</tbody></table>`:'<p class="empty">Todavía no hay acciones registradas.</p>'}</section>`;
     }
 
     function renderCatalog(data) {
@@ -597,15 +651,16 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
       setLoading();
       try {
         if (view === "account") { await renderAccount(); return; }
-        const data = await callAdmin(view === "catalog" ? "catalogManagement" : view);
+        const data = await callAdmin(view === "catalog" ? "catalogManagement" : view === "history" ? "auditLog" : view);
         if (view === "dashboard") renderDashboard(data);
-        if (view === "products") renderProducts(data);
-        if (view === "orders") renderOrders(data);
+        if (view === "products") renderProductsV2(data);
+        if (view === "orders") renderOrdersV2(data);
         if (view === "customers") renderCustomers(data);
         if (view === "admins") renderAdmins(data);
         if (view === "catalog") renderCatalog(data);
         if (view === "coupons") renderCoupons(data);
         if (view === "experiences") renderExperiences(data);
+        if (view === "history") renderHistory(data);
       } catch (error) {
         content.innerHTML = `<p class="empty">${escapeHtml(error.message)}</p>`;
       }

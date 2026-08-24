@@ -65,6 +65,7 @@ Deno.serve(async (request) => {
         .select("id,sku,name,description,retail_price,wholesale_price,stock,status,categories(name),subcategories(name),product_images(image_url,position),product_variants(id,color,size,stock,active,image_url)")
         .eq("id", productId)
         .eq("status", "published")
+        .is("deleted_at", null)
         .maybeSingle();
       if (error) throw error;
       if (!product) return json(request, { error: "Producto no encontrado." }, 404);
@@ -99,6 +100,7 @@ Deno.serve(async (request) => {
     let productsQuery = db.from("products")
       .select("id,sku,name,description,retail_price,wholesale_price,stock,status,created_at,categories(name),subcategories(name),product_images(image_url,position)")
       .eq("status", "published")
+      .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
     if (categoryId) productsQuery = productsQuery.eq("category_id", categoryId);
