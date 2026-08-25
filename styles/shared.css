@@ -9,6 +9,16 @@ html { color-scheme: light; }
 body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 button, a, input, textarea, select { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
+button, .primary, .outline, .edit, .home-link, .guide-action, .mini, .share a, .cart-send, .auth-action, .google-action {
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  line-height: 1.2;
+}
+button:not(.swatch):not(.show-pass):not(.icon-action), .primary, .outline, .edit, .home-link, .guide-action, .mini, .share a, .cart-send, .auth-action, .google-action, .catalog-copy a, .drawer-actions button, .detail-actions button { display:inline-flex; }
+.catalog-copy a, .drawer-actions button, .detail-actions button { align-items:center; justify-content:center; min-height:44px; }
+.access .pill, .actions .pill { display:inline-flex; align-items:center; justify-content:center; min-height:40px; }
+button:disabled { cursor:not-allowed; transform:none!important; box-shadow:none!important; }
 .skip-link {
   position: fixed;
   z-index: 100;
@@ -36,6 +46,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .buy-grid article:nth-child(3) { background: #4f6f78 !important; }
 
 @media (max-width: 440px) {
+  button:not(.swatch):not(.show-pass):not(.icon-action), .primary, .outline, .edit, .home-link, .guide-action, .mini, .share a, .cart-send, .auth-action, .google-action { min-height:44px; }
   .cart-button {
     width: 52px !important;
     min-width: 52px !important;

@@ -64,7 +64,7 @@ async function requireAdmin(request: Request) {
 }
 
 async function dashboard() {
-  const [products, lowStock, pendingOrders, processingOrders, coupons, expiringCoupons, productImageCheck] = await Promise.all([
+  const [products, lowStock, pendingOrders, processingOrders, coupons, expiringCoupons, productImageCheck, salesOrders] = await Promise.all([
     adminDb.from("products").select("id", { count: "exact", head: true }),
     adminDb.from("low_stock_products").select("id", { count: "exact", head: true }),
     adminDb.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending"),
@@ -72,9 +72,10 @@ async function dashboard() {
     adminDb.from("coupons").select("id", { count: "exact", head: true }).eq("active", true),
     adminDb.from("coupons").select("id", { count: "exact", head: true }).eq("active", true).gte("expires_at", new Date().toISOString()).lte("expires_at", new Date(Date.now() + 7 * 86400000).toISOString()),
     adminDb.from("products").select("id,product_images(id)").is("deleted_at", null),
+    adminDb.from("orders").select("total,status,created_at,order_items(product_name,quantity,line_total)").neq("status", "cancelled"),
   ]);
 
-  const errors = [products, lowStock, pendingOrders, processingOrders, coupons, expiringCoupons, productImageCheck]
+  const errors = [products, lowStock, pendingOrders, processingOrders, coupons, expiringCoupons, productImageCheck, salesOrders]
     .map((entry) => entry.error)
     .filter(Boolean);
   if (errors.length) throw errors[0];
@@ -86,6 +87,16 @@ async function dashboard() {
     .limit(10);
   if (alertsError) throw alertsError;
 
+  const now = Date.now();
+  const recent = (salesOrders.data ?? []).filter((order: any) => new Date(order.created_at).getTime() >= now - 30 * 86400000);
+  const revenue = recent.reduce((sum: number, order: any) => sum + Number(order.total ?? 0), 0);
+  const productTotals = new Map<string, { quantity:number; revenue:number }>();
+  for (const order of recent as any[]) for (const item of order.order_items ?? []) {
+    const key = String(item.product_name || "Producto");
+    const current = productTotals.get(key) ?? { quantity:0, revenue:0 };
+    current.quantity += Number(item.quantity ?? 0); current.revenue += Number(item.line_total ?? 0); productTotals.set(key, current);
+  }
+  const bestSellers = [...productTotals.entries()].sort((a,b) => b[1].quantity - a[1].quantity).slice(0,5).map(([name, values]) => ({ name, ...values }));
   return {
     totals: {
       products: products.count ?? 0,
@@ -95,8 +106,12 @@ async function dashboard() {
       activeCoupons: coupons.count ?? 0,
       expiringCoupons: expiringCoupons.count ?? 0,
       productsWithoutImages: (productImageCheck.data ?? []).filter((product: any) => !product.product_images?.length).length,
+      revenue30Days: revenue,
+      orders30Days: recent.length,
+      averageOrder30Days: recent.length ? revenue / recent.length : 0,
     },
     alerts: alerts ?? [],
+    bestSellers,
   };
 }
 
@@ -503,12 +518,15 @@ async function bulkUpdateProducts(body: Record<string, unknown>, actorId: string
 }
 
 async function listCoupons() {
-  const { data, error } = await adminDb
-    .from("coupons")
-    .select("id,code,discount_percent,starts_at,expires_at,active,created_at")
-    .order("created_at", { ascending: false });
+  const [{ data, error }, { data: orders, error: ordersError }] = await Promise.all([
+    adminDb.from("coupons").select("id,code,discount_percent,starts_at,expires_at,active,created_at").order("created_at", { ascending: false }),
+    adminDb.from("orders").select("coupon_id,total,status").not("coupon_id", "is", null).neq("status", "cancelled"),
+  ]);
   if (error) throw error;
-  return data ?? [];
+  if (ordersError) throw ordersError;
+  const usage = new Map<string, { uses:number; revenue:number }>();
+  for (const order of orders ?? []) { const id=String(order.coupon_id); const current=usage.get(id) ?? { uses:0,revenue:0 }; current.uses += 1; current.revenue += Number(order.total ?? 0); usage.set(id,current); }
+  return (data ?? []).map((coupon:any) => ({ ...coupon, ...(usage.get(coupon.id) ?? { uses:0,revenue:0 }) }));
 }
 
 function couponValues(body: Record<string, unknown>) {
@@ -595,6 +613,17 @@ async function updateOrderPaymentStatus(body: Record<string, unknown>, actorId: 
   return data;
 }
 
+async function updateOrderInternalLabel(body: Record<string, unknown>, actorId: string) {
+  const orderId = String(body.orderId ?? "");
+  const internalLabel = String(body.internalLabel ?? "");
+  if (!orderId || !["sin_etiqueta", "esperando_transferencia", "preparar", "entregado"].includes(internalLabel)) throw new ClientError("Etiqueta interna no válida.");
+  const { data, error } = await adminDb.from("orders").update({ internal_label: internalLabel }).eq("id", orderId).select("id,order_number,internal_label").maybeSingle();
+  if (error) throw error;
+  if (!data) throw new ClientError("Pedido no encontrado.");
+  await audit(actorId, "order_label_updated", "order", orderId, { order_number: data.order_number, internal_label: internalLabel });
+  return data;
+}
+
 async function listOrders(body: Record<string, unknown>) {
   const search = String(body.search ?? "").trim().slice(0, 100);
   const status = String(body.status ?? "");
@@ -603,7 +632,7 @@ async function listOrders(body: Record<string, unknown>) {
   const dateTo = String(body.dateTo ?? "");
   let query = adminDb
     .from("orders")
-    .select("id,order_number,status,payment_status,purchase_type,fulfillment_type,subtotal,discount_amount,total,item_count,coupon_code,shipping_address,customer_note,created_at,customers(full_name,phone,email),order_items(id,product_name,variant_name,quantity,unit_price,line_total)")
+    .select("id,order_number,status,payment_status,internal_label,purchase_type,fulfillment_type,subtotal,discount_amount,total,item_count,coupon_code,shipping_address,customer_note,created_at,customers(full_name,phone,email),order_items(id,product_name,variant_name,quantity,unit_price,line_total)")
     .order("created_at", { ascending: false })
     .limit(100);
   if (["pending", "processing", "completed", "cancelled"].includes(status)) query = query.eq("status", status);
@@ -854,6 +883,7 @@ Deno.serve(async (request) => {
     if (action === "orders") return reply(request, { ok: true, data: await listOrders(body) });
     if (action === "updateOrderStatus") return reply(request, { ok: true, data: await updateOrderStatus(body) });
     if (action === "updateOrderPaymentStatus") return reply(request, { ok: true, data: await updateOrderPaymentStatus(body, caller.id) });
+    if (action === "updateOrderInternalLabel") return reply(request, { ok: true, data: await updateOrderInternalLabel(body, caller.id) });
     if (action === "experiences") return reply(request, { ok: true, data: await listExperiences() });
     if (action === "updateExperience") return reply(request, { ok: true, data: await updateExperience(body) });
     if (action === "deleteExperience") return reply(request, { ok: true, data: await deleteExperience(body) });
