@@ -4,12 +4,13 @@
   const root = document.documentElement;
   const media = window.matchMedia("(prefers-color-scheme: dark)");
   const modes = new Set(["light", "dark", "system"]);
+  let volatilePreference = null;
 
   function preference() {
     try {
       const saved = localStorage.getItem(KEY);
-      return modes.has(saved) ? saved : "light";
-    } catch (_) { return "light"; }
+      return modes.has(saved) ? saved : (volatilePreference || "light");
+    } catch (_) { return volatilePreference || "light"; }
   }
   function effective(mode) {
     return mode === "system" ? (media.matches ? "dark" : "light") : mode;
@@ -43,6 +44,7 @@
         select.append(option);
       }
       select.addEventListener("change", () => {
+        volatilePreference = select.value;
         try { localStorage.setItem(KEY, select.value); } catch (_) {}
         // Aplica incluso si el almacenamiento no está disponible.
         root.dataset.themePreference = select.value;
