@@ -1,0 +1,64 @@
+/* Ithiel Bazar 2.0 — Presentación responsive. No modifica reglas comerciales. */
+:root {
+ --ithiel-2-gap: clamp(12px, 1.4vw, 22px);
+ --ithiel-2-width: 1420px;
+}
+html { scroll-behavior: smooth; }
+body { min-width: 320px; }
+body > header { min-height: 300px; }
+body > main { width:min(var(--ithiel-2-width),94vw); }
+body > header .brand { font-size:clamp(38px,4.3vw,65px); }
+body > header .actions { gap:10px; }
+body > header .actions .pill,
+body > header .access .pill { border-radius:100px; min-height:39px; display:inline-flex; align-items:center; justify-content:center; }
+body > main .grid, body > main .drawer-products { gap:var(--ithiel-2-gap); grid-template-columns:repeat(4,minmax(0,1fr)); }
+body > main .catalogs { gap:var(--ithiel-2-gap); grid-template-columns:repeat(4,minmax(0,1fr)); }
+body > main :is(.card,.drawer-product) { border-radius:20px; background:var(--ithiel-surface); border-color:var(--ithiel-line); overflow:hidden; box-shadow:var(--ithiel-shadow-soft); }
+body > main :is(.card,.drawer-product):hover { box-shadow:0 18px 35px rgba(85,24,53,.16); }
+body > main :is(.card,.drawer-product) :is(.image,.drawer-img) { height:clamp(145px,15vw,250px); }
+body > main :is(.card,.drawer-product) .product-name { min-height:2.6em; line-height:1.3; font-size:clamp(13px,1.1vw,17px); }
+body > main :is(.card,.drawer-product) .price-line { display:flex; gap:12px; justify-content:space-between; align-items:baseline; padding:9px 11px; margin:7px 0 0; border:1px solid var(--ithiel-line); border-radius:12px; background:var(--ithiel-pink-soft); color:var(--ithiel-burgundy); font-size:clamp(13px,1.1vw,17px); }
+body > main :is(.card,.drawer-product) .price-line span { font-size:11px; margin:0; font-weight:700; }
+body > main :is(.card,.drawer-product) .price-line.minor { background:var(--ithiel-surface); font-size:clamp(12px,1.05vw,15px); color:var(--ithiel-ink); }
+body > main :is(.card,.drawer-product) .price-line.minor span { color:var(--ithiel-ink); }
+body > main :is(.card,.drawer-product) .drawer-actions { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:12px; }
+body > main :is(.card,.drawer-product) .drawer-actions button { min-height:39px; border-radius:12px; }
+body > main :is(.card,.drawer-product) .drawer-actions .primary { background:var(--ithiel-fuchsia); color:#fff; }
+body .detail-price { gap:12px; }
+body .detail-price > div { border-radius:17px; }
+body .detail-price > div:first-child { background:linear-gradient(145deg,#851044,#b91658); }
+body .detail-price > div:last-child { background:linear-gradient(145deg,#705369,#9b7188); }
+body .cart-pop { width:min(650px,calc(100vw - 24px)); }
+body .ithiel-cart-prices { display:flex; gap:6px 12px; flex-wrap:wrap; margin:6px 0 1px; }
+body .ithiel-cart-prices > span { border:1px solid var(--ithiel-line); border-radius:9px; padding:4px 7px; font-size:11px; color:var(--ithiel-ink); background:var(--ithiel-pink-soft); font-weight:650; }
+body .cart-item .ithiel-cart-prices > span:last-child { background:var(--ithiel-surface); }
+html[data-theme="dark"] body > main :is(.card,.drawer-product) .price-line,
+html[data-theme="dark"] body .ithiel-cart-prices > span { background:#34212e; color:#fff1f7; }
+html[data-theme="dark"] body > main :is(.card,.drawer-product) .price-line.minor,
+html[data-theme="dark"] body .ithiel-cart-prices > span:last-child { background:#241822; color:#fff1f7; }
+html[data-theme="dark"] body > main :is(.card,.drawer-product) .price-line :is(span),
+html[data-theme="dark"] body > main :is(.card,.drawer-product) .price-line.minor span { color:#f8c1d7; }
+html[data-theme="dark"] body .cart-item { color:#fff1f7; background:#241822; border-color:#493142; }
+html[data-theme="dark"] body .cart-item small { color:#d4b9c7; }
+@media(max-width:900px) {
+ body > main .grid,body > main .drawer-products { grid-template-columns:repeat(3,minmax(0,1fr)); }
+ body > main .catalogs { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:620px) {
+ body > header { min-height:unset; }
+ body > main { width:min(100% - 24px,540px); }
+ body > main .grid,body > main .drawer-products { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+ body > main .catalogs { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+ body > main :is(.card,.drawer-product) :is(.image,.drawer-img) { height:clamp(130px,36vw,195px); }
+ body > main :is(.card,.drawer-product) .price-line { display:block; padding:7px 8px; font-size:14px; }
+ body > main :is(.card,.drawer-product) .price-line span { display:block; margin-bottom:2px; }
+ body > main :is(.card,.drawer-product) .price-line.minor { font-size:13px; }
+ body > main :is(.card,.drawer-product) .drawer-actions { grid-template-columns:1fr; }
+ body > main :is(.card,.drawer-product) .drawer-actions button { width:100%; }
+ body .cart-item { grid-template-columns:1fr; }
+ body .cart-item-actions { justify-content:flex-start; }
+}
+@media(max-width:380px) {
+ body > main :is(.card,.drawer-product) .product-name { font-size:13px; }
+ body > main :is(.card,.drawer-product) .price-line { font-size:12px; }
+}
