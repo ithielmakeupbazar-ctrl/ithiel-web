@@ -139,3 +139,87 @@ html[data-theme="dark"] header > .ithiel-theme-control { color: #fff; }
 @media (prefers-reduced-motion: reduce) {
  html[data-theme="dark"] *, html[data-theme="dark"] *::before, html[data-theme="dark"] *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* FIX Dark 2.0.1: contraste coherente de controles interactivos.
+   Google conserva superficie clara y el isotipo multicolor original. */
+html[data-theme="dark"] body .login-card button.google,
+html[data-theme="dark"] body .auth-pop button.google-action {
+  background: #ffffff !important;
+  color: #253047 !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,.18) !important;
+  text-shadow: none !important;
+  opacity: 1;
+}
+html[data-theme="dark"] body .login-card button.google:hover,
+html[data-theme="dark"] body .auth-pop button.google-action:hover {
+  background: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+  box-shadow: 0 5px 15px rgba(0,0,0,.2) !important;
+}
+html[data-theme="dark"] body :is(.login-card button.google, .auth-pop button.google-action) svg {
+  opacity: 1; filter: none; flex-shrink: 0;
+}
+/* Acciones secundarias del panel: no dejar blanco sobre blanco. */
+html[data-theme="dark"] body :is(.app .outline, .app .edit, .app .soft-action, .app .icon-action, .product-form-card .outline, .product-form-card .icon-action) {
+  background: #34212e !important;
+  color: #fff1f7 !important;
+  border-color: #79516a !important;
+}
+html[data-theme="dark"] body :is(.app .outline, .app .edit, .app .soft-action, .app .icon-action):not(:disabled):hover {
+  background: #493142 !important;
+  color: #fff !important;
+  border-color: #f16a9f !important;
+}
+html[data-theme="dark"] body :is(.app button.delete, .app .icon-action.delete, .product-form-card .delete) {
+  background: #48202b !important;
+  color: #ffb4c1 !important;
+  border-color: #a64d65 !important;
+}
+html[data-theme="dark"] body :is(.app button.delete, .app .icon-action.delete, .product-form-card .delete):not(:disabled):hover {
+  background: #a12847 !important;
+  color: #fff !important;
+  border-color: #da5470 !important;
+}
+html[data-theme="dark"] body :is(.app button.primary, .app .primary, .login-card button.primary, .auth-pop .auth-action, .cart-pop .primary, .drawer-actions .primary) {
+  background: #d63f7a !important;
+  color: #ffffff !important;
+  border-color: #d63f7a !important;
+}
+html[data-theme="dark"] body :is(.app button.primary, .app .primary, .login-card button.primary, .auth-pop .auth-action, .cart-pop .primary, .drawer-actions .primary):not(:disabled):hover {
+  background: #b92c64 !important;
+  border-color: #e9679b !important;
+}
+/* Botones sobre tarjetas y selector de categorías: estados distinguibles. */
+html[data-theme="dark"] body :is(.subcat, .drawer-actions button:not(.primary), .detail-actions button:not(.primary), .show-pass, .cart-pop button:not(.primary):not(.cart-close), .auth-pop .show-pass) {
+  background: #34212e !important;
+  border-color: #79516a !important;
+  color: #fff1f7 !important;
+}
+html[data-theme="dark"] body :is(.subcat.active, .subcat[aria-pressed="true"], .detail-options button.active, .nav button.active) {
+  background: #d63f7a !important;
+  border-color: #d63f7a !important;
+  color: #fff !important;
+}
+/* La navegación sobre el hero conserva texto visible. */
+html[data-theme="dark"] body header > .access a.pill,
+html[data-theme="dark"] body header > .actions a.pill {
+  color: #ffffff !important;
+  border-color: rgba(255,255,255,.6) !important;
+}
+html[data-theme="dark"] body header > .access a.pill:hover,
+html[data-theme="dark"] body header > .actions a.pill:hover {
+  color: #ffffff !important;
+  background: rgba(255,255,255,.18) !important;
+}
+/* Estados inactivos nunca deben parecer acciones disponibles. */
+html[data-theme="dark"] body button:disabled,
+html[data-theme="dark"] body button[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: .54 !important;
+  box-shadow: none !important;
+}
+html[data-theme="dark"] body :is(button, a, select, input):focus-visible {
+  outline: 3px solid #ffb0ce !important;
+  outline-offset: 3px;
+}
