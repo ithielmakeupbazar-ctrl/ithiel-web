@@ -1,0 +1,181 @@
+/* ITHIEL 2.0 - Responsive boutique storefront and desktop admin
+   Presentation only. Product/price/order/auth application logic unchanged. */
+:root {
+ --i2-bg: #fff9fb; --i2-surface: #fff; --i2-ink: #432b39;
+ --i2-muted:#806878; --i2-line:#eed3df; --i2-accent:#b91658;
+ --i2-soft:#f8e5ed; --i2-btn:#b91658;
+ --i2-radius:20px; --i2-shadow:0 12px 32px rgba(84,17,48,.08);
+}
+html[data-theme="dark"] {
+ --i2-bg:#160f16; --i2-surface:#241822; --i2-ink:#fff1f7;
+ --i2-muted:#d4b9c7; --i2-line:#493142; --i2-accent:#f16a9f;
+ --i2-soft:#34212e; --i2-btn:#d63f7a;
+}
+/* Shared shell */
+body.ithiel-v2 { background:var(--i2-bg) !important; color:var(--i2-ink); }
+body.ithiel-v2 button,body.ithiel-v2 a { touch-action:manipulation; }
+body.ithiel-v2 :is(.card,.catalog-drawer,.panel,.product-form-card) {
+ border-radius:var(--i2-radius); 
+}
+body.ithiel-v2 :is(.card,.panel,.product-form-card) { box-shadow:var(--i2-shadow); }
+/* Store masthead preserves the original rotating live product images */
+body.ithiel-v2-store > header {
+ min-height:290px; padding-bottom:40px;
+ background:linear-gradient(125deg,#660c35,#851044 52%,#b91658) !important;
+}
+body.ithiel-v2-store > header .brand {
+ font-size:clamp(38px,5vw,65px); letter-spacing:.11em;
+ margin-top:52px;
+}
+body.ithiel-v2-store > header .access { justify-content:flex-end; }
+body.ithiel-v2-store > header .actions {
+ display:flex; justify-content:center; flex-wrap:wrap;
+ max-width:1110px; margin-inline:auto; gap:9px;
+}
+body.ithiel-v2-store > header .actions .pill { padding:11px 17px; }
+body.ithiel-v2-store > main { max-width:1440px; width:min(1280px,92vw); }
+body.ithiel-v2-store > main .title { letter-spacing:-.025em; }
+body.ithiel-v2-store #latest-grid,
+body.ithiel-v2-store .drawer-products { align-items:stretch; }
+body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) {
+ display:flex; flex-direction:column; gap:0; min-width:0;
+ background:var(--i2-surface) !important; color:var(--i2-ink) !important;
+ border:1px solid var(--i2-line); border-radius:20px;
+ box-shadow:var(--i2-shadow); overflow:hidden;
+}
+body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) > div:last-child {
+ flex:1; display:flex; flex-direction:column; min-width:0;
+ padding:14px; gap:5px;
+}
+body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) .product-name {
+ font-size:clamp(14px,1.15vw,17px); line-height:1.3; margin:5px 0 8px;
+ color:var(--i2-ink) !important; 
+}
+body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) .tag {
+ font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+ color:var(--i2-muted) !important;
+}
+body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) .price-line {
+ display:flex; gap:12px; align-items:center; justify-content:space-between;
+ padding:8px 11px; border-radius:10px; margin:2px 0;
+ background:var(--i2-soft); color:var(--i2-accent) !important;
+ font-size:clamp(12px,1vw,15px); font-weight:750;
+}
+body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) .price-line.minor {
+ background:transparent; border:1px solid var(--i2-line);
+ color:var(--i2-ink) !important;
+}
+body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) .price-line span {
+ font-size:11px; font-weight:650; color:var(--i2-muted) !important;
+}
+body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) .drawer-actions {
+ margin-top:auto; padding-top:12px; display:grid; grid-template-columns:1fr 1fr; gap:7px;
+}
+body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) .drawer-actions button {
+ min-width:0; width:100%; min-height:40px; border-radius:12px;
+ white-space:normal; font-size:12px;
+}
+body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) .drawer-actions .primary {
+ background:var(--i2-btn) !important; color:#fff !important;
+ border-color:var(--i2-btn) !important;
+}
+body.ithiel-v2-store .catalogs { gap:18px; }
+body.ithiel-v2-store .catalog {
+ border-radius:22px; min-height:280px; box-shadow:var(--i2-shadow);
+ transition:transform .2s ease,box-shadow .2s ease;
+}
+@media (hover:hover) {
+ body.ithiel-v2-store .catalog:hover { transform:translateY(-3px); box-shadow:0 16px 38px rgba(84,17,48,.17); }
+}
+body.ithiel-v2-store .catalog-drawer { background:var(--i2-surface) !important; border-color:var(--i2-line); }
+body.ithiel-v2-store #catalog-search { background:var(--i2-surface) !important; color:var(--i2-ink) !important; border:1px solid var(--i2-line) !important; }
+body.ithiel-v2-store .price-line { font-variant-numeric:tabular-nums; }
+@media (min-width:980px) {
+ body.ithiel-v2-store #latest-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; }
+ body.ithiel-v2-store .drawer-products { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; }
+ body.ithiel-v2-store .catalogs { grid-template-columns:repeat(4,minmax(0,1fr)); }
+}
+@media (min-width:620px) and (max-width:979px) {
+ body.ithiel-v2-store #latest-grid,
+ body.ithiel-v2-store .drawer-products { grid-template-columns:repeat(3,minmax(0,1fr)); gap:13px; }
+}
+@media (max-width:619px) {
+ body.ithiel-v2-store #latest-grid,
+ body.ithiel-v2-store .drawer-products { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+ body.ithiel-v2-store > main { width:min(100% - 22px,580px); }
+ body.ithiel-v2-store > header { min-height:235px; padding-inline:12px; }
+ body.ithiel-v2-store > header .brand { margin-top:20px; }
+ body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) > div:last-child { padding:10px; }
+ body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) .price-line { padding:7px; gap:5px; font-size:12px; }
+ body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) .price-line span { font-size:10px; }
+ body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) .drawer-actions { grid-template-columns:1fr; }
+ body.ithiel-v2-store .catalogs { gap:10px; }
+ body.ithiel-v2-store .catalog { min-height:220px; }
+}
+/* Desktop admin: nav becomes a true left sidebar, existing data-view handlers retained */
+@media (min-width:1024px) {
+ body.ithiel-v2-admin #appView.app {
+  display:grid !important; grid-template-columns:238px minmax(0,1fr);
+  grid-template-rows:auto auto minmax(0,1fr) auto;
+  gap:0; min-width:0;
+ }
+ body.ithiel-v2-admin #appView.app.hidden { display:none !important; }
+ body.ithiel-v2-admin #appView .admin-top { grid-column:1/-1; grid-row:1; }
+ body.ithiel-v2-admin #appView .admin-hero {
+  grid-column:2; grid-row:2; padding:23px 36px;
+  text-align:left; min-width:0;
+ }
+ body.ithiel-v2-admin #appView .admin-hero h1 { font-size:34px; }
+ body.ithiel-v2-admin #appView .admin-nav-strip {
+  grid-column:1; grid-row:2/4; position:relative !important;
+  top:auto !important; width:auto; min-width:0;
+  padding:28px 12px !important; border-right:1px solid var(--i2-line);
+  background:var(--i2-surface) !important;
+ }
+ body.ithiel-v2-admin #appView .admin-nav-strip .nav {
+  display:flex !important; flex-direction:column !important;
+  align-items:stretch !important; flex-wrap:nowrap !important;
+  gap:6px !important; margin:0 !important; padding:0 !important;
+  max-width:none !important; overflow:visible !important;
+ }
+ body.ithiel-v2-admin #appView .admin-nav-strip .nav button {
+  width:100% !important; min-height:43px;
+  justify-content:flex-start !important; text-align:left !important;
+  display:flex !important; color:var(--i2-ink) !important;
+  background:transparent !important; border:1px solid transparent !important;
+  border-radius:12px !important; padding:11px 14px !important;
+  text-shadow:none !important;
+ }
+ body.ithiel-v2-admin #appView .admin-nav-strip .nav button:hover {
+  background:var(--i2-soft) !important; color:var(--i2-accent) !important;
+ }
+ body.ithiel-v2-admin #appView .admin-nav-strip .nav button.active {
+  background:var(--i2-soft) !important; color:var(--i2-accent) !important;
+  border-color:var(--i2-line) !important;
+ }
+ body.ithiel-v2-admin #appView .admin-shell {
+  grid-column:2; grid-row:3; width:auto !important; min-width:0;
+  margin:0 !important; padding:28px clamp(20px,3vw,45px) !important;
+ }
+ body.ithiel-v2-admin #appView .admin-footer { grid-column:1/-1; grid-row:4; }
+ body.ithiel-v2-admin #appView .cards {
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:14px;
+ }
+ body.ithiel-v2-admin #appView .dashboard-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+body.ithiel-v2-admin #appView :is(.card,.panel) {
+ border:1px solid var(--i2-line) !important;
+ background:var(--i2-surface) !important; color:var(--i2-ink) !important;
+ border-radius:18px !important; box-shadow:var(--i2-shadow);
+}
+body.ithiel-v2-admin #appView .cards .card.dashboard-link {
+ text-align:left; cursor:pointer;
+}
+body.ithiel-v2-admin #appView .cards .card strong { color:var(--i2-accent) !important; }
+body.ithiel-v2-admin #appView .cards .card small { color:var(--i2-muted) !important; }
+body.ithiel-v2-admin #appView .dashboard-grid .panel h2 { color:var(--i2-ink) !important; }
+html[data-theme="dark"] body.ithiel-v2-admin #appView table th { background:#34212e !important; color:#d4b9c7 !important; }
+html[data-theme="dark"] body.ithiel-v2-admin #appView table td { background:var(--i2-surface) !important; }
+@media (max-width:1023px) {
+ body.ithiel-v2-admin #appView .admin-nav-strip { position:relative !important; top:auto !important; }
+}
