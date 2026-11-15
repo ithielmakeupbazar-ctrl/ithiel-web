@@ -1,0 +1,122 @@
+/* Ithiel 2.0: rediseño estructural de portada, no mera recolorización */
+body.ithiel-v2-store > header.ithiel-shop-header {
+  min-height:0!important; padding:0!important; overflow:visible!important; color:var(--i2-ink)!important;
+  background:var(--i2-surface)!important; text-align:left!important; box-shadow:0 2px 15px rgba(55,16,40,.055);
+}
+body.ithiel-v2-store > header.ithiel-shop-header:after{display:none!important}
+.ithiel-shop-topline { background:#851044; color:#fff; font-size:11px; font-weight:750; text-align:center; letter-spacing:.055em; padding:9px 16px; }
+.ithiel-shop-topline span{font-weight:450;margin-left:12px;opacity:.88;letter-spacing:0}
+.ithiel-shop-masthead{ max-width:1400px; margin:auto; display:flex; align-items:center; gap:clamp(14px,3vw,45px); min-height:100px; padding:14px clamp(14px,4vw,52px); }
+.ithiel-shop-logo{ color:var(--i2-ink)!important; text-decoration:none!important; font:700 clamp(25px,2.7vw,40px) "Playfair Display",Georgia,serif; letter-spacing:.03em; line-height:1; white-space:nowrap; }
+.ithiel-shop-logo span{color:var(--i2-accent)}
+.ithiel-shop-logo small{ display:block; margin-top:9px; font:700 9px "DM Sans",sans-serif; letter-spacing:.2em; color:var(--i2-muted)}
+.ithiel-shop-search{flex:1; display:flex; align-items:center; gap:12px; min-height:46px; padding:11px 20px; border:1px solid var(--i2-line); border-radius:999px; background:var(--i2-bg); color:var(--i2-muted)!important; text-decoration:none!important; font-size:13px; min-width:0; }
+.ithiel-shop-search:hover{border-color:var(--i2-accent);color:var(--i2-ink)!important}
+.ithiel-shop-search span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ithiel-shop-tools{display:flex;align-items:center;gap:12px}
+body.ithiel-v2-store .ithiel-shop-tools .ithiel-theme-control {position:static!important;top:auto;left:auto;margin:0;color:var(--i2-ink)!important}
+.ithiel-shop-tools .ithiel-theme-switch span{font-size:0}
+body.ithiel-v2-store > header .ithiel-shop-tools .access{display:flex;gap:8px;position:static;margin:0;justify-content:flex-end!important}
+body.ithiel-v2-store > header .ithiel-shop-tools .access .pill{color:var(--i2-ink)!important;background:var(--i2-bg)!important;border:1px solid var(--i2-line)!important;min-height:40px;padding:9px 14px;font-size:12px}
+body.ithiel-v2-store > header nav.ithiel-shop-navigation{ position:static!important; display:flex; gap:clamp(9px,1.7vw,25px); align-items:center; flex-wrap:wrap!important; justify-content:center!important; margin:0!important; padding:12px 18px 15px!important; border-top:1px solid var(--i2-line); background:var(--i2-surface); }
+body.ithiel-v2-store > header .ithiel-shop-navigation .pill{border:0!important;background:none!important;color:var(--i2-ink)!important;padding:5px 1px!important;min-height:26px!important;font-size:12px;font-weight:650}
+body.ithiel-v2-store > header .ithiel-shop-navigation .pill:hover{color:var(--i2-accent)!important}
+body.ithiel-v2-store > main {display:flex;flex-direction:column;gap:clamp(22px,3vw,48px);margin-top:25px}
+body.ithiel-v2-store > main > .ithiel-shop-hero{order:0}
+body.ithiel-v2-store > main > .ithiel-shop-benefits{order:1}
+body.ithiel-v2-store > main > .ithiel-shop-category-section{order:2}
+body.ithiel-v2-store > main > section.ithiel-shop-latest{order:3}
+body.ithiel-v2-store > main > section{order:4}
+.ithiel-shop-hero{display:grid;grid-template-columns:1fr 0.92fr; min-height:370px; overflow:hidden; border-radius:28px; background:linear-gradient(125deg,#5d0c35,#851044 58%,#ab2866); color:#fff; box-shadow:0 22px 42px rgba(86,13,52,.15)}
+.ithiel-shop-hero-copy{padding:clamp(26px,5vw,76px);align-self:center;position:relative;z-index:2}
+.ithiel-shop-eyebrow{font-size:11px;font-weight:800;letter-spacing:.19em;color:#f9c1db!important;margin:0 0 15px}
+.ithiel-shop-hero h1{font:600 clamp(34px,4.2vw,65px)/1.07 "Playfair Display",serif!important;max-width:550px;color:#fff;margin:0 0 20px;letter-spacing:-.03em}
+.ithiel-shop-hero h1 em{color:#ffbdd8;font-style:italic}
+.ithiel-shop-hero-copy>p:not(.ithiel-shop-eyebrow){color:#fce4ef!important;line-height:1.7;font-size:clamp(13px,1.18vw,16px);max-width:430px}
+.ithiel-shop-hero-cta{display:inline-flex;align-items:center;gap:18px;background:#fff!important;color:#851044!important;font-weight:750;text-decoration:none;border-radius:999px;padding:13px 23px;margin-top:15px;box-shadow:0 8px 24px rgba(0,0,0,.1)}
+.ithiel-shop-hero-art{position:relative;overflow:hidden;display:flex;justify-content:center;align-items:center;flex-direction:column; background:radial-gradient(circle at 56% 48%,#f7acc8 0,#c65c90 38%,#7f204e 72%,#5d1039 100%)}
+.ithiel-shop-art-circle{position:absolute;width:82%;aspect-ratio:1;border-radius:50%;border:1px solid #ffffff65;box-shadow:0 0 0 30px #ffffff10,0 0 0 72px #ffffff0b;transform:rotate(-15deg)}
+.ithiel-shop-art-word{position:relative;font:600 clamp(50px,7vw,104px) "Playfair Display",serif;letter-spacing:.05em;color:#fff9fb;text-shadow:0 14px 28px #67133f55}
+.ithiel-shop-art-caption{position:relative;color:#fff;letter-spacing:.4em;font:750 11px "DM Sans",sans-serif;margin-top:9px}
+.ithiel-shop-art-star{position:absolute;top:18%;right:18%;font-size:52px;color:#ffe2ef;opacity:.75}
+.ithiel-shop-benefits{display:flex;align-items:center;justify-content:space-around;gap:15px;flex-wrap:wrap;padding:19px 25px;background:var(--i2-surface);border:1px solid var(--i2-line);border-radius:18px;color:var(--i2-ink);font-size:13px;font-weight:650}
+.ithiel-shop-section-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:15px;margin:0 0 20px}
+.ithiel-shop-section-heading p{margin:0 0 7px;color:var(--i2-accent);font-size:11px;font-weight:800;letter-spacing:.14em}
+.ithiel-shop-section-heading h2{margin:0;font:600 clamp(29px,3vw,43px) "Playfair Display",serif;color:var(--i2-ink)}
+.ithiel-shop-section-heading>span{color:var(--i2-muted);font-size:13px}
+body.ithiel-v2-store > main .catalogs{margin-top:0!important}
+body.ithiel-v2-store > main .catalog{min-height:260px!important}
+html[data-theme="dark"] body.ithiel-v2-store > header.ithiel-shop-header{background:#241822!important;color:#fff1f7!important}
+html[data-theme="dark"] body.ithiel-v2-store .ithiel-shop-tools .access .pill{background:#34212e!important;color:#fff1f7!important}
+html[data-theme="dark"] body.ithiel-v2-store > header nav.ithiel-shop-navigation{background:#241822!important}
+html[data-theme="dark"] body.ithiel-v2-store > header .ithiel-shop-navigation .pill{color:#fff1f7!important}
+@media(max-width:950px){
+ .ithiel-shop-masthead{flex-wrap:wrap;min-height:0;gap:12px}
+ .ithiel-shop-logo{flex:1}
+ .ithiel-shop-search{flex:1 1 100%;order:3}
+ .ithiel-shop-tools{order:2}
+ .ithiel-shop-hero{grid-template-columns:1.2fr .8fr}
+}
+@media(max-width:620px){
+ .ithiel-shop-topline{font-size:10px;padding:7px 10px}
+ .ithiel-shop-topline span{display:none}
+ .ithiel-shop-masthead{padding:14px 12px;gap:10px}
+ .ithiel-shop-logo{font-size:26px}
+ .ithiel-shop-logo small{font-size:7px;letter-spacing:.13em}
+ .ithiel-shop-tools{gap:5px}
+ .ithiel-shop-tools .access .pill{padding:7px 9px!important;font-size:10px!important}
+ .ithiel-shop-tools .access a#open-register{display:none!important}
+ body.ithiel-v2-store > header nav.ithiel-shop-navigation{justify-content:flex-start!important;overflow-x:auto;flex-wrap:nowrap!important;gap:13px;padding:8px 13px 12px!important;scrollbar-width:none}
+ body.ithiel-v2-store > header .ithiel-shop-navigation .pill{flex:0 0 auto!important;white-space:nowrap}
+ .ithiel-shop-search{min-height:41px;font-size:12px}
+ body.ithiel-v2-store > main{margin-top:12px;gap:20px}
+ .ithiel-shop-hero{grid-template-columns:1fr;min-height:0;border-radius:20px}
+ .ithiel-shop-hero-copy{padding:30px 25px}
+ .ithiel-shop-hero h1{font-size:39px}
+ .ithiel-shop-hero-art{min-height:125px}
+ .ithiel-shop-art-word{font-size:53px}
+ .ithiel-shop-art-circle{width:170px}
+ .ithiel-shop-art-star{font-size:23px}
+ .ithiel-shop-benefits{padding:13px 10px;gap:9px;font-size:10px;justify-content:center}
+ .ithiel-shop-section-heading h2{font-size:29px}
+ .ithiel-shop-section-heading>span{display:none}
+}
+
+/* Dashboard: presentation reset on shared structural grid */
+body.ithiel-v2-admin #appView .admin-hero.ithiel-admin-welcome {
+  display:flex!important; align-items:center; justify-content:space-between;
+  min-height:206px!important; position:relative; overflow:hidden;
+  border-radius:0!important;
+  background:linear-gradient(115deg,#681036,#8c164a 58%,#c43b79)!important;
+  padding:36px clamp(22px,4vw,64px)!important;
+  color:#fff!important; text-align:left!important;
+}
+body.ithiel-v2-admin .ithiel-admin-welcome-content {position:relative;z-index:2;max-width:650px}
+body.ithiel-v2-admin .ithiel-admin-kicker {display:block;font:800 11px "DM Sans",sans-serif;letter-spacing:.18em;color:#f6c0d8;margin-bottom:14px}
+body.ithiel-v2-admin #appView .admin-hero.ithiel-admin-welcome h1 {font:600 clamp(29px,3.1vw,46px)/1.18 "Playfair Display",serif!important;letter-spacing:-.03em;color:#fff!important;margin:0 0 12px}
+body.ithiel-v2-admin #appView .admin-hero.ithiel-admin-welcome .lead {color:#ffe2ef!important;margin:0!important}
+body.ithiel-v2-admin .ithiel-admin-welcome-symbol {font:600 175px/.7 "Playfair Display",serif;color:#ffffff24;letter-spacing:-.13em;transform:rotate(-8deg);margin-right:40px}
+body.ithiel-v2-admin #appView .admin-shell .cards {grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important}
+body.ithiel-v2-admin #appView .admin-shell .cards > .card {padding:22px!important;min-height:137px!important;border-radius:20px!important;box-shadow:var(--i2-shadow)!important}
+body.ithiel-v2-admin #appView .admin-shell .cards .dashboard-link {text-align:left!important;transition:transform .2s,box-shadow .2s}
+body.ithiel-v2-admin #appView .admin-shell .cards .dashboard-link:hover {transform:translateY(-3px)!important;box-shadow:0 18px 28px #58133621!important}
+body.ithiel-v2-admin #appView .admin-shell .cards .card small {font-size:12px!important;font-weight:650}
+body.ithiel-v2-admin #appView .admin-shell .cards .card strong {font-size:clamp(24px,2.2vw,34px)!important}
+body.ithiel-v2-admin #appView .admin-shell .view-head h1,
+body.ithiel-v2-admin #appView .admin-shell .view-head h2 {font-family:"Playfair Display",serif!important;letter-spacing:-.02em}
+@media(min-width:1024px) {
+ body.ithiel-v2-admin #appView .admin-shell {padding:30px clamp(25px,3.2vw,60px)!important}
+}
+@media(max-width:900px) {
+ body.ithiel-v2-admin #appView .admin-shell .cards {grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ body.ithiel-v2-admin .ithiel-admin-welcome-symbol{display:none}
+}
+@media(max-width:580px) {
+ body.ithiel-v2-admin #appView .admin-hero.ithiel-admin-welcome {padding:25px 19px!important;min-height:154px!important}
+ body.ithiel-v2-admin #appView .admin-hero.ithiel-admin-welcome h1{font-size:30px!important}
+ body.ithiel-v2-admin #appView .admin-shell .cards > .card{padding:14px!important;min-height:105px!important}
+ body.ithiel-v2-admin #appView .admin-shell .cards .card strong{font-size:24px!important}
+}
+
+/* Defensa visual: los componentes legacy del hero no deben cubrir el header 2.0. */
+body.ithiel-v2-store > header.ithiel-shop-header > .hero-product-carousel { display:none!important; }

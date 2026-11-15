@@ -1,0 +1,330 @@
+/*
+ * Ithiel 2.0 — MOBILE FIRST / typography refresh.
+ * Gotham is a commercial font: prefer licensed locally installed Gotham
+ * if available, otherwise use compatible Montserrat weights.
+ * This layer is deliberately last in the stylesheet cascade.
+ */
+:root {
+ --ithiel-font:"Gotham","Montserrat","Arial",sans-serif;
+ --ithiel-font-thin:200;
+ --ithiel-font-black:900;
+}
+body.ithiel-v2,
+body.ithiel-v2 :is(button,input,textarea,select,a),
+body.ithiel-v2 :is(p,span,small,strong,h1,h2,h3,h4,label) {
+ font-family:var(--ithiel-font)!important;
+}
+body.ithiel-v2 :is(.ithiel-shop-logo,.ithiel-shop-hero h1,.ithiel-shop-section-heading h2,.title,.brand,.admin-hero h1,.view-head h1,.view-head h2) {
+ font-family:var(--ithiel-font)!important;
+ letter-spacing:-.045em;
+}
+body.ithiel-v2 .ithiel-shop-logo,body.ithiel-v2 .ithiel-shop-art-word {
+ font-weight:900!important;
+}
+body.ithiel-v2 .ithiel-shop-hero h1 {font-weight:900!important}
+body.ithiel-v2 .ithiel-shop-hero-copy>p:not(.ithiel-shop-eyebrow) {font-weight:300}
+body.ithiel-v2 :is(.copy,.lead,.ithiel-shop-section-heading>span) {font-weight:300}
+body.ithiel-v2 .ithiel-shop-section-heading h2 {font-weight:900!important}
+body.ithiel-v2-admin #appView .admin-hero.ithiel-admin-welcome h1 {font-weight:900!important}
+body.ithiel-v2-admin #appView .admin-shell .view-head h1,
+body.ithiel-v2-admin #appView .admin-shell .view-head h2 {font-weight:900!important}
+body.ithiel-v2-store .ithiel-shop-hero-art {min-height:220px}
+/* A real small-device layout, independent of any legacy 4-column !important rules. */
+@media(max-width:767px), (hover:none) and (pointer:coarse) and (max-width:1199px) {
+ html,body {width:100%;max-width:100%;overflow-x:clip}
+ body.ithiel-v2-store {padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+ body.ithiel-v2-store > header.ithiel-shop-header {
+   position:relative!important; min-height:0!important; padding:0!important;
+   width:100%!important; max-width:100%!important; overflow:visible!important;
+ }
+ body.ithiel-v2-store > header .ithiel-shop-topline {
+   font-size:9px!important;line-height:1.35!important;padding:8px 7px!important;
+ }
+ body.ithiel-v2-store > header .ithiel-shop-masthead {
+   width:100%!important;max-width:100%!important;display:grid!important;
+   grid-template-columns:minmax(0,1fr) auto!important;gap:12px 6px!important;
+   align-items:center!important;padding:14px 12px 12px!important;
+   min-height:0!important;margin:0!important;
+ }
+ body.ithiel-v2-store > header .ithiel-shop-logo {
+   grid-column:1;grid-row:1;min-width:0;font-size:clamp(22px,6vw,29px)!important;
+   line-height:1.05!important;white-space:normal!important;margin:0!important;
+ }
+ body.ithiel-v2-store > header .ithiel-shop-logo small {font-size:7px!important;letter-spacing:.07em!important}
+ body.ithiel-v2-store > header .ithiel-shop-tools {
+   grid-column:2;grid-row:1;display:flex!important;justify-content:flex-end!important;
+   align-items:center!important;gap:6px!important;min-width:0;
+ }
+ body.ithiel-v2-store > header .ithiel-shop-tools .access {display:flex!important;margin:0!important;gap:4px!important}
+ body.ithiel-v2-store > header .ithiel-shop-tools #open-register {display:none!important}
+ body.ithiel-v2-store > header .ithiel-shop-tools .access .pill {font-size:11px!important;padding:8px 9px!important;min-height:35px!important}
+ body.ithiel-v2-store .ithiel-shop-tools .ithiel-theme-switch>span {display:none}
+ body.ithiel-v2-store .ithiel-shop-tools .ithiel-theme-switch select {max-width:90px!important;min-height:35px!important;font-size:11px!important;padding:4px!important}
+ body.ithiel-v2-store > header .ithiel-shop-search {
+   grid-column:1/-1;grid-row:2;order:0!important;width:100%!important;min-width:0!important;
+   max-width:100%!important;min-height:43px!important;margin:0!important;
+   display:flex!important;font-size:12px!important;
+ }
+ body.ithiel-v2-store > header nav.ithiel-shop-navigation {
+   display:flex!important;flex-wrap:nowrap!important;overflow-x:auto!important;
+   width:100%!important;max-width:100%!important;justify-content:flex-start!important;
+   gap:14px!important;padding:9px 13px!important;scrollbar-width:none!important;
+ }
+ body.ithiel-v2-store > header nav.ithiel-shop-navigation .pill {
+   white-space:nowrap!important;flex:0 0 auto!important;font-size:11px!important;
+ }
+ body.ithiel-v2-store > main {
+   display:flex!important;flex-direction:column!important;gap:20px!important;
+   width:calc(100% - 24px)!important;max-width:580px!important;
+   margin:12px auto 0!important;padding:0!important;min-width:0!important;
+ }
+ body.ithiel-v2-store > main > :is(section,div) {max-width:100%;min-width:0}
+ body.ithiel-v2-store > main .ithiel-shop-hero {
+   display:grid!important;grid-template-columns:1fr!important;
+   min-height:0!important;border-radius:20px!important;
+ }
+ body.ithiel-v2-store .ithiel-shop-hero-copy {
+   padding:26px 22px!important;max-width:100%;width:100%;min-width:0;
+ }
+ body.ithiel-v2-store .ithiel-shop-hero h1 {
+   font-size:clamp(33px,9vw,46px)!important;line-height:1.1!important;
+   letter-spacing:-.05em!important;overflow-wrap:break-word;
+ }
+ body.ithiel-v2-store .ithiel-shop-hero-art {
+   min-height:120px!important;max-height:160px!important;width:100%!important;
+ }
+ body.ithiel-v2-store .ithiel-shop-art-word{font-size:clamp(45px,13vw,66px)!important}
+ body.ithiel-v2-store .ithiel-shop-art-circle {width:170px!important}
+ body.ithiel-v2-store .ithiel-shop-benefits {
+   display:flex!important;flex-wrap:wrap!important;gap:9px!important;
+   justify-content:center!important;text-align:center;padding:12px 9px!important;font-size:10px!important;
+ }
+ body.ithiel-v2-store .ithiel-shop-section-heading{gap:8px!important}
+ body.ithiel-v2-store .ithiel-shop-section-heading h2 {font-size:clamp(24px,6vw,32px)!important}
+ body.ithiel-v2-store .ithiel-shop-category-section .catalogs {
+   display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+   gap:10px!important;margin:0!important;
+ }
+ body.ithiel-v2-store .ithiel-shop-category-section .catalog {
+   min-width:0!important;min-height:175px!important;padding:12px!important;
+   border-radius:17px!important;
+ }
+ body.ithiel-v2-store .ithiel-shop-category-section .catalog h2 {font-size:clamp(20px,5vw,27px)!important}
+ body.ithiel-v2-store .ithiel-shop-category-section .catalog p{font-size:11px!important}
+ body.ithiel-v2-store :is(#latest-grid,.drawer-products) {
+   display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+   gap:10px!important;width:100%!important;min-width:0!important;
+ }
+ body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) {
+   min-width:0!important;width:auto!important;max-width:100%!important;
+   border-radius:15px!important;
+ }
+ body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) > div:last-child{
+   padding:9px!important;gap:3px!important;
+ }
+ body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) .product-name{
+   font-size:13px!important;line-height:1.3!important;min-height:2.6em;
+ }
+ body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) .price-line {
+   display:block!important;padding:7px!important;line-height:1.35!important;
+   margin:3px 0!important;font-size:clamp(12px,3.45vw,15px)!important;
+ }
+ body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) .price-line span {
+   display:block!important;margin-bottom:3px!important;font-size:10px!important;
+ }
+ body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) .drawer-actions {
+   display:grid!important;grid-template-columns:1fr!important;gap:6px!important;
+ }
+ body.ithiel-v2-store :is(#latest-grid .card,.drawer-products .drawer-product) .drawer-actions button{
+   min-height:37px!important;font-size:11px!important;
+ }
+ body.ithiel-v2-store .buy-guide,body.ithiel-v2-store .pricing-guide,
+ body.ithiel-v2-store .buy-grid {max-width:100%!important}
+ body.ithiel-v2-store .pricing-guide,body.ithiel-v2-store .buy-grid {
+   display:grid!important;grid-template-columns:1fr!important;gap:12px!important;
+ }
+ body.ithiel-v2-store .catalog-drawer {width:100%!important;min-width:0!important;padding:16px!important}
+ body.ithiel-v2-store .drawer-head {flex-wrap:wrap!important}
+ body.ithiel-v2-store .drawer-tools {grid-template-columns:1fr!important}
+ body.ithiel-v2-store .ithiel-mobile-nav {
+   position:fixed;bottom:0;left:0;right:0;z-index:30;
+   display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));
+   gap:0;padding:9px 4px calc(7px + env(safe-area-inset-bottom));
+   background:var(--i2-surface);border-top:1px solid var(--i2-line);
+   box-shadow:0 -8px 24px rgba(54,9,37,.12);
+ }
+ body.ithiel-v2-store .ithiel-mobile-nav :is(a,button) {
+   display:flex;flex-direction:column;align-items:center;justify-content:center;
+   gap:3px;width:100%;padding:2px 1px!important;min-height:46px;
+   border:0!important;background:transparent!important;text-decoration:none!important;
+   color:var(--i2-muted)!important;font-size:10px!important;font-weight:700!important;
+ }
+ body.ithiel-v2-store .ithiel-mobile-nav :is(a,button):first-child {color:var(--i2-accent)!important}
+ body.ithiel-v2-store .ithiel-mobile-nav svg {width:20px;height:20px;stroke:currentColor;stroke-width:1.8;fill:none}
+ body.ithiel-v2-store > .cart-button {bottom:calc(72px + env(safe-area-inset-bottom))!important}
+ body.ithiel-v2-store > .scroll-top {bottom:calc(132px + env(safe-area-inset-bottom))!important}
+ /* Preserve mobile spacing for the modal and full width inputs. */
+ body.ithiel-v2-store :is(.auth-pop,.cart-pop,.product-detail-pop){max-width:calc(100vw - 20px)!important}
+}
+@media(min-width:768px) and (hover:hover), (min-width:1200px) {
+ body.ithiel-v2-store .ithiel-mobile-nav {display:none!important}
+}
+
+/* Admin on phones: full-width cards and horizontal navigation, never desktop sidebar. */
+@media(max-width:767px), (hover:none) and (pointer:coarse) and (max-width:1199px) {
+ body.ithiel-v2-admin {width:100%!important;max-width:100%;overflow-x:clip!important}
+ body.ithiel-v2-admin #appView.app:not(.hidden) {
+   display:flex!important;flex-direction:column!important;width:100%!important;min-width:0!important;
+ }
+ body.ithiel-v2-admin #appView > .admin-top {
+   position:relative!important;top:auto!important;width:100%!important;min-width:0!important;
+   flex-wrap:wrap!important;gap:9px!important;padding:12px!important;
+ }
+ body.ithiel-v2-admin #appView > .admin-top .account {
+   flex:1;min-width:0;justify-content:flex-end!important;flex-wrap:wrap!important;
+ }
+ body.ithiel-v2-admin #appView > .admin-hero.ithiel-admin-welcome {
+   width:100%!important;min-height:0!important;padding:24px 18px!important;
+   order:1;grid-column:auto!important;grid-row:auto!important;
+ }
+ body.ithiel-v2-admin #appView > .admin-nav-strip {
+   position:relative!important;top:auto!important;width:100%!important;
+   height:auto!important;max-height:none!important;padding:8px 10px!important;
+   order:2;grid-column:auto!important;grid-row:auto!important;
+   border-right:0!important;border-bottom:1px solid var(--i2-line)!important;
+ }
+ body.ithiel-v2-admin #appView > .admin-nav-strip .nav {
+   display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;
+   overflow-x:auto!important;justify-content:flex-start!important;align-items:center!important;
+   gap:8px!important;max-width:100%!important;padding:4px!important;
+ }
+ body.ithiel-v2-admin #appView > .admin-nav-strip .nav button {
+   flex:0 0 auto!important;width:auto!important;min-width:0!important;
+   white-space:nowrap!important;font-size:12px!important;padding:9px 13px!important;
+ }
+ body.ithiel-v2-admin #appView > .admin-shell {
+   width:100%!important;max-width:100%!important;min-width:0!important;
+   order:3;grid-column:auto!important;grid-row:auto!important;
+   padding:16px 12px!important;margin:0!important;
+ }
+ body.ithiel-v2-admin #appView > .admin-footer {order:4}
+ body.ithiel-v2-admin #appView .admin-shell .cards {
+   display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;
+ }
+ body.ithiel-v2-admin #appView .admin-shell .cards > .card {
+   min-width:0!important;padding:12px!important;min-height:110px!important;
+ }
+ body.ithiel-v2-admin #appView .dashboard-grid,
+ body.ithiel-v2-admin #appView .account-grid {
+   display:grid!important;grid-template-columns:1fr!important;
+ }
+ body.ithiel-v2-admin #appView .admin-shell :is(.product-table,.orders-grid) {
+   max-width:100%!important;min-width:0!important;
+ }
+ body.ithiel-v2-admin #appView .admin-shell .panel {max-width:100%!important;overflow-x:auto}
+}
+
+/* The hero uses an actual catalog image, not stock imagery or a legacy carousel. */
+body.ithiel-v2-store .ithiel-shop-hero-art.has-product-image {
+ isolation:isolate;
+ background:radial-gradient(circle at 52% 40%,#f7d3e2 0,#e9a9c7 45%,#ad477b 100%);
+}
+body.ithiel-v2-store .ithiel-shop-featured-image {
+ position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:contain;
+ padding:clamp(12px,3vw,32px);z-index:2;filter:drop-shadow(0 16px 22px rgba(67,11,40,.2));
+}
+body.ithiel-v2-store .ithiel-shop-hero-art.has-product-image :is(.ithiel-shop-art-word,.ithiel-shop-art-caption,.ithiel-shop-art-star) {
+ display:none;
+}
+@media(max-width:767px), (hover:none) and (pointer:coarse) and (max-width:1199px) {
+ body.ithiel-v2-store .ithiel-shop-hero-art.has-product-image {min-height:170px!important;max-height:210px!important}
+ body.ithiel-v2-store .ithiel-shop-featured-image {padding:10px!important}
+}
+
+/* Ithiel 2.0: rotating headline + actual range of Gotham-inspired weights */
+body.ithiel-v2 {
+ font-family:var(--ithiel-font)!important;
+ font-weight:400!important;
+}
+body.ithiel-v2 :is(p,small,.copy,.lead,.product-name,.cart-item small,.tag) {
+ font-weight:300!important;
+ letter-spacing:normal!important;
+}
+body.ithiel-v2 :is(.ithiel-shop-topline,.ithiel-shop-navigation .pill,.ithiel-shop-search,.ithiel-shop-benefits,.ithiel-shop-hero-copy>p:not(.ithiel-shop-eyebrow)) {
+ font-weight:300!important;
+}
+body.ithiel-v2 :is(.ithiel-shop-hero h1,.ithiel-shop-section-heading h2,.title,.view-head h1,.view-head h2) {
+ font-weight:300!important;
+ letter-spacing:-.04em!important;
+}
+body.ithiel-v2 .ithiel-shop-hero h1 em {font-weight:700!important}
+body.ithiel-v2 :is(.price-line,.detail-price strong,.cart-total strong,.cards .card strong) {
+ font-weight:600!important;
+}
+body.ithiel-v2 :is(button,.primary,.ithiel-shop-hero-cta,.dashboard-link,.product-name) {
+ font-weight:500!important;
+}
+body.ithiel-v2-admin #appView .admin-hero.ithiel-admin-welcome h1 {
+ font-weight:300!important;
+}
+body.ithiel-v2 :is(.ithiel-shop-eyebrow,.ithiel-admin-kicker) {
+ font-weight:700!important;
+}
+body.ithiel-v2-store .ithiel-shop-logo {
+ display:flex!important;flex-wrap:wrap;align-items:center;column-gap:.22em;
+ row-gap:1px;width:auto;max-width:100%;line-height:1!important;
+ font-weight:400!important;text-decoration:none!important;
+ letter-spacing:-.05em!important;
+}
+body.ithiel-v2-store .ithiel-shop-logo .ithiel-brand-fixed {
+ color:var(--i2-ink)!important;font-weight:900!important;line-height:1.1;
+}
+body.ithiel-v2-store .ithiel-shop-logo .ithiel-rotate-window {
+ position:relative;display:inline-block!important;flex:0 0 auto;
+ width:clamp(126px,18vw,255px);height:1.2em;
+ overflow:hidden;vertical-align:middle;
+ font-family:var(--ithiel-font)!important;
+}
+body.ithiel-v2-store .ithiel-shop-logo .ithiel-rotate-word {
+ position:absolute;left:0;top:0;width:100%;height:100%;
+ display:flex;align-items:center;justify-content:flex-start;
+ color:var(--i2-accent)!important;font-weight:300!important;
+ font-size:clamp(13px,1.65vw,26px)!important;
+ letter-spacing:-.045em!important;white-space:nowrap;
+ opacity:0;transform:translateY(65%);filter:blur(5px);
+ animation:ithiel-rotate-word 12s infinite ease-in-out;
+}
+body.ithiel-v2-store .ithiel-shop-logo .ithiel-rotate-word:nth-child(2){animation-delay:3s}
+body.ithiel-v2-store .ithiel-shop-logo .ithiel-rotate-word:nth-child(3){animation-delay:6s}
+body.ithiel-v2-store .ithiel-shop-logo .ithiel-rotate-word:nth-child(4){animation-delay:9s}
+@keyframes ithiel-rotate-word {
+ 0%,3%{opacity:0;transform:translateY(65%);filter:blur(5px)}
+ 7%,20%{opacity:1;transform:translateY(0);filter:blur(0)}
+ 24%,100%{opacity:0;transform:translateY(-65%);filter:blur(5px)}
+}
+body.ithiel-v2-store .ithiel-shop-logo small {
+ width:100%;flex:0 0 100%;margin-top:4px;
+ color:var(--i2-muted)!important;font-weight:300!important;
+ letter-spacing:.1em!important;
+}
+@media(max-width:767px), (hover:none) and (pointer:coarse) and (max-width:1199px) {
+ body.ithiel-v2-store > header .ithiel-shop-logo {
+   display:flex!important;column-gap:5px!important;flex-wrap:wrap!important;
+   min-width:0!important;font-size:clamp(20px,5.5vw,26px)!important;
+ }
+ body.ithiel-v2-store .ithiel-shop-logo .ithiel-rotate-window {
+   width:clamp(85px,24vw,116px)!important;height:1.15em!important;
+ }
+ body.ithiel-v2-store .ithiel-shop-logo .ithiel-rotate-word {
+   font-size:clamp(10px,2.8vw,13px)!important;
+ }
+ body.ithiel-v2-store .ithiel-shop-logo small {
+   font-size:6px!important;letter-spacing:0!important;max-width:100%;
+ }
+}
+@media(prefers-reduced-motion:reduce) {
+ body.ithiel-v2-store .ithiel-shop-logo .ithiel-rotate-word {
+  animation:none!important;opacity:0;filter:none;transform:none;
+ }
+ body.ithiel-v2-store .ithiel-shop-logo .ithiel-rotate-word:first-child {opacity:1}
+}

@@ -1,0 +1,38 @@
+/* Ithiel Bazar 2.0 — Dashboard responsive. Mantiene IDs, navegación y eventos. */
+@media (min-width: 1025px) {
+  #appView.app:not(.hidden) { display:grid!important; grid-template-columns:240px minmax(0,1fr); grid-template-rows:auto auto minmax(60vh,auto) auto; gap:0!important; align-items:start; }
+  #appView > .admin-top { grid-column:1/-1; grid-row:1; }
+  #appView > .admin-hero { grid-column:1/-1; grid-row:2; text-align:left!important; padding:22px clamp(25px,4vw,60px)!important; }
+  #appView > .admin-hero h1 { font-size:clamp(29px,3vw,44px)!important; }
+  #appView > .admin-nav-strip { grid-column:1; grid-row:3; position:sticky!important; top:72px!important; align-self:start; height:calc(100vh - 72px); overflow-y:auto; padding:18px 12px!important; margin:0!important; background:var(--ithiel-surface)!important; border-right:1px solid var(--ithiel-line)!important; border-top:0!important; box-shadow:none!important; }
+  #appView > .admin-nav-strip .nav { display:grid!important; grid-template-columns:1fr!important; align-items:stretch!important; gap:5px!important; max-width:none!important; padding:0!important; margin:0!important; overflow:visible!important; background:transparent!important; }
+  #appView > .admin-nav-strip .nav button { width:100%; justify-content:flex-start!important; text-align:left!important; padding:12px 15px!important; background:transparent!important; border:1px solid transparent!important; border-radius:13px!important; color:var(--ithiel-ink)!important; text-shadow:none!important; box-shadow:none!important; font-size:13px!important; }
+  #appView > .admin-nav-strip .nav button:hover { background:var(--ithiel-pink-soft)!important; color:var(--ithiel-burgundy)!important; }
+  #appView > .admin-nav-strip .nav button.active { background:var(--ithiel-pink-soft)!important; border-color:var(--ithiel-line)!important; color:var(--ithiel-burgundy)!important; font-weight:800!important; }
+  #appView > .admin-shell { grid-column:2; grid-row:3; width:100%!important; max-width:none!important; margin:0!important; padding:clamp(22px,3vw,46px)!important; }
+  #appView > .admin-footer { grid-column:1/-1; grid-row:4; }
+}
+#appView .admin-shell .cards { gap:16px!important; grid-template-columns:repeat(auto-fit,minmax(180px,1fr))!important; }
+#appView .admin-shell .cards > .card { min-height:120px!important; border-radius:19px!important; border-color:var(--ithiel-line)!important; box-shadow:var(--ithiel-shadow-soft)!important; }
+#appView .admin-shell .cards > .card strong { font-size:clamp(23px,2.1vw,31px)!important; }
+#appView .admin-shell .panel { border-radius:19px!important; border-color:var(--ithiel-line)!important; }
+#appView .admin-shell .view-head { margin-bottom:22px!important; }
+#appView .admin-shell .product-table { width:100%!important; }
+html[data-theme="dark"] #appView > .admin-nav-strip { background:#241822!important; border-color:#493142!important; }
+html[data-theme="dark"] #appView > .admin-nav-strip .nav button { color:#fff1f7!important; }
+html[data-theme="dark"] #appView > .admin-nav-strip .nav button:hover,
+html[data-theme="dark"] #appView > .admin-nav-strip .nav button.active { background:#493142!important; color:#fff1f7!important; border-color:#79516a!important; }
+html[data-theme="dark"] #appView .admin-shell .cards > .card { background:#241822!important; border-color:#493142!important; color:#fff1f7!important; }
+@media (min-width: 1025px) and (max-width:1150px) { #appView.app:not(.hidden) { grid-template-columns:210px minmax(0,1fr); } }
+@media(max-width:1024px) {
+ #appView > .admin-nav-strip { position:static!important; height:auto!important; }
+ #appView > .admin-nav-strip .nav { display:flex!important; flex-wrap:nowrap!important; overflow-x:auto!important; justify-content:flex-start!important; }
+ #appView > .admin-nav-strip .nav button { flex:0 0 auto!important; white-space:nowrap!important; }
+ #appView .admin-shell { width:100%!important; max-width:none!important; padding:16px!important; }
+}
+@media(max-width:620px) {
+ #appView .admin-top { padding:10px 12px!important; }
+ #appView .admin-shell .cards { grid-template-columns:repeat(2,minmax(0,1fr))!important; gap:10px!important; }
+ #appView .admin-shell .cards > .card { min-height:100px!important; padding:12px!important; }
+ #appView .admin-shell .cards > .card strong { font-size:22px!important; }
+}
