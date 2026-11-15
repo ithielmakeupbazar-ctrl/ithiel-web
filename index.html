@@ -76,10 +76,11 @@ header:after{z-index:0;background:linear-gradient(100deg,rgba(92,7,45,.91),rgba(
 @media(prefers-reduced-motion:reduce){.hero-product-track{animation:none}.catalog:before{transition:none}.catalog:hover:before{transform:scale(1.03)}}
 </style><link rel="stylesheet" href="styles/shared.css?v=20260802-1">
 <link rel="stylesheet" href="styles/boutique-equilibrada.css?v=20261115-3">
-<link rel="stylesheet" href="styles/ithiel-2-store.css?v=20261115-1"><script src="scripts/dialog-accessibility.js" defer></script><link rel="stylesheet" href="styles/ithiel-v2-layout.css?v=20261115-1">
-<link rel="stylesheet" href="styles/ithiel-v2-redesign.css?v=20261115-3">
+<script src="scripts/dialog-accessibility.js" defer></script>
+
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/ithiel-v2-mobile.css?v=20261115-4">
+
+<link rel="stylesheet" href="styles/ithiel-v2-consolidated.css?v=20261115-1">
 </head><body class="ithiel-v2 ithiel-v2-store"><a class="skip-link" href="#contenido">Saltar al catálogo</a><header class="ithiel-shop-header">
 <div class="ithiel-shop-topline">ITHIEL BAZAR & MAKEUP <span>Compras minoristas y mayoristas · Rosario, Santa Fe</span></div>
 <div class="ithiel-shop-masthead">
@@ -281,7 +282,8 @@ supabase.auth.getSession().then(({data:{session}})=>renderAccessNav(session));
 supabase.auth.onAuthStateChange((_event,session)=>renderAccessNav(session));</script><script id="catalog-offset-fix">document.querySelector('a[href="#bazar"]')?.addEventListener("click",event=>{event.preventDefault();window.setTimeout(()=>{const target=document.querySelector("#bazar .catalogs");if(!target)return;if(window.innerWidth<760)window.scrollTo({top:Math.max(0,target.offsetTop-18),behavior:"smooth"});else target.scrollIntoView({behavior:"smooth",block:"center"})},700)});</script><script type="module" src="scripts/popup-register.js?v=20260802-authfix"></script><script type="module" src="scripts/popup-login.js?v=20260802-authfix"></script><script id="ithiel-mobile-navigation">
 document.querySelector("[data-ithiel-mobile-cart]")?.addEventListener("click",()=>document.querySelector(".cart-button")?.click());
 document.querySelector("[data-ithiel-mobile-account]")?.addEventListener("click",()=>{const trigger=document.querySelector("#open-account");if(trigger)trigger.click();else window.location.assign("/cuenta");});
-</script></body></html>
+</script><script src="scripts/ithiel-text-morph.js?v=20261115-1" defer></script>
+</body></html>
 
 
 
