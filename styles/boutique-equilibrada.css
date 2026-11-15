@@ -49,3 +49,93 @@ html { accent-color: var(--ithiel-fuchsia); }
     transition-duration: .01ms !important;
   }
 }
+
+/* Selector accesible, compacto y compartido. */
+.ithiel-theme-control { display: inline-flex; align-items: center; position: relative; z-index: 30; }
+.ithiel-theme-switch { display: inline-flex; gap: .45rem; align-items: center; font-size: .79rem; line-height: 1.2; white-space: nowrap; color: inherit; }
+.ithiel-theme-switch select {
+  appearance: auto; cursor: pointer; font: inherit; font-weight: 600;
+  background: var(--ithiel-surface); color: var(--ithiel-ink);
+  padding: .5rem .55rem; border: 1px solid var(--ithiel-line);
+  border-radius: 999px; min-height: 38px; max-width: 120px;
+}
+header > .ithiel-theme-control { position: absolute; top: 17px; left: max(14px, 3vw); color: #fff; }
+header > .ithiel-theme-control .ithiel-theme-switch select { background: #fff9fb; color: #432b39; }
+.login-card > .ithiel-theme-control { margin-bottom: 12px; color: #432b39; }
+.admin-top .ithiel-theme-control { margin-inline: 8px; color: var(--ithiel-ink); }
+@media (max-width: 700px) {
+  header > .ithiel-theme-control { position: relative; top: auto; left: auto; margin: 0 auto 10px; display: flex; justify-content: center; }
+  .admin-top .ithiel-theme-switch span { display: none; }
+  .admin-top .ithiel-theme-switch select { max-width: 104px; }
+}
+html[data-theme="dark"] {
+  --ithiel-burgundy: #601335;
+  --ithiel-fuchsia: #f16a9f;
+  --ithiel-pink-soft: #34212e;
+  --ithiel-surface: #241822;
+  --ithiel-ink: #fff1f7;
+  --ithiel-line: #493142;
+  --ithiel-focus: #f16a9f;
+  --deep: #601335;
+  --rose: #f16a9f;
+  --soft: #34212e;
+  --ink: #fff1f7;
+  --line: #493142;
+  --av-wine: #f16a9f;
+  --av-hot: #f16a9f;
+  --av-soft: #34212e;
+  --av-paper: #241822;
+  --av-ink: #fff1f7;
+  --av-muted: #d4b9c7;
+  --av-line: #493142;
+  --wine: #f16a9f;
+  --pink: #f16a9f;
+  --paper: #241822;
+  --muted: #d4b9c7;
+  --cream: #241822;
+  background: #160f16;
+  color: #fff1f7;
+}
+html[data-theme="dark"] body,
+html[data-theme="dark"] .app { background: #160f16 !important; color: #fff1f7 !important; }
+html[data-theme="dark"] main,
+html[data-theme="dark"] .admin-shell { color: #fff1f7; }
+html[data-theme="dark"] :is(section, article, .panel, .card, .login-card, .account-card, .product-form-card, .product-detail-pop, .whatsapp-pop, .social-pop, .auth-pop, .cart-pop, .catalog-drawer, .buy-guide, .pricing-guide, .guide-card, .order-card, .dashboard-link, .dashboard-grid > *, .admin-shell .view-head) {
+  border-color: #493142;
+}
+html[data-theme="dark"] :is(.card, .panel, .login-card, .account-card, .product-form-card, .product-detail-pop, .whatsapp-pop, .social-pop, .auth-pop, .cart-pop, .catalog-drawer, .buy-guide, .pricing-guide, .guide-card, .order-card, .dashboard-link, .admin-shell .view-head) {
+  background: #241822 !important; color: #fff1f7 !important;
+  box-shadow: 0 12px 28px rgba(0,0,0,.15);
+}
+html[data-theme="dark"] :is(.admin-top, .app .admin-top, .admin-nav-strip, .app .admin-nav-strip) {
+  background: #241822 !important; color: #fff1f7 !important;
+  border-color: #493142 !important;
+}
+html[data-theme="dark"] :is(.admin-top .brand, .app .admin-top .brand, .title, .view-head h1, .view-head h2, .card h3, .product-name, .admin-shell h2, .admin-shell h3) { color: #fff1f7 !important; }
+html[data-theme="dark"] :is(.copy, .lead, .muted, .tag, .product-tools label, .empty, .admin-top .account, .admin-top .account span, .admin-shell p, .panel small) { color: #d4b9c7 !important; }
+html[data-theme="dark"] :is(input, textarea, select, .product-search, .cart-input) {
+  background: #34212e !important; color: #fff1f7 !important; border-color: #6c485b !important;
+}
+html[data-theme="dark"] :is(input, textarea)::placeholder { color: #d4b9c7 !important; opacity: .8; }
+html[data-theme="dark"] :is(table, thead, tbody, tr, th, td) { border-color: #493142 !important; color: #fff1f7 !important; }
+html[data-theme="dark"] :is(th, thead) { background: #34212e !important; }
+html[data-theme="dark"] :is(tr:nth-child(even), .subcat, .catalog-copy, .product-tools, .management-row, .account-fields) { background-color: #2a1c29 !important; }
+html[data-theme="dark"] :is(.price-line, .detail-price, .card .price, a:not(.primary)) { color: #f16a9f; }
+html[data-theme="dark"] :is(.primary, button.primary, .auth-action, .whatsapp-action) {
+  background: #d63f7a !important; color: #fff !important; border-color: #d63f7a !important;
+}
+html[data-theme="dark"] :is(.outline, .secondary, .home-link, .app .admin-top .home-link, .app .admin-top .outline) {
+  background: #34212e !important; color: #fff1f7 !important; border-color: #6c485b !important;
+}
+html[data-theme="dark"] :is(.admin-hero, .login, .app .admin-hero) {
+  background: linear-gradient(125deg,#45112e,#601335 55%,#872452) !important; color: #fff !important;
+}
+html[data-theme="dark"] :is(.admin-nav-strip .nav button, .nav button) { color: #fff1f7 !important; }
+html[data-theme="dark"] :is(.nav button.active, .admin-nav-strip .nav button.active) { background: #d63f7a !important; color: #fff !important; }
+html[data-theme="dark"] :is(.modal, [role="dialog"]) { color: #fff1f7; }
+html[data-theme="dark"] :is(.ithiel-theme-switch select) { color: #fff1f7 !important; background: #34212e !important; border-color: #79516a !important; }
+html[data-theme="dark"] :is(.login-card .ithiel-theme-switch, .admin-top .ithiel-theme-switch) { color: #fff1f7; }
+html[data-theme="dark"] header > .ithiel-theme-control { color: #fff; }
+@media (prefers-reduced-motion: reduce) {
+ html[data-theme="dark"] *, html[data-theme="dark"] *::before, html[data-theme="dark"] *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
