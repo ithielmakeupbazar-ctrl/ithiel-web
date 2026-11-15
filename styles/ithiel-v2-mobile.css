@@ -30,7 +30,7 @@ body.ithiel-v2-admin #appView .admin-shell .view-head h1,
 body.ithiel-v2-admin #appView .admin-shell .view-head h2 {font-weight:900!important}
 body.ithiel-v2-store .ithiel-shop-hero-art {min-height:220px}
 /* A real small-device layout, independent of any legacy 4-column !important rules. */
-@media(max-width:767px) {
+@media(max-width:767px), (hover:none) and (pointer:coarse) and (max-width:1199px) {
  html,body {width:100%;max-width:100%;overflow-x:clip}
  body.ithiel-v2-store {padding-bottom:calc(72px + env(safe-area-inset-bottom))}
  body.ithiel-v2-store > header.ithiel-shop-header {
@@ -166,6 +166,60 @@ body.ithiel-v2-store .ithiel-shop-hero-art {min-height:220px}
  /* Preserve mobile spacing for the modal and full width inputs. */
  body.ithiel-v2-store :is(.auth-pop,.cart-pop,.product-detail-pop){max-width:calc(100vw - 20px)!important}
 }
-@media(min-width:768px) {
+@media(min-width:768px) and (hover:hover), (min-width:1200px) {
  body.ithiel-v2-store .ithiel-mobile-nav {display:none!important}
+}
+
+/* Admin on phones: full-width cards and horizontal navigation, never desktop sidebar. */
+@media(max-width:767px), (hover:none) and (pointer:coarse) and (max-width:1199px) {
+ body.ithiel-v2-admin {width:100%!important;max-width:100%;overflow-x:clip!important}
+ body.ithiel-v2-admin #appView.app:not(.hidden) {
+   display:flex!important;flex-direction:column!important;width:100%!important;min-width:0!important;
+ }
+ body.ithiel-v2-admin #appView > .admin-top {
+   position:relative!important;top:auto!important;width:100%!important;min-width:0!important;
+   flex-wrap:wrap!important;gap:9px!important;padding:12px!important;
+ }
+ body.ithiel-v2-admin #appView > .admin-top .account {
+   flex:1;min-width:0;justify-content:flex-end!important;flex-wrap:wrap!important;
+ }
+ body.ithiel-v2-admin #appView > .admin-hero.ithiel-admin-welcome {
+   width:100%!important;min-height:0!important;padding:24px 18px!important;
+   order:1;grid-column:auto!important;grid-row:auto!important;
+ }
+ body.ithiel-v2-admin #appView > .admin-nav-strip {
+   position:relative!important;top:auto!important;width:100%!important;
+   height:auto!important;max-height:none!important;padding:8px 10px!important;
+   order:2;grid-column:auto!important;grid-row:auto!important;
+   border-right:0!important;border-bottom:1px solid var(--i2-line)!important;
+ }
+ body.ithiel-v2-admin #appView > .admin-nav-strip .nav {
+   display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;
+   overflow-x:auto!important;justify-content:flex-start!important;align-items:center!important;
+   gap:8px!important;max-width:100%!important;padding:4px!important;
+ }
+ body.ithiel-v2-admin #appView > .admin-nav-strip .nav button {
+   flex:0 0 auto!important;width:auto!important;min-width:0!important;
+   white-space:nowrap!important;font-size:12px!important;padding:9px 13px!important;
+ }
+ body.ithiel-v2-admin #appView > .admin-shell {
+   width:100%!important;max-width:100%!important;min-width:0!important;
+   order:3;grid-column:auto!important;grid-row:auto!important;
+   padding:16px 12px!important;margin:0!important;
+ }
+ body.ithiel-v2-admin #appView > .admin-footer {order:4}
+ body.ithiel-v2-admin #appView .admin-shell .cards {
+   display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;
+ }
+ body.ithiel-v2-admin #appView .admin-shell .cards > .card {
+   min-width:0!important;padding:12px!important;min-height:110px!important;
+ }
+ body.ithiel-v2-admin #appView .dashboard-grid,
+ body.ithiel-v2-admin #appView .account-grid {
+   display:grid!important;grid-template-columns:1fr!important;
+ }
+ body.ithiel-v2-admin #appView .admin-shell :is(.product-table,.orders-grid) {
+   max-width:100%!important;min-width:0!important;
+ }
+ body.ithiel-v2-admin #appView .admin-shell .panel {max-width:100%!important;overflow-x:auto}
 }
