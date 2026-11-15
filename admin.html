@@ -385,39 +385,6 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
       });
     }
 
-    function renderProducts(products) {
-      const productList = Array.isArray(products) ? products : products?.products || [];
-      const categoryList = Array.isArray(products?.categories) ? products.categories : [];
-      const subcategoryList = Array.isArray(products?.subcategories) ? [...products.subcategories].sort(byName) : [];
-      const selectedProductIds = new Set();
-      const subcategoryOptions = p => `<option value="">Sin subcategoría</option>${subcategoryList.filter(item => item.category_id === p.category_id).map(item => `<option value="${item.id}" ${item.id === p.subcategory_id ? "selected" : ""}>${escapeHtml(item.name)}</option>`).join("")}`;
-      const productRow = p => `<tr>
-        <td><input class="row-check" type="checkbox" data-select-product="${p.id}" ${selectedProductIds.has(p.id) ? "checked" : ""} aria-label="Seleccionar ${escapeHtml(p.name)}"></td>
-        <td>${p.product_images?.[0]?.image_url ? `<img class="photo-thumb" src="${escapeHtml(p.product_images[0].image_url)}" alt="">` : "—"}</td>
-        <td><strong>${escapeHtml(p.name)}</strong><br><small>${escapeHtml(p.sku)}</small></td>
-        <td><select class="row-select" data-product-category="${p.id}">${categoryList.map(c => `<option value="${c.id}" ${c.id === p.category_id ? "selected" : ""}>${escapeHtml(c.name)}</option>`).join("")}</select></td>
-        <td><select class="row-select" data-product-subcategory="${p.id}">${subcategoryOptions(p)}</select></td>
-        <td>${money(p.retail_price)}</td>
-        <td>${money(p.wholesale_price)}</td>
-        <td><span class="pill ${Number(p.stock) <= 5 ? "low" : ""}">${p.stock}</span></td>
-        <td>${statusLabel(p.status)}</td>
-        <td><div class="actions actions-stack"><button class="icon-action" data-edit-product="${p.id}" title="Editar">${icons.edit}</button><button class="icon-action" data-toggle-product="${p.id}" title="${p.status === "published" ? "Ocultar" : "Publicar"}">${p.status === "published" ? icons.pause : icons.play}</button><button class="icon-action delete" data-delete-product="${p.id}" title="Eliminar">${icons.trash}</button></div></td>
-      </tr>`;
-      const rows = items => items.length ? `<table class="product-table"><thead><tr><th><input id="selectVisibleProducts" class="row-check" type="checkbox" aria-label="Seleccionar productos visibles"></th><th>Foto</th><th>Producto</th><th>Categoría</th><th>Subcategoría</th><th>Minorista</th><th>Mayorista</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${items.map(productRow).join("")}</tbody></table>` : '<p class="empty">No encontramos productos.</p>';
-      content.innerHTML = `${viewHead("PRODUCTOS","Administrar productos","Agregá, editá precios y organizá productos.",'<button id="newProduct" class="primary" type="button">+ Agregar producto</button>')}<section class="panel"><div class="product-tools"><input id="productSearch" class="product-search" type="search" placeholder="Buscar por nombre, SKU, categoría o estado…"><div class="bulk-move"><strong><span id="selectedProductCount">0</span> seleccionados</strong><select id="bulkCategory"><option value="">Mover a categoría…</option>${categoryList.map(item=>`<option value="${item.id}">${escapeHtml(item.name)}</option>`).join("")}</select><select id="bulkSubcategory" disabled><option value="">Sin subcategoría</option></select><button id="bulkMoveProducts" class="edit" type="button" disabled>Mover seleccionados</button><button id="bulkDeleteProducts" class="delete" type="button" disabled>Eliminar seleccionados</button></div></div><div id="productRows">${rows(productList)}</div></section>`;
-      document.querySelector("#newProduct").addEventListener("click",()=>renderProductForm().catch(showProductError));
-      const savePlacement=async(product,categoryId,subcategoryId)=>callAdmin("saveProduct",{id:product.id,name:product.name,description:product.description||"",categoryId,subcategoryId,supplierPrice:product.supplier_price,retailPrice:product.retail_price,wholesalePrice:product.wholesale_price,stock:product.stock,status:product.status,variants:product.product_variants||[]});
-      const bulkCategory=document.querySelector("#bulkCategory");const bulkSubcategory=document.querySelector("#bulkSubcategory");const bulkButton=document.querySelector("#bulkMoveProducts");const bulkDeleteButton=document.querySelector("#bulkDeleteProducts");const updateBulkState=()=>{document.querySelector("#selectedProductCount").textContent=selectedProductIds.size;bulkButton.disabled=!selectedProductIds.size||!bulkCategory.value;bulkDeleteButton.disabled=!selectedProductIds.size};const fillBulkSubcategories=()=>{bulkSubcategory.innerHTML='<option value="">Sin subcategoría</option>'+subcategoryList.filter(item=>item.category_id===bulkCategory.value).map(item=>`<option value="${item.id}">${escapeHtml(item.name)}</option>`).join("");bulkSubcategory.disabled=!bulkCategory.value};
-      const visibleProducts=()=>{const term=document.querySelector("#productSearch")?.value.trim().toLocaleLowerCase("es-AR")||"";return productList.filter(p=>`${p.name} ${p.sku} ${p.status} ${p.categories?.name||""} ${p.subcategories?.name||""}`.toLocaleLowerCase("es-AR").includes(term))};
-      const repaintRows=()=>{document.querySelector("#productRows").innerHTML=rows(visibleProducts());wireRows()};
-      const removeProductsFromScreen=ids=>{const removed=new Set(ids);for(let index=productList.length-1;index>=0;index-=1)if(removed.has(productList[index].id))productList.splice(index,1);ids.forEach(id=>selectedProductIds.delete(id));repaintRows();updateBulkState()};
-      const deleteProducts=async(ids)=>{if(!ids.length)return;const names=ids.map(id=>productList.find(p=>p.id===id)?.name).filter(Boolean);const description=ids.length===1?`¿Eliminar definitivamente “${names[0]||"este producto"}”?`:`¿Eliminar definitivamente ${ids.length} productos seleccionados? Esta acción no se puede deshacer.`;if(!confirm(description))return;const scrollY=window.scrollY;bulkDeleteButton.disabled=true;try{await callAdmin("deleteProducts",{productIds:ids});removeProductsFromScreen(ids);window.scrollTo(0,scrollY)}catch(error){alert(error.message)}finally{updateBulkState()}};
-      const wireRows=()=>{document.querySelectorAll("[data-select-product]").forEach(check=>check.addEventListener("change",()=>{check.checked?selectedProductIds.add(check.dataset.selectProduct):selectedProductIds.delete(check.dataset.selectProduct);updateBulkState()}));document.querySelector("#selectVisibleProducts")?.addEventListener("change",event=>{document.querySelectorAll("[data-select-product]").forEach(check=>{check.checked=event.target.checked;check.checked?selectedProductIds.add(check.dataset.selectProduct):selectedProductIds.delete(check.dataset.selectProduct)});updateBulkState()});document.querySelectorAll("[data-edit-product]").forEach(button=>button.addEventListener("click",()=>renderProductForm(productList.find(p=>p.id===button.dataset.editProduct)).catch(showProductError)));document.querySelectorAll("[data-toggle-product]").forEach(button=>button.addEventListener("click",async()=>{const p=productList.find(item=>item.id===button.dataset.toggleProduct);try{await callAdmin("saveProduct",{id:p.id,name:p.name,description:p.description||"",categoryId:p.category_id,subcategoryId:p.subcategory_id||"",supplierPrice:p.supplier_price,retailPrice:p.retail_price,wholesalePrice:p.wholesale_price,stock:p.stock,status:p.status==="published"?"archived":"published"});await loadView("products")}catch(error){alert(error.message)}}));document.querySelectorAll("[data-delete-product]").forEach(button=>button.addEventListener("click",()=>deleteProducts([button.dataset.deleteProduct])));document.querySelectorAll("[data-product-category]").forEach(select=>select.addEventListener("change",async()=>{const product=productList.find(item=>item.id===select.dataset.productCategory);if(!product)return;try{await savePlacement(product,select.value,"");await loadView("products")}catch(error){alert(error.message);await loadView("products")}}));document.querySelectorAll("[data-product-subcategory]").forEach(select=>select.addEventListener("change",async()=>{const product=productList.find(item=>item.id===select.dataset.productSubcategory);if(!product)return;try{await savePlacement(product,product.category_id,select.value);await loadView("products")}catch(error){alert(error.message);await loadView("products")}}))};
-      bulkCategory.addEventListener("change",()=>{fillBulkSubcategories();updateBulkState()});bulkButton.addEventListener("click",async()=>{if(selectedProductIds.size>500){alert("Podés mover hasta 500 productos por vez.");return}bulkButton.disabled=true;bulkButton.textContent="Moviendo…";try{await callAdmin("moveProducts",{productIds:[...selectedProductIds],categoryId:bulkCategory.value,subcategoryId:bulkSubcategory.value});await loadView("products")}catch(error){alert(error.message);bulkButton.textContent="Mover seleccionados";updateBulkState()}});bulkDeleteButton.addEventListener("click",()=>deleteProducts([...selectedProductIds]));
-      document.querySelector("#productSearch").addEventListener("input",repaintRows);
-      wireRows();
-    }
-
     function renderProductsV2(data, state = {}) {
       const products = Array.isArray(data?.products) ? data.products : [];
       const categories = Array.isArray(data?.categories) ? data.categories : [];
@@ -468,36 +435,6 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
 
     function formatDate(value) {
       return value ? new Date(value).toLocaleString("es-AR", { dateStyle:"short", timeStyle:"short" }) : "—";
-    }
-
-    function renderOrders(orders) {
-      const items = Array.isArray(orders) ? orders : [];
-      const statusOptions = [
-        ["pending", "Pendiente"], ["processing", "En proceso"],
-        ["completed", "Completado"], ["cancelled", "Cancelado"],
-      ];
-      const cards = items.map(order => {
-        const customer = order.customers || {};
-        const products = Array.isArray(order.order_items) ? order.order_items : [];
-        const productRows = products.map(item => `<tr><td><strong>${escapeHtml(item.product_name)}</strong>${item.variant_name ? `<br><small>${escapeHtml(item.variant_name)}</small>` : ""}</td><td>${Number(item.quantity || 0)}</td><td>${money(item.unit_price)}</td><td>${money(item.line_total)}</td></tr>`).join("");
-        return `<article class="order-card">
-          <header><div><span class="eyebrow">PEDIDO #${escapeHtml(order.order_number)}</span><h3>${escapeHtml(customer.full_name || "Compra sin seguimiento")}</h3><p>${formatDate(order.created_at)}</p></div>${statusLabel(order.status)}</header>
-          <div class="order-meta"><span><b>Tipo</b>${order.purchase_type === "wholesale" ? "Mayorista" : "Minorista"}</span><span><b>Entrega</b>${order.fulfillment_type === "shipping" ? "Envío" : "Retiro"}</span><span><b>Productos</b>${Number(order.item_count || 0)}</span><span><b>Total</b>${money(order.total)}</span></div>
-          <div class="order-contact"><p><b>Contacto:</b> ${escapeHtml(customer.phone || customer.email || "No solicitado")}</p>${order.shipping_address ? `<p><b>Dirección:</b> ${escapeHtml(order.shipping_address)}</p>` : ""}${order.customer_note ? `<p><b>Nota:</b> ${escapeHtml(order.customer_note)}</p>` : ""}${order.coupon_code ? `<p><b>Cupón:</b> ${escapeHtml(order.coupon_code)} · Descuento ${money(order.discount_amount)}</p>` : ""}</div>
-          <div class="order-products"><table><thead><tr><th>Producto</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr></thead><tbody>${productRows || '<tr><td colspan="4">Sin detalle disponible.</td></tr>'}</tbody></table></div>
-          <footer><label>Estado<select data-order-status="${order.id}" ${["completed","cancelled"].includes(order.status) ? "disabled" : ""}>${statusOptions.map(([value,label]) => `<option value="${value}" ${order.status === value ? "selected" : ""}>${label}</option>`).join("")}</select></label>${["completed","cancelled"].includes(order.status) ? '<span class="pill">Pedido cerrado</span>' : `<button class="edit" type="button" data-save-order-status="${order.id}" data-current-status="${order.status}">Guardar estado</button>`}</footer>
-        </article>`;
-      }).join("");
-      content.innerHTML = `${viewHead("PEDIDOS", "Pedidos", "Compras registradas, productos y seguimiento.")}<section class="orders-grid">${cards || '<p class="empty">Todavía no hay pedidos registrados.</p>'}</section>`;
-      document.querySelectorAll("[data-save-order-status]").forEach(button => button.addEventListener("click", async () => {
-        const select = document.querySelector(`[data-order-status="${button.dataset.saveOrderStatus}"]`);
-        if (!select || select.value === button.dataset.currentStatus) return;
-        const warnings = { completed:"¿Marcar este pedido como completado?", cancelled:"¿Cancelar el pedido y devolver su stock?" };
-        if (warnings[select.value] && !confirm(warnings[select.value])) return;
-        select.disabled = true; button.disabled = true; button.textContent = "Guardando…";
-        try { await callAdmin("updateOrderStatus", { orderId:button.dataset.saveOrderStatus, status:select.value }); await loadView("orders"); }
-        catch (error) { alert(error.message); await loadView("orders"); }
-      }));
     }
 
     function renderOrdersV2(orders, state = {}) {
