@@ -117,3 +117,6 @@ body.ithiel-v2-admin #appView .admin-shell .view-head h2 {font-family:"Playfair 
  body.ithiel-v2-admin #appView .admin-shell .cards > .card{padding:14px!important;min-height:105px!important}
  body.ithiel-v2-admin #appView .admin-shell .cards .card strong{font-size:24px!important}
 }
+
+/* Defensa visual: los componentes legacy del hero no deben cubrir el header 2.0. */
+body.ithiel-v2-store > header.ithiel-shop-header > .hero-product-carousel { display:none!important; }
