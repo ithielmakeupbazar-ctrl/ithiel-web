@@ -1,0 +1,51 @@
+/*
+ * Ithiel Bazar 2.0 — Boutique equilibrada
+ * Paleta conservada de la web original.
+ * Capa de identidad compartida para catálogo y administración.
+ * No altera la lógica de compra ni los permisos.
+ */
+:root {
+  --ithiel-burgundy: #851044;
+  --ithiel-fuchsia: #b91658;
+  --ithiel-pink-soft: #f8e5ed;
+  --ithiel-surface: #fff9fb;
+  --ithiel-ink: #432b39;
+  --ithiel-line: #eed3df;
+  --ithiel-radius-card: 18px;
+  --ithiel-shadow-soft: 0 10px 30px rgba(84, 17, 48, .09);
+  --ithiel-focus: #851044;
+  /* Compatibilidad con nombres de variables existentes en la tienda. */
+  --deep: var(--ithiel-burgundy);
+  --rose: var(--ithiel-fuchsia);
+  --soft: #fff5f9;
+  --ink: var(--ithiel-ink);
+  --line: var(--ithiel-line);
+  /* Compatibilidad con el panel administrativo V2. */
+  --av-wine: var(--ithiel-burgundy);
+  --av-hot: var(--ithiel-fuchsia);
+  --av-paper: var(--ithiel-surface);
+  --av-ink: var(--ithiel-ink);
+  --av-line: var(--ithiel-line);
+  --wine: var(--ithiel-burgundy);
+  --pink: var(--ithiel-fuchsia);
+  --paper: var(--ithiel-surface);
+}
+html { accent-color: var(--ithiel-fuchsia); }
+:where(button, input, textarea, select, a):focus-visible {
+  outline: 3px solid var(--ithiel-focus);
+  outline-offset: 3px;
+}
+:where(button, input, textarea, select) {
+  font-family: "DM Sans", sans-serif;
+}
+:where(button, a) {
+  -webkit-tap-highlight-color: transparent;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
