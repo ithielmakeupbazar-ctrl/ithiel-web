@@ -240,3 +240,91 @@ body.ithiel-v2-store .ithiel-shop-hero-art.has-product-image :is(.ithiel-shop-ar
  body.ithiel-v2-store .ithiel-shop-hero-art.has-product-image {min-height:170px!important;max-height:210px!important}
  body.ithiel-v2-store .ithiel-shop-featured-image {padding:10px!important}
 }
+
+/* Ithiel 2.0: rotating headline + actual range of Gotham-inspired weights */
+body.ithiel-v2 {
+ font-family:var(--ithiel-font)!important;
+ font-weight:400!important;
+}
+body.ithiel-v2 :is(p,small,.copy,.lead,.product-name,.cart-item small,.tag) {
+ font-weight:300!important;
+ letter-spacing:normal!important;
+}
+body.ithiel-v2 :is(.ithiel-shop-topline,.ithiel-shop-navigation .pill,.ithiel-shop-search,.ithiel-shop-benefits,.ithiel-shop-hero-copy>p:not(.ithiel-shop-eyebrow)) {
+ font-weight:300!important;
+}
+body.ithiel-v2 :is(.ithiel-shop-hero h1,.ithiel-shop-section-heading h2,.title,.view-head h1,.view-head h2) {
+ font-weight:300!important;
+ letter-spacing:-.04em!important;
+}
+body.ithiel-v2 .ithiel-shop-hero h1 em {font-weight:700!important}
+body.ithiel-v2 :is(.price-line,.detail-price strong,.cart-total strong,.cards .card strong) {
+ font-weight:600!important;
+}
+body.ithiel-v2 :is(button,.primary,.ithiel-shop-hero-cta,.dashboard-link,.product-name) {
+ font-weight:500!important;
+}
+body.ithiel-v2-admin #appView .admin-hero.ithiel-admin-welcome h1 {
+ font-weight:300!important;
+}
+body.ithiel-v2 :is(.ithiel-shop-eyebrow,.ithiel-admin-kicker) {
+ font-weight:700!important;
+}
+body.ithiel-v2-store .ithiel-shop-logo {
+ display:flex!important;flex-wrap:wrap;align-items:center;column-gap:.22em;
+ row-gap:1px;width:auto;max-width:100%;line-height:1!important;
+ font-weight:400!important;text-decoration:none!important;
+ letter-spacing:-.05em!important;
+}
+body.ithiel-v2-store .ithiel-shop-logo .ithiel-brand-fixed {
+ color:var(--i2-ink)!important;font-weight:900!important;line-height:1.1;
+}
+body.ithiel-v2-store .ithiel-shop-logo .ithiel-rotate-window {
+ position:relative;display:inline-block!important;flex:0 0 auto;
+ width:clamp(126px,18vw,255px);height:1.2em;
+ overflow:hidden;vertical-align:middle;
+ font-family:var(--ithiel-font)!important;
+}
+body.ithiel-v2-store .ithiel-shop-logo .ithiel-rotate-word {
+ position:absolute;left:0;top:0;width:100%;height:100%;
+ display:flex;align-items:center;justify-content:flex-start;
+ color:var(--i2-accent)!important;font-weight:300!important;
+ font-size:clamp(13px,1.65vw,26px)!important;
+ letter-spacing:-.045em!important;white-space:nowrap;
+ opacity:0;transform:translateY(65%);filter:blur(5px);
+ animation:ithiel-rotate-word 12s infinite ease-in-out;
+}
+body.ithiel-v2-store .ithiel-shop-logo .ithiel-rotate-word:nth-child(2){animation-delay:3s}
+body.ithiel-v2-store .ithiel-shop-logo .ithiel-rotate-word:nth-child(3){animation-delay:6s}
+body.ithiel-v2-store .ithiel-shop-logo .ithiel-rotate-word:nth-child(4){animation-delay:9s}
+@keyframes ithiel-rotate-word {
+ 0%,3%{opacity:0;transform:translateY(65%);filter:blur(5px)}
+ 7%,20%{opacity:1;transform:translateY(0);filter:blur(0)}
+ 24%,100%{opacity:0;transform:translateY(-65%);filter:blur(5px)}
+}
+body.ithiel-v2-store .ithiel-shop-logo small {
+ width:100%;flex:0 0 100%;margin-top:4px;
+ color:var(--i2-muted)!important;font-weight:300!important;
+ letter-spacing:.1em!important;
+}
+@media(max-width:767px), (hover:none) and (pointer:coarse) and (max-width:1199px) {
+ body.ithiel-v2-store > header .ithiel-shop-logo {
+   display:flex!important;column-gap:5px!important;flex-wrap:wrap!important;
+   min-width:0!important;font-size:clamp(20px,5.5vw,26px)!important;
+ }
+ body.ithiel-v2-store .ithiel-shop-logo .ithiel-rotate-window {
+   width:clamp(85px,24vw,116px)!important;height:1.15em!important;
+ }
+ body.ithiel-v2-store .ithiel-shop-logo .ithiel-rotate-word {
+   font-size:clamp(10px,2.8vw,13px)!important;
+ }
+ body.ithiel-v2-store .ithiel-shop-logo small {
+   font-size:6px!important;letter-spacing:0!important;max-width:100%;
+ }
+}
+@media(prefers-reduced-motion:reduce) {
+ body.ithiel-v2-store .ithiel-shop-logo .ithiel-rotate-word {
+  animation:none!important;opacity:0;filter:none;transform:none;
+ }
+ body.ithiel-v2-store .ithiel-shop-logo .ithiel-rotate-word:first-child {opacity:1}
+}
