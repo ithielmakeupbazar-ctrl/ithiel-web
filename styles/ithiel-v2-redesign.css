@@ -25,7 +25,7 @@ body.ithiel-v2-store > main {display:flex;flex-direction:column;gap:clamp(22px,3
 body.ithiel-v2-store > main > .ithiel-shop-hero{order:0}
 body.ithiel-v2-store > main > .ithiel-shop-benefits{order:1}
 body.ithiel-v2-store > main > .ithiel-shop-category-section{order:2}
-body.ithiel-v2-store > main > section:first-of-type:not(.ithiel-shop-hero){order:3}
+body.ithiel-v2-store > main > section.ithiel-shop-latest{order:3}
 body.ithiel-v2-store > main > section{order:4}
 .ithiel-shop-hero{display:grid;grid-template-columns:1fr 0.92fr; min-height:370px; overflow:hidden; border-radius:28px; background:linear-gradient(125deg,#5d0c35,#851044 58%,#ab2866); color:#fff; box-shadow:0 22px 42px rgba(86,13,52,.15)}
 .ithiel-shop-hero-copy{padding:clamp(26px,5vw,76px);align-self:center;position:relative;z-index:2}
