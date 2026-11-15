@@ -172,6 +172,7 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
   @media(max-width:820px){.compact-order header{gap:10px}.compact-order header>div:last-child{justify-content:flex-start}.compact-order .order-meta{grid-template-columns:1fr 1fr}.compact-order .order-meta span:last-child{grid-column:1/-1}.compact-order footer{display:grid;grid-template-columns:1fr 1fr}.compact-order footer .edit{width:100%}.customer-form,.coupon-form,.management-list{overflow-x:auto}.panel>table{min-width:620px}.orders-grid{margin-inline:0}.product-tools{grid-template-columns:1fr!important}.product-tools input{grid-column:auto!important}}
 </style>
 <link rel="stylesheet" href="styles/ithiel-v2-layout.css?v=20261115-1">
+<link rel="stylesheet" href="styles/ithiel-v2-redesign.css?v=20261115-1">
 </head>
 <body class="ithiel-v2 ithiel-v2-admin">
   <section id="loginView" class="login">
@@ -192,9 +193,8 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
       <div class="brand">ITHIEL</div>
       <div class="account"><div class="ithiel-theme-control" data-ithiel-theme-switch></div><span id="accountEmail"></span><a class="home-link" href="/">Catálogo</a><button id="logout" class="outline">Salir</button></div>
     </header>
-    <section class="admin-hero">
-      <h1>Administración</h1>
-      <p class="lead">Productos, pedidos y comunidad.</p>
+    <section class="admin-hero ithiel-admin-welcome">
+      <div class="ithiel-admin-welcome-content"><span class="ithiel-admin-kicker">CENTRO DE GESTIÓN COMERCIAL</span><h1>Tu negocio, en un solo lugar.</h1><p class="lead">Productos, pedidos, clientes y novedades de Ithiel.</p></div><div class="ithiel-admin-welcome-symbol" aria-hidden="true">I</div>
       </section><div class="admin-nav-strip"><nav class="nav" aria-label="Secciones del panel">
         <button data-view="dashboard" class="active">Resumen</button><button data-view="orders">Pedidos</button><button data-view="products">Administrar productos</button><button data-view="catalog">Categorías</button><button data-view="customers">Clientes</button><button data-view="coupons">Cupones</button><button data-view="experiences">Experiencias</button><button data-view="history">Historial</button><button data-view="admins">Administradores</button><button data-view="account">Mi cuenta</button>
       </nav></div><main class="admin-shell"><div id="content"><p class="empty">Cargando…</p></div></main>
@@ -250,7 +250,7 @@ body{background:linear-gradient(180deg,#fff9fb 0,#fff 78%);color:var(--ink)}.log
 
     function renderDashboard(data) {
       const t = data.totals;
-      content.innerHTML = `${viewHead("RESUMEN", "Administración", "Vista general del negocio.")}
+      content.innerHTML = `${viewHead("RESUMEN", "Panel general", "Estado de tu tienda en tiempo real.")}
         <div class="cards">
           <button class="card dashboard-link" type="button" data-go-view="products"><small>Productos</small><strong>${t.products}</strong></button>
           <button class="card dashboard-link" type="button" data-go-view="products" data-go-stock="low"><small>Stock para revisar</small><strong>${t.lowStock}</strong></button>
